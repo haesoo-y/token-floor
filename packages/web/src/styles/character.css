@@ -1,0 +1,49 @@
+.character-picker {
+  position: absolute;
+  z-index: 5;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 11px;
+  color: #8da3b4;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  font:
+    10px ui-monospace,
+    monospace;
+  text-transform: uppercase;
+}
+.character-picker > div {
+  display: flex;
+  gap: 6px;
+}
+.preset {
+  position: relative;
+  width: 21px;
+  height: 25px;
+  border: 2px solid #03070a;
+  background: #dc6f92;
+  cursor: pointer;
+}
+.preset::before {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 9px;
+  left: 2px;
+  top: -9px;
+  border: 2px solid #03070a;
+  border-radius: 50%;
+  background: #bd8b6b;
+}
+.preset-cyan {
+  background: #38c6c9;
+}
+.preset-violet {
+  background: #a466d8;
+}
+.preset.selected {
+  box-shadow: 0 0 0 2px var(--mint);
+}

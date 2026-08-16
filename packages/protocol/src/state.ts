@@ -58,6 +58,11 @@ function projectAgent(event: AgentEvent): AgentSnapshot {
   return base;
 }
 
+/**
+ * Projects one normalized event into immutable office state.
+ *
+ * Older agent events are ignored so delayed adapter output cannot roll the UI back.
+ */
 export function applyEvent(state: OfficeState, event: NormalizedEvent): OfficeState {
   if (!isAgentEvent(event)) {
     return {
@@ -76,6 +81,10 @@ export function applyEvent(state: OfficeState, event: NormalizedEvent): OfficeSt
   };
 }
 
+/**
+ * Marks silent active agents as completed when a provider cannot emit a terminal event.
+ * Waiting agents are deliberately excluded because they still require user action.
+ */
 export function inferTimedOutCompletions(
   state: OfficeState,
   now: Date,

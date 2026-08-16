@@ -10,6 +10,10 @@ export interface SpeechSanitizerOptions {
   maxLength?: number;
 }
 
+/**
+ * Redacts common credentials and local user paths before activity text reaches speech bubbles.
+ * This is a display safety boundary, not a substitute for provider-side secret handling.
+ */
 export function sanitizeSpeech(input: string, options: SpeechSanitizerOptions = {}): string {
   const maxLength = options.maxLength ?? 96;
   let output = input.replace(/\s+/g, " ").trim();

@@ -65,6 +65,11 @@ function hasUsagePayload(value: Record<string, unknown>): boolean {
   );
 }
 
+/**
+ * Validates untrusted adapter or WebSocket input at the protocol boundary.
+ *
+ * @throws {Error} When the envelope or type-specific payload violates schema version 1.
+ */
 export function parseNormalizedEvent(value: unknown): NormalizedEvent {
   if (!isRecord(value) || !hasBaseFields(value)) throw new Error("Invalid event envelope");
   if (value.type === "usage.updated" && hasUsagePayload(value))

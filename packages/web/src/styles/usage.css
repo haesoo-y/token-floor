@@ -1,0 +1,62 @@
+.usage-list {
+  display: flex;
+  gap: 7px;
+}
+.usage-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 128px;
+  height: 48px;
+  padding: 6px 9px;
+  color: #eaf2f7;
+  background: #0d1922;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+}
+.usage-card:hover {
+  background: #142532;
+}
+.usage-avatar {
+  position: relative;
+  width: 24px;
+  height: 29px;
+  background: var(--blue);
+  border: 2px solid #03070a;
+}
+.usage-avatar::before {
+  content: "";
+  position: absolute;
+  width: 15px;
+  height: 11px;
+  left: 2px;
+  top: -10px;
+  border: 2px solid #03070a;
+  border-radius: 50%;
+  background: #bd8b6b;
+}
+.usage-card.claude-code .usage-avatar {
+  background: var(--orange);
+}
+.usage-card > span:last-child {
+  display: grid;
+}
+.usage-card small {
+  color: #839aaa;
+  font:
+    9px ui-monospace,
+    monospace;
+  text-transform: uppercase;
+}
+.usage-card strong {
+  font:
+    800 13px ui-monospace,
+    monospace;
+}
+.usage-card.codex strong {
+  color: #8fb7ff;
+}
+.usage-card.claude-code strong {
+  color: #ffb780;
+}

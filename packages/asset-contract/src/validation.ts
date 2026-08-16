@@ -13,6 +13,7 @@ export interface AssetValidationResult {
   unsafe: string[];
 }
 
+/** Converts a pack-relative path to POSIX form and rejects traversal or absolute paths. */
 export function normalizeAssetPath(path: string): string {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//, "");
   const parts = normalized.split("/");
@@ -22,6 +23,7 @@ export function normalizeAssetPath(path: string): string {
   return parts.filter(Boolean).join("/");
 }
 
+/** Compares the installed image inventory with the versioned MetroCity asset contract. */
 export function validateAssetInventory(
   manifest: AssetPackManifest,
   inventory: readonly ImageInventoryEntry[]

@@ -7,6 +7,8 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "concurrently -k -n server,web -c blue,magenta \"npm run dev -w @token-floor/server\" \"npm run dev -w @token-floor/web\"",
+    "build": "npm run build -w @token-floor/server && npm run build -w @token-floor/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -17,6 +19,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.2.0",
+    "concurrently": "^10.0.5",
     "eslint": "^10.8.1",
     "prettier": "^3.9.6",
     "typescript": "^6.0.3",

@@ -1,4 +1,9 @@
 {
   "files": [],
-  "references": [{ "path": "./packages/protocol" }, { "path": "./packages/asset-contract" }]
+  "references": [
+    { "path": "./packages/protocol" },
+    { "path": "./packages/asset-contract" },
+    { "path": "./packages/server" },
+    { "path": "./packages/web" }
+  ]
 }

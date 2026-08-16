@@ -75,6 +75,7 @@ export type AgentEvent =
 
 export type NormalizedEvent = AgentEvent | UsageUpdatedEvent;
 
+/** Narrows a normalized provider event to one that changes an agent projection. */
 export function isAgentEvent(event: NormalizedEvent): event is AgentEvent {
   return event.type.startsWith("agent.");
 }

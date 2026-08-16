@@ -3,6 +3,8 @@ private/
 .env
 node_modules/
 dist/
+dist-types/
 coverage/
 *.tsbuildinfo
 assets/vendor/metrocity/
+packages/web/public/vendor/metrocity/
