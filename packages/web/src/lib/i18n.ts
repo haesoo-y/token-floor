@@ -15,7 +15,10 @@ const messages = {
     player: "My character",
     connected: "Live simulation",
     disconnected: "Server disconnected",
-    controls: "WASD move · wheel zoom · click an agent for details"
+    controls: "WASD move · wheel zoom · click an agent for details",
+    claudeConnect: "Connect Claude",
+    claudeConnected: "Claude connected",
+    claudeChecking: "Checking Claude"
   },
   ko: {
     active: "작업 중",
@@ -31,7 +34,10 @@ const messages = {
     player: "내 캐릭터",
     connected: "실시간 시뮬레이션",
     disconnected: "서버 연결 끊김",
-    controls: "WASD 이동 · 휠 확대 · 에이전트를 클릭해 상세 보기"
+    controls: "WASD 이동 · 휠 확대 · 에이전트를 클릭해 상세 보기",
+    claudeConnect: "Claude 연결",
+    claudeConnected: "Claude 연결됨",
+    claudeChecking: "Claude 확인 중"
   },
   ja: {
     active: "作業中",
@@ -47,7 +53,10 @@ const messages = {
     player: "マイキャラクター",
     connected: "ライブシミュレーション",
     disconnected: "サーバー未接続",
-    controls: "WASDで移動 · ホイールでズーム · エージェントをクリック"
+    controls: "WASDで移動 · ホイールでズーム · エージェントをクリック",
+    claudeConnect: "Claudeを接続",
+    claudeConnected: "Claude接続済み",
+    claudeChecking: "Claude確認中"
   }
 } as const;
 

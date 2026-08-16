@@ -8,6 +8,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
+    "@token-floor/adapter-claude": "0.0.0",
     "@token-floor/protocol": "0.0.0",
     "ws": "^8.21.3"
   },

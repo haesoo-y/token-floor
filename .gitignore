@@ -8,3 +8,4 @@ coverage/
 *.tsbuildinfo
 assets/vendor/metrocity/
 packages/web/public/vendor/metrocity/
+.token-floor/

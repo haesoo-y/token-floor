@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CharacterPicker } from "./components/CharacterPicker.js";
 import { ChatPanel } from "./components/ChatPanel.js";
+import { ClaudeIntegrationButton } from "./components/ClaudeIntegrationButton.js";
 import { HeaderStats } from "./components/HeaderStats.js";
 import { OfficeCanvas } from "./components/OfficeCanvas.js";
 import { SetupScreen } from "./components/SetupScreen.js";
@@ -39,6 +40,7 @@ export function App() {
         </div>
         <HeaderStats stats={stats} locale={locale} />
         <div className="top-actions">
+          <ClaudeIntegrationButton locale={locale} />
           <UsageCards usage={state.usageByProvider} locale={locale} />
           <select
             value={locale}

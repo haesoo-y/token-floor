@@ -2,6 +2,35 @@
   display: flex;
   gap: 7px;
 }
+.integration-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 10px;
+  color: #a9bbc8;
+  background: #0d1922;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font:
+    700 10px ui-monospace,
+    monospace;
+  white-space: nowrap;
+}
+.integration-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.integration-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--yellow);
+}
+.integration-button.installed .integration-dot {
+  background: var(--mint);
+  box-shadow: 0 0 8px #64d6b2aa;
+}
 .usage-card {
   display: flex;
   align-items: center;

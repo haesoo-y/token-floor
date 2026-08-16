@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n server,web -c blue,magenta \"npm run dev -w @token-floor/server\" \"npm run dev -w @token-floor/web\"",
-    "build": "npm run build -w @token-floor/server && npm run build -w @token-floor/web",
+    "build": "npm run build -w @token-floor/adapter-claude && npm run build -w @token-floor/server && npm run build -w @token-floor/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
