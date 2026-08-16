@@ -1,3 +1,8 @@
 .DS_Store
 private/
 .env
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+assets/vendor/metrocity/
