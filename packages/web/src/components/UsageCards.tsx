@@ -1,6 +1,7 @@
 import type { UsageSnapshot } from "@token-floor/protocol";
-import { translate, type Locale } from "../lib/i18n.js";
 import { framesForUsage } from "../lib/avatar.js";
+import type { Locale } from "../lib/i18n.js";
+import { usageDetailValues } from "../lib/usageDetails.js";
 import { AvatarPreview } from "./common/AvatarPreview.js";
 
 function UsageCard({
@@ -14,8 +15,8 @@ function UsageCard({
   locale: Locale;
   onSelect: (provider: "codex" | "claude-code") => void;
 }) {
-  const available = usage?.capability === "weekly-percentage";
   const label = provider === "claude-code" ? "Claude" : "Codex";
+  const values = usageDetailValues(usage, locale, "- -");
   return (
     <button
       className={`usage-card ${provider}`}
@@ -24,10 +25,8 @@ function UsageCard({
     >
       <AvatarPreview frames={framesForUsage(provider)} />
       <span>
-        <small>{label} weekly</small>
-        <strong>
-          {available ? `${usage.remainingPercent}%` : translate(locale, "tokenUnavailable")}
-        </strong>
+        <small>{label} usage</small>
+        <strong>{`${values.fiveHour} | ${values.weekly}`}</strong>
       </span>
     </button>
   );

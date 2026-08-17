@@ -1,0 +1,36 @@
+.chat-panel.is-minimized {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 190px;
+  height: 46px;
+  padding: 0 7px 0 14px;
+}
+.chat-panel.is-minimized strong {
+  color: #d4d4d8;
+  font-size: 11px;
+}
+.panel-tabs {
+  height: 100%;
+}
+.panel-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  gap: 4px;
+  margin: 7px;
+}
+.panel-toggle {
+  border: 0;
+  border-radius: 8px;
+  color: #aab3c0;
+  background: #ffffff0b;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+}
+.panel-toggle:hover,
+.panel-toggle:focus-visible {
+  color: #f8fafc;
+  background: #282d36c8;
+  outline: none;
+}

@@ -6,6 +6,10 @@ interface SessionContext extends CodexSessionRecord {
   sourceKey: string;
 }
 
+function isInternalSession(context: CodexSessionRecord): boolean {
+  return context.kind === "subagent" && context.subagentKind === "guardian";
+}
+
 function actorId(threadId: string): string {
   return `codex:${threadId}`;
 }
@@ -29,7 +33,7 @@ export class CodexLifecycleNormalizer {
 
   sessionStarted(sourceKey: string): AgentEvent | undefined {
     const context = this.sourceSessions.get(sourceKey);
-    return context
+    return context && !isInternalSession(context)
       ? {
           ...this.base(context, context.timestamp, `session:${context.threadId}`),
           type: "agent.started"
@@ -39,7 +43,7 @@ export class CodexLifecycleNormalizer {
 
   normalize(sourceKey: string, record: CodexLifecycleRecord): AgentEvent[] {
     const context = this.sourceSessions.get(sourceKey);
-    if (!context) return [];
+    if (!context || isInternalSession(context)) return [];
     if (record.type === "subagent.activity") return this.normalizeSubagentActivity(context, record);
     const discriminator =
       record.type === "message"
@@ -56,6 +60,8 @@ export class CodexLifecycleNormalizer {
     );
     const callKey = "callId" in record ? `${context.threadId}:${record.callId}` : undefined;
     if (record.type === "message") {
+      // Subagent user-role records are orchestration prompts, not user-authored conversation.
+      if (context.kind === "subagent" && record.role === "user") return [];
       const text = sanitizeSpeech(record.text, { maxLength: 200 });
       if (!text) return [];
       return [{ ...base, type: "agent.message", message: { role: record.role, text } }];
@@ -87,7 +93,7 @@ export class CodexLifecycleNormalizer {
   ): AgentEvent[] {
     this.parentByChild.set(record.childThreadId, actorId(parent.threadId));
     const child = this.sessions.get(record.childThreadId);
-    if (!child) return [];
+    if (!child || isInternalSession(child)) return [];
     const base = this.base(child, record.timestamp, `subagent:${record.eventId}`);
     if (record.state === "started") return [{ ...base, type: "agent.started" }];
     if (record.state === "failed") {

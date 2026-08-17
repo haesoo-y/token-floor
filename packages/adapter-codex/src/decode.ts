@@ -40,7 +40,9 @@ function decodeSession(
   const occurredAt = timestamp(payload.timestamp) ?? timestamp(outerTimestamp);
   if (!threadId || !cwd || !occurredAt) return undefined;
   const source = payload.source;
-  const subagent = isRecord(source) && isRecord(source.subagent);
+  const subagentSource =
+    isRecord(source) && isRecord(source.subagent) ? source.subagent : undefined;
+  const subagentKind = subagentSource ? text(subagentSource, "other") : undefined;
   const parentThreadId = text(payload, "parent_thread_id");
   const forkedFromId = text(payload, "forked_from_id");
   return {
@@ -49,7 +51,8 @@ function decodeSession(
     threadId,
     sessionId: text(payload, "session_id") ?? threadId,
     cwd,
-    kind: subagent ? "subagent" : "main",
+    kind: subagentSource ? "subagent" : "main",
+    ...(subagentKind ? { subagentKind } : {}),
     ...(parentThreadId ? { parentThreadId } : {}),
     ...(forkedFromId ? { forkedFromId } : {})
   };

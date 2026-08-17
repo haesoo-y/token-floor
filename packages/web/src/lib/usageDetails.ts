@@ -15,7 +15,10 @@ export function usageDetailValues(
   now = new Date()
 ): UsageDetailValues {
   return {
-    weekly: usage?.capability === "weekly-percentage" ? `${usage.remainingPercent}%` : unavailable,
+    weekly:
+      usage?.capability === "weekly-percentage" && typeof usage.remainingPercent === "number"
+        ? `${usage.remainingPercent}%`
+        : unavailable,
     fiveHour:
       typeof usage?.fiveHourRemainingPercent === "number"
         ? `${usage.fiveHourRemainingPercent}%`

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyEvent, createOfficeState } from "@token-floor/protocol";
-import { removeLegacyCodexAgents } from "./codex-state-migration.js";
+import { removeHiddenCodexAgents, removeLegacyCodexAgents } from "./codex-state-migration.js";
 
 const base = {
   schemaVersion: 1 as const,
@@ -24,5 +24,26 @@ describe("removeLegacyCodexAgents", () => {
       agent: { id: "codex:thread", kind: "main", executionId: "thread" }
     });
     expect(Object.keys(removeLegacyCodexAgents(state).agents)).toEqual(["codex:thread"]);
+  });
+});
+
+describe("removeHiddenCodexAgents", () => {
+  it("removes a hidden actor from agents, messages, and recent events", () => {
+    let state = applyEvent(createOfficeState(), {
+      ...base,
+      eventId: "guardian-start",
+      agent: { id: "codex:guardian", kind: "subagent", executionId: "guardian" }
+    });
+    state = applyEvent(state, {
+      ...base,
+      type: "agent.message",
+      eventId: "guardian-message",
+      agent: { id: "codex:guardian", kind: "subagent", executionId: "guardian" },
+      message: { role: "assistant", text: "internal" }
+    });
+    const cleaned = removeHiddenCodexAgents(state, new Set(["codex:guardian"]));
+    expect(cleaned.agents).toEqual({});
+    expect(cleaned.messages).toEqual([]);
+    expect(cleaned.recentEvents).toEqual([]);
   });
 });

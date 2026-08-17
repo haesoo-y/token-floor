@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { CharacterPicker } from "./components/CharacterPicker.js";
-import { ChatPanel } from "./components/ChatPanel.js";
+import { ChatPanel, type PanelTab } from "./components/ChatPanel.js";
 import { HeaderStats } from "./components/HeaderStats.js";
 import { OfficeCanvas } from "./components/OfficeCanvas.js";
 import { SetupScreen } from "./components/SetupScreen.js";
@@ -16,6 +16,8 @@ export function App() {
   const { state, events, connection } = useAgentStream();
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedUsage, setSelectedUsage] = useState<"codex" | "claude-code">();
+  const [panelTab, setPanelTab] = useState<PanelTab>("selected");
+  const [panelMinimized, setPanelMinimized] = useState(false);
   const [locale, setLocale] = useState<Locale>(
     () => (localStorage.getItem("token-floor-locale") as Locale | null) ?? "en"
   );
@@ -46,6 +48,8 @@ export function App() {
             onSelect={(provider) => {
               setSelectedId(undefined);
               setSelectedUsage(provider);
+              setPanelTab("selected");
+              setPanelMinimized(false);
             }}
           />
           <select
@@ -72,10 +76,14 @@ export function App() {
             onSelect={(id) => {
               setSelectedUsage(undefined);
               setSelectedId(id);
+              setPanelTab("selected");
+              setPanelMinimized(false);
             }}
             onSelectUsage={(provider) => {
               setSelectedId(undefined);
               setSelectedUsage(provider);
+              setPanelTab("selected");
+              setPanelMinimized(false);
             }}
           />
         ) : assets.status === "missing" ? (
@@ -83,7 +91,6 @@ export function App() {
         ) : (
           <div className="loading">CHECKING OFFICE ASSETS…</div>
         )}
-        <div className="control-hint">{translate(locale, "controls")}</div>
         <CharacterPicker preset={preset} onChange={setPreset} locale={locale} />
         <ChatPanel
           selected={selected}
@@ -92,6 +99,10 @@ export function App() {
           messages={state.messages ?? []}
           events={events}
           locale={locale}
+          activeTab={panelTab}
+          minimized={panelMinimized}
+          onTabChange={setPanelTab}
+          onMinimizedChange={setPanelMinimized}
         />
       </section>
     </main>

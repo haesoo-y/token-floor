@@ -25,5 +25,9 @@ describe("overlay transparency", () => {
     expect(chatPanelRule).not.toContain("backdrop-filter");
     expect(chatPanelRule).not.toContain("box-shadow");
     expect(readStyle("panels")).toContain(".chat-row.assistant.claude-code strong");
+    expect(readStyle("panels")).toContain(".event-row.claude-code span");
+    expect(readStyle("panels")).toContain('.ui-tabs-content[data-state="inactive"]');
+    expect(readStyle("panel-controls")).toContain(".chat-panel.is-minimized");
+    expect(readStyle("stage")).not.toContain("control-hint");
   });
 });

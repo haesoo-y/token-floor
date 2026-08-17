@@ -5,6 +5,7 @@ export interface CodexSessionRecord {
   sessionId: string;
   cwd: string;
   kind: "main" | "subagent";
+  subagentKind?: string;
   parentThreadId?: string;
   forkedFromId?: string;
 }

@@ -34,4 +34,14 @@ describe("usageDetailValues", () => {
       resetsAt: "확인 불가"
     });
   });
+
+  it("uses the supplied fallback independently for a missing limit window", () => {
+    const values = usageDetailValues(
+      { capability: "weekly-percentage", remainingPercent: 74, checkedAt: "" },
+      "ko",
+      "-"
+    );
+    expect(values.fiveHour).toBe("-");
+    expect(values.weekly).toBe("74%");
+  });
 });

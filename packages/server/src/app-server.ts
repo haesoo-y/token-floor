@@ -14,7 +14,7 @@ import { startClaudeMaintenance } from "./claude-maintenance.js";
 import { removeUnobservedClaudeAgents } from "./claude-state-migration.js";
 import { ingestClaudeUsage } from "./claude-usage-ingestion.js";
 import { startCodexMaintenance } from "./codex-maintenance.js";
-import { removeLegacyCodexAgents } from "./codex-state-migration.js";
+import { removeHiddenCodexAgents, removeLegacyCodexAgents } from "./codex-state-migration.js";
 import type { EventStore } from "./event-store.js";
 import { createHealthPayload } from "./health.js";
 import { sendJson } from "./json-response.js";
@@ -38,12 +38,7 @@ export interface TokenFloorServerOptions {
   simulation?: boolean;
 }
 
-/**
- * Creates the local HTTP and WebSocket projection server.
- *
- * The simulation source will be replaced by provider adapters without changing either transport
- * or the normalized state consumed by the web client.
- */
+/** Creates the local HTTP and WebSocket projection server. */
 export function createTokenFloorServer(options: TokenFloorServerOptions = {}): TokenFloorServer {
   const startedAt = Date.now();
   const restored = options.eventStore?.load() ?? [];
@@ -169,7 +164,13 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
   });
   const stopCodexMaintenance = startCodexMaintenance({
     sessionsPath: options.codexSessionsPath,
-    acceptEvent: acceptRecoveredEvent
+    acceptEvent: acceptRecoveredEvent,
+    excludeAgents: (ids) => {
+      const next = removeHiddenCodexAgents(state, ids);
+      if (next === state) return;
+      state = next;
+      broadcastSnapshot(state);
+    }
   });
   const stopProviderUsageMaintenance = startProviderUsageMaintenance({
     cachePath: options.providerUsageCachePath,

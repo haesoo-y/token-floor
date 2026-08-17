@@ -4,6 +4,7 @@ import { CodexSessionCollector } from "./codex-session-source.js";
 interface CodexMaintenanceOptions {
   sessionsPath?: string | undefined;
   acceptEvent: (event: NormalizedEvent) => void;
+  excludeAgents?: (agentIds: ReadonlySet<string>) => void;
   intervalMs?: number;
 }
 
@@ -13,6 +14,7 @@ export function startCodexMaintenance(options: CodexMaintenanceOptions): () => v
   const collector = new CodexSessionCollector(options.sessionsPath);
   const refresh = () => {
     for (const event of collector.poll()) options.acceptEvent(event);
+    options.excludeAgents?.(collector.hiddenAgentIds());
   };
   refresh();
   const timer = setInterval(refresh, options.intervalMs ?? 1_000);

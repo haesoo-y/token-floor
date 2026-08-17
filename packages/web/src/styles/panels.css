@@ -14,7 +14,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 4px;
-  margin: 7px;
+  margin: 0;
   padding: 4px;
   border-radius: 10px;
   background: #ffffff0b;
@@ -36,6 +36,9 @@
 }
 .ui-tabs-content:focus-visible {
   outline: none;
+}
+.ui-tabs-content[data-state="inactive"] {
+  display: none;
 }
 .panel-content {
   height: calc(100% - 56px);
@@ -118,9 +121,12 @@ dd {
   color: #7e8795;
 }
 .event-row span {
-  color: #fb923c;
+  color: #60a5fa;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.event-row.claude-code span {
+  color: #fb923c;
 }
 .event-row strong {
   color: #d4d4d8;

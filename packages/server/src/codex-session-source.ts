@@ -68,9 +68,15 @@ function decodeLines(lines: readonly string[]): Array<CodexSessionRecord | Codex
 export class CodexSessionCollector {
   private readonly cursors = new Map<string, Cursor>();
   private readonly normalizer = new CodexLifecycleNormalizer();
+  private readonly hiddenAgents = new Set<string>();
   private recovering = true;
 
   constructor(private readonly root: string) {}
+
+  /** Returns structurally identified provider-internal actors seen by this collector. */
+  hiddenAgentIds(): ReadonlySet<string> {
+    return this.hiddenAgents;
+  }
 
   poll(now = new Date()): AgentEvent[] {
     const sessions: Array<{ sourceKey: string; record: CodexSessionRecord }> = [];
@@ -83,8 +89,10 @@ export class CodexSessionCollector {
         // One locked, replaced, or concurrently deleted file must not abort the collection cycle.
       }
     }
-    for (const { sourceKey, record } of sessions)
+    for (const { sourceKey, record } of sessions) {
+      if (record.subagentKind === "guardian") this.hiddenAgents.add(`codex:${record.threadId}`);
       this.normalizer.registerSession(sourceKey, record);
+    }
     const timeline: Array<{ timestamp: string; run: () => AgentEvent[] }> = [];
     for (const { sourceKey } of sessions) {
       const cursor = this.cursors.get(sourceKey);

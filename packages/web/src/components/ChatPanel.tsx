@@ -9,13 +9,19 @@ import { truncateChatText } from "../lib/chatText.js";
 import { usageDetailValues } from "../lib/usageDetails.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs.js";
 
+export type PanelTab = "selected" | "chat" | "events";
+
 export function ChatPanel({
   selected,
   selectedUsage,
   usage,
   messages,
   events,
-  locale
+  locale,
+  activeTab,
+  minimized,
+  onTabChange,
+  onMinimizedChange
 }: {
   selected: AgentSnapshot | undefined;
   selectedUsage: "codex" | "claude-code" | undefined;
@@ -23,16 +29,51 @@ export function ChatPanel({
   messages: AgentMessageEvent[];
   events: NormalizedEvent[];
   locale: Locale;
+  activeTab: PanelTab;
+  minimized: boolean;
+  onTabChange: (tab: PanelTab) => void;
+  onMinimizedChange: (minimized: boolean) => void;
 }) {
   const usageValues = usageDetailValues(usage, locale, translate(locale, "tokenUnavailable"));
+  if (minimized) {
+    return (
+      <aside className="chat-panel is-minimized">
+        <strong>{translate(locale, "activityPanel")}</strong>
+        <button
+          type="button"
+          className="panel-toggle"
+          aria-label={translate(locale, "restorePanel")}
+          title={translate(locale, "restorePanel")}
+          onClick={() => onMinimizedChange(false)}
+        >
+          ↗
+        </button>
+      </aside>
+    );
+  }
   return (
     <aside className="chat-panel">
-      <Tabs defaultValue="selected">
-        <TabsList>
-          <TabsTrigger value="selected">{translate(locale, "selectedAgent")}</TabsTrigger>
-          <TabsTrigger value="chat">{translate(locale, "chatLog")}</TabsTrigger>
-          <TabsTrigger value="events">{translate(locale, "allEvents")}</TabsTrigger>
-        </TabsList>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => onTabChange(value as PanelTab)}
+        className="panel-tabs"
+      >
+        <div className="panel-toolbar">
+          <TabsList>
+            <TabsTrigger value="selected">{translate(locale, "selectedAgent")}</TabsTrigger>
+            <TabsTrigger value="chat">{translate(locale, "chatLog")}</TabsTrigger>
+            <TabsTrigger value="events">{translate(locale, "allEvents")}</TabsTrigger>
+          </TabsList>
+          <button
+            type="button"
+            className="panel-toggle"
+            aria-label={translate(locale, "minimizePanel")}
+            title={translate(locale, "minimizePanel")}
+            onClick={() => onMinimizedChange(true)}
+          >
+            −
+          </button>
+        </div>
         <TabsContent value="selected" className="panel-content">
           {selected ? (
             <>
@@ -119,7 +160,7 @@ export function ChatPanel({
             <p className="empty">Waiting for the next event…</p>
           ) : (
             events.map((event) => (
-              <div className="event-row" key={event.eventId}>
+              <div className={`event-row ${event.provider}`} key={event.eventId}>
                 <time>{new Date(event.occurredAt).toLocaleTimeString()}</time>
                 <span>{event.provider}</span>
                 <strong>{event.type}</strong>

@@ -27,6 +27,12 @@ function meta(id: string, kind: "main" | "subagent" = "main") {
   };
 }
 
+function guardianMeta(id: string) {
+  const record = meta(id, "subagent");
+  record.payload.source = { subagent: { other: "guardian" } };
+  return record;
+}
+
 function line(value: unknown): string {
   return `${JSON.stringify(value)}\n`;
 }
@@ -76,6 +82,31 @@ describe("CodexSessionCollector", () => {
       type: "agent.message",
       message: { role: "assistant", text: "The panel now includes the chat log." }
     });
+  });
+
+  it("excludes guardian sessions and subagent orchestration prompts", () => {
+    const directory = root();
+    fs.writeFileSync(
+      path.join(directory, "guardian.jsonl"),
+      line(guardianMeta("guardian")) +
+        line(task("task_started")) +
+        line(message("user_message", "Internal approval transcript")) +
+        line(message("agent_message", "Internal approval result"))
+    );
+    fs.writeFileSync(
+      path.join(directory, "worker.jsonl"),
+      line(meta("worker", "subagent")) +
+        line(message("user_message", "Internal delegation prompt")) +
+        line(message("agent_message", "Worker-visible result"))
+    );
+    const collector = new CodexSessionCollector(directory);
+    const events = collector.poll(new Date(at));
+
+    expect(events.some((event) => event.agent.id === "codex:guardian")).toBe(false);
+    expect(
+      events.some((event) => event.type === "agent.message" && event.agent.id === "codex:worker")
+    ).toBe(true);
+    expect(collector.hiddenAgentIds()).toContain("codex:guardian");
   });
 
   it("recovers an already completed execution after restart", () => {

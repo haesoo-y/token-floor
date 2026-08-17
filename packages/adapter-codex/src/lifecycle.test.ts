@@ -50,6 +50,21 @@ describe("Codex lifecycle decoding", () => {
     ).toMatchObject({ type: "message", role: "user", text: "Please update it." });
   });
 
+  it("identifies provider-internal guardian sessions from structural metadata", () => {
+    expect(
+      decodeCodexRecord({
+        type: "session_meta",
+        timestamp: at,
+        payload: {
+          id: "guardian-thread",
+          timestamp: at,
+          cwd: "/workspace/token-floor",
+          source: { subagent: { other: "guardian" } }
+        }
+      })
+    ).toMatchObject({ type: "session", kind: "subagent", subagentKind: "guardian" });
+  });
+
   it("distinguishes permission waits from ordinary local tool activity", () => {
     const permission = decodeCodexRecord({
       type: "response_item",
@@ -119,6 +134,28 @@ describe("Codex lifecycle normalization", () => {
     expect(event.type).toBe("agent.message");
     expect(event).not.toHaveProperty("payload");
     if (event.type === "agent.message") expect(event.message.text.length).toBeLessThanOrEqual(200);
+  });
+
+  it("hides guardian activity and subagent orchestration prompts", () => {
+    const normalizer = new CodexLifecycleNormalizer();
+    normalizer.registerSession("guardian", {
+      ...main,
+      threadId: "guardian-thread",
+      kind: "subagent",
+      subagentKind: "guardian"
+    });
+    normalizer.registerSession("worker", {
+      ...main,
+      threadId: "worker-thread",
+      kind: "subagent"
+    });
+    const prompt = { type: "message" as const, timestamp: at, role: "user" as const, text: "Run" };
+    expect(normalizer.sessionStarted("guardian")).toBeUndefined();
+    expect(normalizer.normalize("guardian", prompt)).toEqual([]);
+    expect(normalizer.normalize("worker", prompt)).toEqual([]);
+    expect(
+      normalizer.normalize("worker", { ...prompt, role: "assistant", text: "Done" })[0]?.type
+    ).toBe("agent.message");
   });
 
   it("keeps local tool work active and returns to active when a user wait finishes", () => {
