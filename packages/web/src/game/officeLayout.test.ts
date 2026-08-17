@@ -29,12 +29,12 @@ describe("office layout", () => {
       "workspace",
       "meeting-passage",
       "lounge-passage",
-      "future",
+      "executive-codex",
+      "executive-claude",
       "meeting-right",
       "meeting-lounge-passage",
       "lounge",
-      "executive-codex",
-      "executive-claude"
+      "future"
     ]);
     expect(officeRooms.find((room) => room.id === "workspace")).toMatchObject({
       width: 288,
@@ -46,7 +46,12 @@ describe("office layout", () => {
     });
     expect(officeRooms.find((room) => room.id === "future")).toMatchObject({ height: 128 });
     expect(officeRooms.find((room) => room.id === "executive-codex")).toMatchObject({
+      x: 112,
       height: 128
+    });
+    expect(officeRooms.find((room) => room.id === "future")).toMatchObject({
+      x: 416,
+      width: 256
     });
   });
 
@@ -66,7 +71,7 @@ describe("office layout", () => {
   });
 
   it("keeps the Claude title eight pixels clear of the executive divider", () => {
-    const divider = officeWalls.find((wall) => wall.x === 536 && wall.width === WALL_SIZE)!;
+    const divider = officeWalls.find((wall) => wall.x === 232 && wall.width === WALL_SIZE)!;
     const label = officeLabels.find((candidate) => candidate.roomId === "executive-claude")!;
     expect(label.x - (divider.x + divider.width)).toBe(8);
   });
@@ -157,9 +162,9 @@ describe("office layout", () => {
     );
   });
 
-  it("keeps both executive offices inaccessible from the lounge", () => {
-    expect(resolveMovement({ x: 464, y: 299 }, { x: 0, y: 6 }, bounds, collisionObstacles)).toEqual(
-      { x: 464, y: 299 }
+  it("keeps both executive offices inaccessible from the workspace", () => {
+    expect(resolveMovement({ x: 176, y: 299 }, { x: 0, y: 6 }, bounds, collisionObstacles)).toEqual(
+      { x: 176, y: 299 }
     );
   });
 

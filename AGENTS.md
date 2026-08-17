@@ -60,7 +60,7 @@
 ## Office Layout and Density
 
 - Design compact rooms so the player can see nearby agents without traversing large empty areas.
-- The current compact office has workspace only on the upper left, an intentionally empty future zone on the lower left, one meeting room on the upper right, coffee lounge at the middle right, and the executive suite at the lower right.
+- The current compact office has workspace on the upper left, the sealed executive suite on the lower left, one meeting room on the upper right, coffee lounge at the middle right, and an intentionally empty future zone on the lower right.
 - Split the executive suite into two sealed offices. They have no player passage, contain no decorative doors, and hold one usage NPC per provider.
 - Place usage NPCs inside the executive office, not in a generic open usage area.
 - Keep the meeting room furnished with a meeting table, a whiteboard, and limited plants.
