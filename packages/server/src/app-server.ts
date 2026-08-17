@@ -8,10 +8,13 @@ import {
   type OfficeState
 } from "@token-floor/protocol";
 import { WebSocketServer } from "ws";
+import { startAgentMaintenance } from "./agent-maintenance.js";
 import { ingestClaudeHook } from "./claude-ingestion.js";
 import { startClaudeMaintenance } from "./claude-maintenance.js";
 import { removeUnobservedClaudeAgents } from "./claude-state-migration.js";
 import { ingestClaudeUsage } from "./claude-usage-ingestion.js";
+import { startCodexMaintenance } from "./codex-maintenance.js";
+import { removeLegacyCodexAgents } from "./codex-state-migration.js";
 import type { EventStore } from "./event-store.js";
 import { createHealthPayload } from "./health.js";
 import { sendJson } from "./json-response.js";
@@ -49,6 +52,7 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
   let state: OfficeState = seed.reduce(applyEvent, createOfficeState());
   state = pruneCompletedAgents(state, new Date());
   state = removeUnobservedClaudeAgents(state, restored);
+  if (restored.length > 0) state = removeLegacyCodexAgents(state);
   const claudeRegistry = ClaudeSubagentRegistry.fromEvents(restored);
   let step = 0;
   const sockets = new WebSocketServer({ noServer: true });
@@ -64,6 +68,11 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
     broadcast(event);
   };
   const acceptRecoveredEvent = (event: NormalizedEvent) => {
+    if (
+      event.type === "agent.message" &&
+      state.messages.some((message) => message.eventId === event.eventId)
+    )
+      return;
     const before =
       event.type === "usage.updated"
         ? state.usageByProvider[event.provider]
@@ -73,7 +82,7 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
       event.type === "usage.updated"
         ? next.usageByProvider[event.provider]
         : next.agents[event.agent.id];
-    if (JSON.stringify(before) === JSON.stringify(after)) return;
+    if (event.type !== "agent.message" && JSON.stringify(before) === JSON.stringify(after)) return;
     state = next;
     options.eventStore?.append(event);
     broadcast(event);
@@ -134,13 +143,33 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
         }, 3_500);
   const stopClaudeMaintenance = startClaudeMaintenance({
     getState: () => state,
+    projectsPath: options.claudeProjectsPath,
+    acceptRecoveredEvent
+  });
+  const stopAgentMaintenance = startAgentMaintenance({
+    getState: () => state,
     setState: (next) => {
       state = next;
     },
-    registry: claudeRegistry,
-    projectsPath: options.claudeProjectsPath,
-    acceptRecoveredEvent,
-    broadcastSnapshot
+    broadcastSnapshot,
+    onChange: (previous, next) => {
+      for (const [id, agent] of Object.entries(next.agents)) {
+        const before = previous.agents[id];
+        if (
+          before?.status === "active" &&
+          agent.status === "completed" &&
+          agent.provider === "claude-code" &&
+          agent.kind === "subagent" &&
+          agent.executionId
+        ) {
+          claudeRegistry.release(agent.sessionId, agent.executionId);
+        }
+      }
+    }
+  });
+  const stopCodexMaintenance = startCodexMaintenance({
+    sessionsPath: options.codexSessionsPath,
+    acceptEvent: acceptRecoveredEvent
   });
   const stopProviderUsageMaintenance = startProviderUsageMaintenance({
     cachePath: options.providerUsageCachePath,
@@ -156,6 +185,8 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
       new Promise((resolve, reject) => {
         if (timer) clearInterval(timer);
         stopClaudeMaintenance();
+        stopAgentMaintenance();
+        stopCodexMaintenance();
         stopProviderUsageMaintenance();
         sockets.close();
         server.close((error) => {

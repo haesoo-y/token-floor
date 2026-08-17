@@ -21,25 +21,27 @@ describe("actor motion", () => {
   it("routes completed agents through the narrow room passage", () => {
     const route = routeForAgent({ status: "completed" } as AgentSnapshot, 0);
     expect(route).toEqual([
-      { x: 384, y: 256 },
-      { x: 432, y: 256 },
-      { x: 448, y: 256 }
+      { x: 416, y: 256 },
+      { x: 464, y: 256 },
+      { x: 528, y: 256 }
     ]);
   });
 
   it("routes reactivated agents from the lounge back through the open passage", () => {
     const agent = { status: "active", kind: "main" } as AgentSnapshot;
-    expect(routeForAgent(agent, 0, { x: 544, y: 288 })).toEqual([
-      { x: 432, y: 256 },
-      { x: 384, y: 256 },
+    expect(routeForAgent(agent, 0, { x: 592, y: 288 })).toEqual([
+      { x: 464, y: 288 },
+      { x: 416, y: 288 },
       { x: 144, y: 128 }
     ]);
   });
 
-  it("stagger completed agents while they cross the shared passage", () => {
-    const agent = { status: "completed" } as AgentSnapshot;
-    const passageYs = [0, 1, 2, 3].map((index) => routeForAgent(agent, index)[0]?.y);
-    expect(passageYs).toEqual([256, 288, 256, 288]);
+  it("uses separate one-way lanes for lounge entry and exit", () => {
+    const completed = { status: "completed" } as AgentSnapshot;
+    const active = { status: "active", kind: "main" } as AgentSnapshot;
+
+    expect(routeForAgent(completed, 3)[0]?.y).toBe(256);
+    expect(routeForAgent(active, 3, { x: 544, y: 288 })[0]?.y).toBe(288);
   });
 
   it("gives subagents distinct direct destinations at the shared table", () => {
@@ -60,26 +62,26 @@ describe("actor motion", () => {
   });
 
   it("uses one horizontal direction between lounge seats without a center-point reversal", () => {
-    expect(routeToRestSpot({ x: 432, y: 288 }, { x: 624, y: 288 })).toEqual([
-      { x: 432, y: 256 },
-      { x: 624, y: 256 },
-      { x: 624, y: 288 }
+    expect(routeToRestSpot({ x: 464, y: 288 }, { x: 672, y: 288 })).toEqual([
+      { x: 464, y: 256 },
+      { x: 672, y: 256 },
+      { x: 672, y: 288 }
     ]);
   });
 
   it("routes subagents directly instead of reversing near their work spot", () => {
     const agent = { status: "active", kind: "subagent" } as AgentSnapshot;
-    expect(routeForAgent(agent, 1)).toEqual([{ x: 208, y: 256 }]);
+    expect(routeForAgent(agent, 1)).toEqual([{ x: 192, y: 256 }]);
   });
 
-  it("uses one of the two open entrance lanes when replanning from outside the lounge", () => {
-    expect(routeToRestSpot({ x: 384, y: 224 }, { x: 544, y: 256 }, 224).slice(0, 2)).toEqual([
-      { x: 384, y: 256 },
-      { x: 432, y: 256 }
+  it("keeps replanned lounge entry on the inbound passage lane", () => {
+    expect(routeToRestSpot({ x: 416, y: 224 }, { x: 592, y: 256 }, 224).slice(0, 2)).toEqual([
+      { x: 416, y: 256 },
+      { x: 464, y: 256 }
     ]);
-    expect(routeToRestSpot({ x: 384, y: 288 }, { x: 544, y: 256 }, 288).slice(0, 2)).toEqual([
-      { x: 384, y: 288 },
-      { x: 432, y: 288 }
+    expect(routeToRestSpot({ x: 416, y: 288 }, { x: 592, y: 256 }, 288).slice(0, 2)).toEqual([
+      { x: 416, y: 256 },
+      { x: 464, y: 256 }
     ]);
   });
 
@@ -104,7 +106,7 @@ describe("actor motion", () => {
 
   it("varies horizontal lounge lanes between visits", () => {
     const routes = Array.from({ length: 8 }, (_, visit) =>
-      routeToNextRestSpot({ x: 448, y: 256 }, "agent-a", visit, [{ x: 448, y: 256 }])
+      routeToNextRestSpot({ x: 528, y: 256 }, "agent-a", visit, [{ x: 528, y: 256 }])
     );
     const laneYs = routes.map((route) => route[0]?.y);
 

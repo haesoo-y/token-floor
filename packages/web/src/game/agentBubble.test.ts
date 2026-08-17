@@ -18,4 +18,17 @@ describe("agent bubble placement", () => {
       bubble: "Running tests"
     });
   });
+
+  it("prefers the latest assistant message and truncates it to fifty characters", () => {
+    const active = {
+      status: "active",
+      activity: { summary: "Using a local tool" },
+      lastMessage: { role: "assistant", text: "가".repeat(60) }
+    } as AgentSnapshot;
+    const bubble = agentBubbleProps("ko", active, { x: 304, y: 192 }, false).bubble!;
+
+    expect(Array.from(bubble)).toHaveLength(50);
+    expect(bubble.endsWith("...")).toBe(true);
+    expect(bubble).not.toContain("Using a local tool");
+  });
 });

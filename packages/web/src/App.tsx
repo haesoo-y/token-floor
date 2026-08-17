@@ -89,6 +89,7 @@ export function App() {
           selected={selected}
           selectedUsage={selectedUsage}
           usage={selectedUsage ? state.usageByProvider[selectedUsage] : undefined}
+          messages={state.messages ?? []}
           events={events}
           locale={locale}
         />

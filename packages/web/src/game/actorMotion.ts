@@ -16,6 +16,9 @@ export interface MotionStep {
   reached: boolean;
 }
 
+const LOUNGE_ENTRY_Y = PASSAGE_Y - 16;
+const LOUNGE_EXIT_Y = PASSAGE_Y + 16;
+
 /** Finishes the horizontal leg before the vertical leg to avoid rapid staircase motion. */
 export function moveToward(
   current: Point,
@@ -40,18 +43,16 @@ export function moveToward(
 export function routeForAgent(agent: AgentSnapshot, index: number, current?: Point): Point[] {
   const destination = spotForAgent(agent, index);
   if (agent.status === "completed") {
-    const passageY = PASSAGE_Y - 16 + (index % 2) * 32;
     return [
-      { x: LOUNGE_PASSAGE.left, y: passageY },
-      { x: LOUNGE_PASSAGE.right, y: passageY },
-      ...routeToRestSpot({ x: LOUNGE_PASSAGE.right, y: passageY }, destination, passageY)
+      { x: LOUNGE_PASSAGE.left, y: LOUNGE_ENTRY_Y },
+      { x: LOUNGE_PASSAGE.right, y: LOUNGE_ENTRY_Y },
+      ...routeToRestSpot({ x: LOUNGE_PASSAGE.right, y: LOUNGE_ENTRY_Y }, destination)
     ];
   }
   if (current && isLoungePoint(current)) {
-    const passageY = PASSAGE_Y - 16 + (index % 2) * 32;
     return [
-      { x: LOUNGE_PASSAGE.right, y: passageY },
-      { x: LOUNGE_PASSAGE.left, y: passageY },
+      { x: LOUNGE_PASSAGE.right, y: LOUNGE_EXIT_Y },
+      { x: LOUNGE_PASSAGE.left, y: LOUNGE_EXIT_Y },
       destination
     ];
   }
@@ -101,8 +102,10 @@ export function routeToRestSpot(
   const route: Point[] = [];
   let start = current;
   if (current.x < LOUNGE_PASSAGE.right) {
-    const entranceY = laneY > PASSAGE_Y ? PASSAGE_Y + 16 : PASSAGE_Y - 16;
-    route.push({ x: LOUNGE_PASSAGE.left, y: entranceY }, { x: LOUNGE_PASSAGE.right, y: entranceY });
+    route.push(
+      { x: LOUNGE_PASSAGE.left, y: LOUNGE_ENTRY_Y },
+      { x: LOUNGE_PASSAGE.right, y: LOUNGE_ENTRY_Y }
+    );
     start = route.at(-1)!;
   }
   if (start.y !== laneY) route.push({ x: start.x, y: laneY });

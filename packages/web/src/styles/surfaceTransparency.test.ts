@@ -20,7 +20,10 @@ describe("overlay transparency", () => {
     expect(combined).toContain("background: var(--label)");
 
     const chatPanelRule = readStyle("panels").match(/\.chat-panel\s*\{([^}]+)\}/)?.[1] ?? "";
+    expect(chatPanelRule).toContain("width: min(468px, calc(100vw - 36px))");
+    expect(chatPanelRule).toContain("height: min(600px, calc(100vh - 120px))");
     expect(chatPanelRule).not.toContain("backdrop-filter");
     expect(chatPanelRule).not.toContain("box-shadow");
+    expect(readStyle("panels")).toContain(".chat-row.assistant.claude-code strong");
   });
 });

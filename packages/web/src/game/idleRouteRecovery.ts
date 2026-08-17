@@ -11,7 +11,7 @@ interface RecoverableIdleActor extends MovingActor {
 
 const BLOCKED_ROUTE_RECOVERY_MS = 350;
 
-/** Replans an idle agent that stopped against a changed wall or a congested entrance. */
+/** Replans a completed agent stalled by a static layout change. */
 export function recoverBlockedIdleRoute(
   actor: RecoverableIdleActor,
   delta: number,
@@ -25,7 +25,8 @@ export function recoverBlockedIdleRoute(
   if (actor.blockedMs < BLOCKED_ROUTE_RECOVERY_MS) return false;
 
   const current = { x: actor.avatar.container.x, y: actor.avatar.container.y };
-  const unavailable = reservedRestSpots(actor, actors);
+  const actorList = [...actors];
+  const unavailable = reservedRestSpots(actor, actorList);
   replaceRoute(actor, routeToNextRestSpot(current, actor.snapshot.id, actor.visit, unavailable));
   actor.blockedMs = 0;
   return true;

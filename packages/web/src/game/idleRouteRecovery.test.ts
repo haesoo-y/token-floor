@@ -11,8 +11,8 @@ type TestIdleActor = MovingActor & {
 
 function blockedActor(): TestIdleActor {
   return {
-    avatar: { container: { x: 384, y: 224 } },
-    route: [{ x: 432, y: 224 }],
+    avatar: { container: { x: 416, y: 224 } },
+    route: [{ x: 464, y: 224 }],
     waypoint: 0,
     moving: false,
     snapshot: { id: "idle-agent", status: "completed" } as AgentSnapshot,
@@ -27,7 +27,7 @@ describe("idle route recovery", () => {
 
     expect(recoverBlockedIdleRoute(actor, 349, [actor])).toBe(false);
     expect(recoverBlockedIdleRoute(actor, 1, [actor])).toBe(true);
-    expect(actor.route[0]?.x).toBe(384);
+    expect(actor.route[0]?.x).toBe(416);
     expect([256, 288]).toContain(actor.route[0]?.y);
     expect(actor.waypoint).toBe(0);
   });

@@ -3,6 +3,7 @@ import type { Locale } from "../lib/i18n.js";
 import type { Point } from "../lib/movement.js";
 import { isLoungePoint } from "./officeLayout.js";
 import { agentSpeech } from "./officeSpeech.js";
+import { truncateChatText } from "../lib/chatText.js";
 
 /** Keeps scripted idle dialogue in the lounge while preserving task-status speech at work spots. */
 export function agentBubbleProps(
@@ -12,7 +13,9 @@ export function agentBubbleProps(
   isScheduledSpeaker: boolean,
   idle?: string
 ): { bubble?: string } {
-  if (agent.status !== "completed") return { bubble: agentSpeech(locale, agent, idle) };
+  if (agent.status !== "completed") {
+    return { bubble: truncateChatText(agentSpeech(locale, agent, idle), 50) };
+  }
   if (!isScheduledSpeaker || !isLoungePoint(point)) return {};
-  return { bubble: agentSpeech(locale, agent, idle) };
+  return { bubble: truncateChatText(agentSpeech(locale, agent, idle), 50) };
 }

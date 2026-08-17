@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { usageNpcOverlay } from "./AgentDirector.js";
+import { usageNpcOverlay } from "./usageNpcOverlay.js";
 
 describe("usage NPC overlays", () => {
   it.each(["codex", "claude-code"] as const)("keeps %s free of speech bubbles", (provider) => {

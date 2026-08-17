@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { recoverClaudeTranscript } from "@token-floor/adapter-claude";
+import {
+  recoverClaudeTranscript,
+  recoverClaudeTranscriptMessages
+} from "@token-floor/adapter-claude";
 import type { AgentEvent } from "@token-floor/protocol";
 
 const DEFAULT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
@@ -46,18 +49,24 @@ function readTail(filename: string): string {
   }
 }
 
-/** Recovers recent main-session metadata without retaining transcript message content. */
+/** Recovers recent main-session lifecycle and bounded visible chat from local transcripts. */
 export function recoverClaudeProjectTranscripts(
   root: string,
   now = new Date(),
   lookbackMs = DEFAULT_LOOKBACK_MS
 ): AgentEvent[] {
-  return recentJsonlFiles(root, now, lookbackMs).flatMap((filename) => {
+  const events = recentJsonlFiles(root, now, lookbackMs).flatMap((filename) => {
     try {
-      const event = recoverClaudeTranscript(readTail(filename), now);
-      return event ? [event] : [];
+      const content = readTail(filename);
+      const event = recoverClaudeTranscript(content, now);
+      return [...recoverClaudeTranscriptMessages(content), ...(event ? [event] : [])];
     } catch {
       return [];
     }
   });
+  const messages = events
+    .filter((event) => event.type === "agent.message")
+    .sort((left, right) => left.occurredAt.localeCompare(right.occurredAt))
+    .slice(-100);
+  return [...messages, ...events.filter((event) => event.type !== "agent.message")];
 }

@@ -3,6 +3,7 @@ import { EVENT_SCHEMA_VERSION, type NormalizedEvent } from "./model.js";
 const agentTypes = new Set([
   "agent.started",
   "agent.active",
+  "agent.message",
   "agent.waiting",
   "agent.completed",
   "agent.failed"
@@ -45,6 +46,13 @@ function hasAgentFields(value: Record<string, unknown>): boolean {
 
 function hasTypePayload(value: Record<string, unknown>): boolean {
   if (value.type === "agent.active") return isRecord(value.activity);
+  if (value.type === "agent.message") {
+    return (
+      isRecord(value.message) &&
+      (value.message.role === "user" || value.message.role === "assistant") &&
+      hasString(value.message, "text")
+    );
+  }
   if (value.type === "agent.waiting") {
     return value.reason === "input" || value.reason === "permission";
   }

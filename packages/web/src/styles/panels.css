@@ -3,8 +3,8 @@
   z-index: 7;
   right: 18px;
   bottom: 18px;
-  width: 390px;
-  height: 300px;
+  width: min(468px, calc(100vw - 36px));
+  height: min(600px, calc(100vh - 120px));
   overflow: hidden;
   border: 1px solid #ffffff24;
   border-radius: 14px;
@@ -12,7 +12,7 @@
 }
 .ui-tabs-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin: 7px;
   padding: 4px;
@@ -38,7 +38,7 @@
   outline: none;
 }
 .panel-content {
-  height: 244px;
+  height: calc(100% - 56px);
   padding: 13px 16px 17px;
   overflow: auto;
 }
@@ -124,4 +124,38 @@ dd {
 }
 .event-row strong {
   color: #d4d4d8;
+}
+.chat-log {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.chat-row {
+  padding: 9px 10px;
+  border: 1px solid #ffffff12;
+  border-radius: 8px;
+  background: #ffffff08;
+}
+.chat-row header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #8f98a7;
+  font-size: 10px;
+}
+.chat-row.assistant strong {
+  color: #60a5fa;
+}
+.chat-row.assistant.claude-code strong {
+  color: #fb923c;
+}
+.chat-row.user strong {
+  color: #f8fafc;
+}
+.chat-row p {
+  margin: 6px 0 0;
+  color: #d4d4d8;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }

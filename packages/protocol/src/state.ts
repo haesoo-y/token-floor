@@ -1,4 +1,11 @@
-import type { AgentEvent, AgentStatus, NormalizedEvent, UsageUpdatedEvent } from "./model.js";
+import type {
+  AgentChatMessage,
+  AgentEvent,
+  AgentMessageEvent,
+  AgentStatus,
+  NormalizedEvent,
+  UsageUpdatedEvent
+} from "./model.js";
 import { isAgentEvent } from "./model.js";
 
 export const DEFAULT_COMPLETION_TIMEOUT_MS = 5 * 60 * 1000;
@@ -18,6 +25,7 @@ export interface AgentSnapshot {
   lastEventAt: string;
   inferredCompletion: boolean;
   activity?: { tool?: string; summary?: string };
+  lastMessage?: AgentChatMessage;
   waitReason?: "input" | "permission";
   error?: { code?: string; message: string };
 }
@@ -27,10 +35,19 @@ export type UsageSnapshot = UsageUpdatedEvent["usage"] & { checkedAt: string };
 export interface OfficeState {
   agents: Record<string, AgentSnapshot>;
   usageByProvider: Record<string, UsageSnapshot>;
+  messages: AgentMessageEvent[];
+  recentEvents: NormalizedEvent[];
 }
 
 export function createOfficeState(): OfficeState {
-  return { agents: {}, usageByProvider: {} };
+  return { agents: {}, usageByProvider: {}, messages: [], recentEvents: [] };
+}
+
+function recordRecentEvent(state: OfficeState, event: NormalizedEvent): OfficeState {
+  if (event.type === "agent.message") return state;
+  const recentEvents = state.recentEvents ?? [];
+  if (recentEvents.some((recent) => recent.eventId === event.eventId)) return state;
+  return { ...state, recentEvents: [event, ...recentEvents].slice(0, 50) };
 }
 
 function statusFor(event: AgentEvent): AgentStatus {
@@ -40,7 +57,10 @@ function statusFor(event: AgentEvent): AgentStatus {
   return "active";
 }
 
-function projectAgent(event: AgentEvent): AgentSnapshot {
+function projectAgent(
+  event: Exclude<AgentEvent, AgentMessageEvent>,
+  previous?: AgentSnapshot
+): AgentSnapshot {
   const base: AgentSnapshot = {
     id: event.agent.id,
     sessionId: event.sessionId,
@@ -58,6 +78,7 @@ function projectAgent(event: AgentEvent): AgentSnapshot {
   if (event.type === "agent.active") base.activity = event.activity;
   if (event.type === "agent.waiting") base.waitReason = event.reason;
   if (event.type === "agent.failed") base.error = event.error;
+  if (previous?.lastMessage) base.lastMessage = previous.lastMessage;
 
   // Each event is a full projection, so stale wait, error, and activity details are discarded.
   return base;
@@ -70,20 +91,44 @@ function projectAgent(event: AgentEvent): AgentSnapshot {
  */
 export function applyEvent(state: OfficeState, event: NormalizedEvent): OfficeState {
   if (!isAgentEvent(event)) {
+    return recordRecentEvent(
+      {
+        ...state,
+        usageByProvider: {
+          ...state.usageByProvider,
+          [event.provider]: { ...event.usage, checkedAt: event.occurredAt }
+        }
+      },
+      event
+    );
+  }
+  if (event.type === "agent.message") {
+    const messages = state.messages ?? [];
+    if (messages.some((message) => message.eventId === event.eventId)) return state;
+    const previous = state.agents[event.agent.id];
+    const agents = { ...state.agents };
+    if (previous && event.message.role === "assistant") {
+      agents[event.agent.id] = { ...previous, lastMessage: event.message };
+    } else if (previous) {
+      const withoutLastMessage = { ...previous };
+      delete withoutLastMessage.lastMessage;
+      agents[event.agent.id] = withoutLastMessage;
+    }
     return {
       ...state,
-      usageByProvider: {
-        ...state.usageByProvider,
-        [event.provider]: { ...event.usage, checkedAt: event.occurredAt }
-      }
+      agents,
+      messages: [event, ...messages].slice(0, 100)
     };
   }
   const previous = state.agents[event.agent.id];
   if (previous && Date.parse(previous.lastEventAt) > Date.parse(event.occurredAt)) return state;
-  return {
-    ...state,
-    agents: { ...state.agents, [event.agent.id]: projectAgent(event) }
-  };
+  return recordRecentEvent(
+    {
+      ...state,
+      agents: { ...state.agents, [event.agent.id]: projectAgent(event, previous) }
+    },
+    event
+  );
 }
 
 /**
@@ -122,5 +167,9 @@ export function pruneCompletedAgents(
   );
   return Object.keys(agents).length === Object.keys(state.agents).length
     ? state
-    : { ...state, agents };
+    : {
+        ...state,
+        agents,
+        messages: (state.messages ?? []).filter((message) => agents[message.agent.id])
+      };
 }

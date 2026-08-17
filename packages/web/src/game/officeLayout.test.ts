@@ -6,11 +6,13 @@ import {
   collisionObstacles,
   GRID_SIZE,
   isLoungePoint,
+  LOUNGE_PASSAGE,
   mainWorkSpots,
   officeLabels,
   officeProps,
   officeRooms,
   officeWalls,
+  OFFICE_WIDTH,
   PLAYER_BOUNDS,
   restSpots,
   spawnSpotForAgent,
@@ -21,7 +23,7 @@ import {
 
 const main = { status: "active", kind: "main" } as AgentSnapshot;
 const sub = { status: "active", kind: "subagent" } as AgentSnapshot;
-const bounds = { minX: 0, maxX: 832, minY: 0, maxY: 528 };
+const bounds = { minX: 0, maxX: OFFICE_WIDTH, minY: 0, maxY: 528 };
 
 describe("office layout", () => {
   it("defines wider rooms and textured room passages", () => {
@@ -37,21 +39,26 @@ describe("office layout", () => {
       "future"
     ]);
     expect(officeRooms.find((room) => room.id === "workspace")).toMatchObject({
-      width: 288,
+      width: 320,
       height: 240
     });
     expect(officeRooms.find((room) => room.id === "meeting-right")).toMatchObject({
-      width: 256,
-      height: 128
+      width: 288,
+      height: 96
     });
+    expect(officeRooms.find((room) => room.id === "lounge")).toMatchObject({ height: 128 });
     expect(officeRooms.find((room) => room.id === "future")).toMatchObject({ height: 128 });
     expect(officeRooms.find((room) => room.id === "executive-codex")).toMatchObject({
       x: 112,
+      width: 160,
       height: 128
     });
+    expect(officeRooms.find((room) => room.id === "executive-claude")).toMatchObject({
+      width: 160
+    });
     expect(officeRooms.find((room) => room.id === "future")).toMatchObject({
-      x: 416,
-      width: 256
+      x: 448,
+      width: 288
     });
   });
 
@@ -71,7 +78,7 @@ describe("office layout", () => {
   });
 
   it("keeps the Claude title eight pixels clear of the executive divider", () => {
-    const divider = officeWalls.find((wall) => wall.x === 232 && wall.width === WALL_SIZE)!;
+    const divider = officeWalls.find((wall) => wall.x === 264 && wall.width === WALL_SIZE)!;
     const label = officeLabels.find((candidate) => candidate.roomId === "executive-claude")!;
     expect(label.x - (divider.x + divider.width)).toBe(8);
   });
@@ -98,19 +105,20 @@ describe("office layout", () => {
 
   it("keeps passage textures inside their destination rooms without cross-floor overlap", () => {
     expect(officeRooms.find((room) => room.id === "meeting-passage")).toMatchObject({
-      x: 400,
+      x: 432,
+      y: 96,
       texture: "floor-passage"
     });
     expect(officeRooms.find((room) => room.id === "lounge-passage")).toMatchObject({
-      x: 400,
+      x: 432,
       y: 240,
       height: 64,
       texture: "floor-lounge"
     });
     expect(officeRooms.find((room) => room.id === "meeting-lounge-passage")).toMatchObject({
-      x: 448,
-      y: 192,
-      width: 192,
+      x: 480,
+      y: 160,
+      width: 224,
       height: 16,
       texture: "floor-lounge"
     });
@@ -133,7 +141,7 @@ describe("office layout", () => {
   it("removes the meeting-room plant and moves the larger whiteboard to the upper right", () => {
     expect(officeProps.some((prop) => prop.id === "meeting-plant")).toBe(false);
     expect(officeProps.find((prop) => prop.id === "whiteboard")).toMatchObject({
-      x: 624,
+      x: 672,
       y: 96,
       width: 64,
       height: 48
@@ -143,12 +151,18 @@ describe("office layout", () => {
   it("assigns stable work and lounge destinations", () => {
     expect(spotForAgent(main, 0)).toEqual({ x: 144, y: 128 });
     expect(spotForAgent(sub, 0)).toEqual({ x: 144, y: 256 });
-    expect(spotForAgent({ ...main, status: "completed" }, 0)).toEqual({ x: 448, y: 256 });
+    expect(spotForAgent({ ...main, status: "completed" }, 0)).toEqual({ x: 528, y: 256 });
   });
 
-  it("keeps four unique destinations for main and subagents", () => {
-    expect(new Set(mainWorkSpots.map((spot) => JSON.stringify(spot))).size).toBe(4);
-    expect(new Set(subagentWorkSpots.map((spot) => JSON.stringify(spot))).size).toBe(4);
+  it("keeps eighteen unique destinations for each active role", () => {
+    expect(new Set(mainWorkSpots.map((spot) => JSON.stringify(spot))).size).toBe(18);
+    expect(new Set(subagentWorkSpots.map((spot) => JSON.stringify(spot))).size).toBe(18);
+    expect(new Set(restSpots.map((spot) => JSON.stringify(spot))).size).toBe(restSpots.length);
+  });
+
+  it("gives thirty simultaneous actors distinct spawn positions", () => {
+    const spawns = Array.from({ length: 30 }, (_, index) => spawnSpotForAgent(index));
+    expect(new Set(spawns.map((spot) => JSON.stringify(spot))).size).toBe(30);
   });
 
   it("retains the meeting-table collision without a workstation collision", () => {
@@ -157,56 +171,56 @@ describe("office layout", () => {
       x: workSpot.x + 5,
       y: workSpot.y
     });
-    expect(resolveMovement({ x: 475, y: 144 }, { x: 5, y: 0 }, bounds, collisionObstacles)).toEqual(
-      { x: 475, y: 144 }
+    expect(resolveMovement({ x: 523, y: 112 }, { x: 5, y: 0 }, bounds, collisionObstacles)).toEqual(
+      { x: 523, y: 112 }
     );
   });
 
   it("keeps both executive offices inaccessible from the workspace", () => {
-    expect(resolveMovement({ x: 176, y: 299 }, { x: 0, y: 6 }, bounds, collisionObstacles)).toEqual(
-      { x: 176, y: 299 }
+    expect(resolveMovement({ x: 192, y: 299 }, { x: 0, y: 6 }, bounds, collisionObstacles)).toEqual(
+      { x: 192, y: 299 }
     );
   });
 
   it("provides an office-to-meeting passage while adjacent wall remains solid", () => {
     expect(
-      resolveMovement({ x: 395, y: 160 }, { x: 10, y: 0 }, bounds, collisionObstacles)
-    ).toEqual({ x: 405, y: 160 });
-    expect(resolveMovement({ x: 395, y: 96 }, { x: 10, y: 0 }, bounds, collisionObstacles)).toEqual(
-      { x: 395, y: 96 }
+      resolveMovement({ x: 427, y: 128 }, { x: 10, y: 0 }, bounds, collisionObstacles)
+    ).toEqual({ x: 437, y: 128 });
+    expect(resolveMovement({ x: 427, y: 80 }, { x: 10, y: 0 }, bounds, collisionObstacles)).toEqual(
+      { x: 427, y: 80 }
     );
   });
 
   it("keeps the compact player body outside internal wall edges", () => {
     expect(
       resolveMovement(
-        { x: 392, y: 224 },
+        { x: 424, y: 224 },
         { x: 1, y: 0 },
         PLAYER_BOUNDS,
         collisionObstacles,
         AVATAR_COLLISION_RADIUS
       )
-    ).toEqual({ x: 392, y: 224 });
+    ).toEqual({ x: 424, y: 224 });
     expect(
       resolveMovement(
-        { x: 440, y: 216 },
+        { x: 472, y: 184 },
         { x: 0, y: -1 },
         PLAYER_BOUNDS,
         collisionObstacles,
         AVATAR_COLLISION_RADIUS
       )
-    ).toEqual({ x: 440, y: 216 });
+    ).toEqual({ x: 472, y: 184 });
   });
 
   it("lets the player cross the widened meeting-to-lounge passage in both directions", () => {
     const downward = resolveMovement(
-      { x: 544, y: 184 },
+      { x: 592, y: 152 },
       { x: 0, y: 32 },
       PLAYER_BOUNDS,
       collisionObstacles,
       AVATAR_COLLISION_RADIUS
     );
-    expect(downward).toEqual({ x: 544, y: 216 });
+    expect(downward).toEqual({ x: 592, y: 184 });
     expect(
       resolveMovement(
         downward,
@@ -215,11 +229,11 @@ describe("office layout", () => {
         collisionObstacles,
         AVATAR_COLLISION_RADIUS
       )
-    ).toEqual({ x: 544, y: 184 });
+    ).toEqual({ x: 592, y: 152 });
   });
 
   it("lets a player caught on the passage corner move sideways and then enter the lounge", () => {
-    const caughtAtLeftCorner = { x: 450, y: 200 };
+    const caughtAtLeftCorner = { x: 482, y: 168 };
     const escapedCorner = resolveMovement(
       caughtAtLeftCorner,
       { x: 2, y: 0 },
@@ -228,30 +242,33 @@ describe("office layout", () => {
       AVATAR_COLLISION_RADIUS
     );
 
-    expect(escapedCorner).toEqual({ x: 452, y: 200 });
+    expect(escapedCorner).toEqual({ x: 484, y: 168 });
     expect(
       resolveMovement(
-        { x: 464, y: 200 },
+        { x: 496, y: 168 },
         { x: 0, y: 16 },
         PLAYER_BOUNDS,
         collisionObstacles,
         AVATAR_COLLISION_RADIUS
       )
-    ).toEqual({ x: 464, y: 216 });
+    ).toEqual({ x: 496, y: 184 });
   });
 
   it("recognizes only lounge coordinates as idle conversation space", () => {
-    expect(isLoungePoint({ x: 496, y: 256 })).toBe(true);
+    expect(isLoungePoint({ x: 496, y: 192 })).toBe(true);
     expect(isLoungePoint({ x: 304, y: 256 })).toBe(false);
   });
 
   it("keeps every rest destination inside the lounge with non-overlapping spacing", () => {
     for (const spot of restSpots) {
       expect(isLoungePoint(spot)).toBe(true);
-      expect(spot.x).toBeGreaterThanOrEqual(432);
-      expect(spot.x).toBeLessThanOrEqual(656);
+      expect(spot.x).toBeGreaterThanOrEqual(464);
+      expect(spot.x).toBeLessThanOrEqual(720);
       expect(spot.y).toBeGreaterThanOrEqual(256);
       expect(spot.y).toBeLessThanOrEqual(288);
+    }
+    for (const spot of restSpots) {
+      expect(Math.hypot(spot.x - LOUNGE_PASSAGE.right, spot.y - 256)).toBeGreaterThanOrEqual(48);
     }
     for (const [index, spot] of restSpots.entries()) {
       for (const other of restSpots.slice(index + 1)) {

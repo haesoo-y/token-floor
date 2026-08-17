@@ -3,42 +3,21 @@ import type { AgentSnapshot } from "@token-floor/protocol";
 import { framesForProvider } from "../lib/avatar.js";
 import type { Locale } from "../lib/i18n.js";
 import { routeForAgent, routeToNextRestSpot } from "./actorMotion.js";
-import { advanceActor, replaceRoute, routeComplete, type MovingActor } from "./actorRuntime.js";
+import { advanceActor, replaceRoute, routeComplete } from "./actorRuntime.js";
 import { createAvatar } from "./avatarFactory.js";
 import { projectAvatar, type OfficeOverlayActor } from "./officeOverlay.js";
 import { spawnSpotForAgent, usageSpots } from "./officeLayout.js";
 import { officeActorMotionConstraints } from "./officeCollision.js";
 import { idlePhrase, scheduledSpeaker } from "./officeSpeech.js";
-import { behaviorForAgent } from "./agentBehavior.js";
+import { agentDestinationChanged, behaviorForAgent } from "./agentBehavior.js";
 import { labelForAgent } from "./agentLabel.js";
 import { assignAgentRoster } from "./agentRoster.js";
 import { agentBubbleProps } from "./agentBubble.js";
-import { nextUsagePatrolTarget, usagePatrolSpeed, type UsagePatrolState } from "./usagePatrol.js";
+import { nextUsagePatrolTarget, usagePatrolSpeed } from "./usagePatrol.js";
 import { reservedRestSpots } from "./loungeOccupancy.js";
-import { agentConstraints } from "./agentSeparation.js";
 import { recoverBlockedIdleRoute } from "./idleRouteRecovery.js";
-
-interface AgentActor extends MovingActor {
-  snapshot: AgentSnapshot;
-  index: number;
-  visit: number;
-  speed: number;
-  pauseMs: number;
-  blockedMs: number;
-  arrivedAt: number | undefined;
-  phrase?: string;
-}
-type UsageActor = MovingActor & UsagePatrolState & { provider: "codex" | "claude-code" };
-
-/** Keeps usage NPC overlays informational and intentionally free of speech bubbles. */
-export function usageNpcOverlay(provider: "codex" | "claude-code") {
-  return {
-    id: `usage-${provider}`,
-    label: provider === "codex" ? "CODEX METER" : "CLAUDE METER",
-    provider,
-    status: "npc" as const
-  };
-}
+import { usageNpcOverlay } from "./usageNpcOverlay.js";
+import type { AgentActor, UsageActor } from "./agentDirectorTypes.js";
 
 /** Manages normalized agents and provider NPCs independently of camera and player input. */
 export class AgentDirector {
@@ -64,7 +43,7 @@ export class AgentDirector {
       }
     }
     assignAgentRoster(Object.values(agents)).forEach((entry) =>
-      this.upsertAgent(entry.snapshot, entry.layoutSlot, entry.appearanceSlot)
+      this.upsertAgent(entry.snapshot, entry.layoutSlot, entry.appearanceSlot, entry.spawnSlot)
     );
   }
 
@@ -105,7 +84,7 @@ export class AgentDirector {
   }
 
   private updateAgent(actor: AgentActor, time: number, delta: number): void {
-    advanceActor(actor, delta, time, actor.speed, agentConstraints(actor, this.agents.values()));
+    advanceActor(actor, delta, time, actor.speed, officeActorMotionConstraints);
     if (!routeComplete(actor)) {
       actor.arrivedAt = undefined;
       recoverBlockedIdleRoute(actor, delta, this.agents.values());
@@ -136,7 +115,12 @@ export class AgentDirector {
     if (target) replaceRoute(actor, [target]);
   }
 
-  private upsertAgent(snapshot: AgentSnapshot, index: number, variant: number): void {
+  private upsertAgent(
+    snapshot: AgentSnapshot,
+    index: number,
+    variant: number,
+    spawnIndex: number
+  ): void {
     let actor = this.agents.get(snapshot.id);
     if (!actor) {
       const frames = framesForProvider(
@@ -146,7 +130,7 @@ export class AgentDirector {
         false,
         variant
       );
-      const spawn = spawnSpotForAgent(index);
+      const spawn = spawnSpotForAgent(spawnIndex);
       const avatar = createAvatar(this.scene, spawn.x, spawn.y, frames);
       avatar.container
         .setInteractive({ useHandCursor: true })
@@ -165,10 +149,15 @@ export class AgentDirector {
       };
       this.agents.set(snapshot.id, actor);
     }
-    const statusChanged = actor.snapshot.status !== snapshot.status;
+    const destinationChanged = agentDestinationChanged(
+      actor.snapshot,
+      snapshot,
+      actor.index,
+      index
+    );
     actor.snapshot = snapshot;
     actor.index = index;
-    if (statusChanged || actor.route.length === 0) {
+    if (destinationChanged || actor.route.length === 0) {
       const current = { x: actor.avatar.container.x, y: actor.avatar.container.y };
       replaceRoute(actor, routeForAgent(snapshot, index, current));
     }

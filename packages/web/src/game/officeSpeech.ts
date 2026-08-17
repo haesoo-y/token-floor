@@ -163,5 +163,5 @@ export function agentSpeech(locale: Locale, agent: AgentSnapshot, idle?: string)
   if (agent.status === "completed") return idle ?? systemPhrase(locale, "coffee");
   if (agent.status === "waiting") return systemPhrase(locale, "waiting");
   if (agent.status === "error") return systemPhrase(locale, "error");
-  return agent.activity?.summary ?? systemPhrase(locale, "working");
+  return agent.lastMessage?.text ?? agent.activity?.summary ?? systemPhrase(locale, "working");
 }

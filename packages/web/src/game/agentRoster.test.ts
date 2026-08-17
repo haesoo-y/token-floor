@@ -23,4 +23,13 @@ describe("assignAgentRoster", () => {
     ]);
     expect(roster.map((entry) => entry.appearanceSlot)).toEqual([0, 0, 1]);
   });
+
+  it("keeps spawn slots unique across status and role pools", () => {
+    const roster = assignAgentRoster([
+      agent("a", "codex"),
+      { ...agent("b", "codex", "main"), status: "completed" },
+      agent("c", "claude-code", "main")
+    ]);
+    expect(roster.map((entry) => entry.spawnSlot)).toEqual([0, 1, 2]);
+  });
 });

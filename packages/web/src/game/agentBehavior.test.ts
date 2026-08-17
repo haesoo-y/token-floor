@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { AgentSnapshot } from "@token-floor/protocol";
-import { behaviorForAgent } from "./agentBehavior.js";
+import { agentDestinationChanged, behaviorForAgent } from "./agentBehavior.js";
+
+const agent = { id: "agent", kind: "main", status: "active" } as AgentSnapshot;
+
+describe("agentDestinationChanged", () => {
+  it("recalculates routes for status and roster destination changes", () => {
+    expect(agentDestinationChanged(agent, { ...agent, status: "completed" }, 0, 0)).toBe(true);
+    expect(agentDestinationChanged(agent, agent, 0, 1)).toBe(true);
+    expect(agentDestinationChanged(agent, agent, 0, 0)).toBe(false);
+  });
+});
 
 describe("behaviorForAgent", () => {
   it("gives separate subagent identities different pacing", () => {
@@ -10,8 +20,8 @@ describe("behaviorForAgent", () => {
   });
 
   it("keeps behavior stable for the same identity", () => {
-    const agent = { id: "stable", kind: "main" } as AgentSnapshot;
-    expect(behaviorForAgent(agent, 2)).toEqual(behaviorForAgent(agent, 2));
+    const stable = { id: "stable", kind: "main" } as AgentSnapshot;
+    expect(behaviorForAgent(stable, 2)).toEqual(behaviorForAgent(stable, 2));
   });
 
   it("keeps lounge pauses long enough to avoid constant motion", () => {

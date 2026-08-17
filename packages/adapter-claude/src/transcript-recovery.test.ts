@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recoverClaudeTranscript } from "./transcript-recovery.js";
+import { recoverClaudeTranscript, recoverClaudeTranscriptMessages } from "./transcript-recovery.js";
 
 describe("recoverClaudeTranscript", () => {
   it("recovers lifecycle metadata without retaining transcript content", () => {
@@ -34,5 +34,27 @@ describe("recoverClaudeTranscript", () => {
       type: "agent.completed",
       inferred: true
     });
+  });
+
+  it("recovers text blocks while excluding tool blocks", () => {
+    const content = JSON.stringify({
+      type: "assistant",
+      sessionId: "session-9",
+      cwd: "/work/project",
+      timestamp: "2026-08-16T00:00:00.000Z",
+      message: {
+        content: [
+          { type: "text", text: "Visible reply" },
+          { type: "tool_use", input: "private command" }
+        ]
+      }
+    });
+    const events = recoverClaudeTranscriptMessages(content);
+
+    expect(events[0]).toMatchObject({
+      type: "agent.message",
+      message: { role: "assistant", text: "Visible reply" }
+    });
+    expect(JSON.stringify(events)).not.toContain("private command");
   });
 });

@@ -5,6 +5,18 @@ export interface AgentBehavior {
   pauseMs: number;
 }
 
+/** Detects projection changes that assign an existing actor a different world destination. */
+export function agentDestinationChanged(
+  previous: AgentSnapshot,
+  next: AgentSnapshot,
+  previousIndex: number,
+  nextIndex: number
+): boolean {
+  return (
+    previous.status !== next.status || previous.kind !== next.kind || previousIndex !== nextIndex
+  );
+}
+
 /** Creates stable but visibly different pacing, with extra variance for subagents. */
 export function behaviorForAgent(agent: AgentSnapshot, index: number): AgentBehavior {
   const seed = hash(`${agent.id}:${index}`);

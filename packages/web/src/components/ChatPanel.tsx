@@ -1,5 +1,11 @@
-import type { AgentSnapshot, NormalizedEvent, UsageSnapshot } from "@token-floor/protocol";
+import type {
+  AgentMessageEvent,
+  AgentSnapshot,
+  NormalizedEvent,
+  UsageSnapshot
+} from "@token-floor/protocol";
 import { translate, type Locale } from "../lib/i18n.js";
+import { truncateChatText } from "../lib/chatText.js";
 import { usageDetailValues } from "../lib/usageDetails.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs.js";
 
@@ -7,12 +13,14 @@ export function ChatPanel({
   selected,
   selectedUsage,
   usage,
+  messages,
   events,
   locale
 }: {
   selected: AgentSnapshot | undefined;
   selectedUsage: "codex" | "claude-code" | undefined;
   usage: UsageSnapshot | undefined;
+  messages: AgentMessageEvent[];
   events: NormalizedEvent[];
   locale: Locale;
 }) {
@@ -22,6 +30,7 @@ export function ChatPanel({
       <Tabs defaultValue="selected">
         <TabsList>
           <TabsTrigger value="selected">{translate(locale, "selectedAgent")}</TabsTrigger>
+          <TabsTrigger value="chat">{translate(locale, "chatLog")}</TabsTrigger>
           <TabsTrigger value="events">{translate(locale, "allEvents")}</TabsTrigger>
         </TabsList>
         <TabsContent value="selected" className="panel-content">
@@ -85,6 +94,24 @@ export function ChatPanel({
             </>
           ) : (
             <p className="empty">{translate(locale, "noSelection")}</p>
+          )}
+        </TabsContent>
+        <TabsContent value="chat" className="panel-content chat-log">
+          {messages.length === 0 ? (
+            <p className="empty">Waiting for the next message…</p>
+          ) : (
+            messages.map((event) => (
+              <article
+                className={`chat-row ${event.message.role} ${event.provider}`}
+                key={event.eventId}
+              >
+                <header>
+                  <strong>{event.message.role === "assistant" ? event.agent.id : "User"}</strong>
+                  <time>{new Date(event.occurredAt).toLocaleTimeString()}</time>
+                </header>
+                <p>{truncateChatText(event.message.text, 200)}</p>
+              </article>
+            ))
           )}
         </TabsContent>
         <TabsContent value="events" className="panel-content event-list">

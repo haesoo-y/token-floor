@@ -28,6 +28,47 @@ describe("office state reducer", () => {
       provider: "codex",
       projectLabel: "token-floor"
     });
+    expect(state.recentEvents).toEqual([activeEvent]);
+  });
+
+  it("stores chat messages idempotently and projects the latest assistant reply", () => {
+    const active = applyEvent(createOfficeState(), activeEvent);
+    const message = {
+      ...activeEvent,
+      eventId: "message-1",
+      type: "agent.message" as const,
+      message: { role: "assistant" as const, text: "Implemented the requested change." }
+    };
+    const state = applyEvent(active, message);
+
+    expect(state.messages).toEqual([message]);
+    expect(state.recentEvents).toEqual([activeEvent]);
+    expect(state.agents["agent-1"]?.lastMessage).toEqual(message.message);
+    expect(applyEvent(state, message)).toBe(state);
+
+    const userMessage = {
+      ...message,
+      eventId: "message-2",
+      message: { role: "user" as const, text: "Start the next change." }
+    };
+    const next = applyEvent(state, userMessage);
+    expect(next.messages).toHaveLength(2);
+    expect(next.agents["agent-1"]?.lastMessage).toBeUndefined();
+  });
+
+  it("keeps a bounded idempotent event history for snapshot recovery", () => {
+    let state = createOfficeState();
+    for (let index = 0; index < 55; index += 1) {
+      state = applyEvent(state, {
+        ...activeEvent,
+        eventId: `history-${index}`,
+        occurredAt: new Date(Date.parse(activeEvent.occurredAt) + index).toISOString()
+      });
+    }
+
+    expect(state.recentEvents).toHaveLength(50);
+    expect(state.recentEvents[0]?.eventId).toBe("history-54");
+    expect(applyEvent(state, state.recentEvents[0]!)).toEqual(state);
   });
 
   it("retains reusable actor execution metadata", () => {
@@ -106,5 +147,19 @@ describe("office state reducer", () => {
     expect(
       pruneCompletedAgents(completed, new Date("2026-08-16T01:00:00.000Z")).agents["agent-1"]
     ).toBeUndefined();
+  });
+
+  it("keeps Claude and Codex identities separate for the same provider execution token", () => {
+    const codex = applyEvent(createOfficeState(), {
+      ...activeEvent,
+      agent: { id: "codex:shared", kind: "main", executionId: "shared" }
+    });
+    const combined = applyEvent(codex, {
+      ...activeEvent,
+      eventId: "claude-shared",
+      provider: "claude-code",
+      agent: { id: "claude:shared", kind: "main", executionId: "shared" }
+    });
+    expect(Object.keys(combined.agents).sort()).toEqual(["claude:shared", "codex:shared"]);
   });
 });

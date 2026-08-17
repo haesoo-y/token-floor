@@ -31,6 +31,18 @@ describe("parseNormalizedEvent", () => {
     expect(parseNormalizedEvent(event)).toEqual(event);
   });
 
+  it("accepts provider-neutral chat messages and rejects invalid roles", () => {
+    const message = {
+      ...validEvent,
+      type: "agent.message",
+      message: { role: "assistant", text: "Finished the implementation." }
+    };
+    expect(parseNormalizedEvent(message)).toEqual(message);
+    expect(() =>
+      parseNormalizedEvent({ ...message, message: { role: "tool", text: "opaque output" } })
+    ).toThrow("Invalid event payload");
+  });
+
   it("rejects unknown versions and incomplete payloads", () => {
     expect(() => parseNormalizedEvent({ ...validEvent, schemaVersion: 2 })).toThrow(
       "Invalid event envelope"

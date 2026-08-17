@@ -49,6 +49,16 @@ export interface AgentActiveEvent extends AgentEventBase {
   activity: { tool?: string; summary?: string };
 }
 
+export interface AgentChatMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
+export interface AgentMessageEvent extends AgentEventBase {
+  type: "agent.message";
+  message: AgentChatMessage;
+}
+
 export interface AgentWaitingEvent extends AgentEventBase {
   type: "agent.waiting";
   reason: WaitReason;
@@ -76,7 +86,12 @@ export interface UsageUpdatedEvent extends EventBase {
 }
 
 export type AgentEvent =
-  AgentStartedEvent | AgentActiveEvent | AgentWaitingEvent | AgentCompletedEvent | AgentFailedEvent;
+  | AgentStartedEvent
+  | AgentActiveEvent
+  | AgentMessageEvent
+  | AgentWaitingEvent
+  | AgentCompletedEvent
+  | AgentFailedEvent;
 
 export type NormalizedEvent = AgentEvent | UsageUpdatedEvent;
 

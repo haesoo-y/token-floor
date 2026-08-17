@@ -27,7 +27,6 @@ export function useAgentStream(): {
   connection: ConnectionStatus;
 } {
   const [state, setState] = useState(createOfficeState);
-  const [events, setEvents] = useState<NormalizedEvent[]>([]);
   const [connection, setConnection] = useState<ConnectionStatus>("connecting");
 
   // The hook owns exactly one socket for its mounted lifetime and closes it during unmount.
@@ -41,10 +40,9 @@ export function useAgentStream(): {
       const payload = JSON.parse(String(message.data)) as SnapshotMessage | EventMessage;
       if (payload.type === "snapshot") return setState(payload.state);
       setState((current) => applyEvent(current, payload.event));
-      setEvents((current) => [payload.event, ...current].slice(0, 50));
     });
     return () => socket.close();
   }, []);
 
-  return { state, events, connection };
+  return { state, events: state.recentEvents ?? [], connection };
 }
