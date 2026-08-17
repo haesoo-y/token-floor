@@ -33,7 +33,7 @@ function addLabel(scene: Phaser.Scene, x: number, y: number, label: string, colo
       fontStyle: "bold",
       letterSpacing: 1,
       padding: { x: 6, y: 4 },
-      backgroundColor: "#0b1018dd"
+      backgroundColor: "#0d2033dd"
     })
     .setDepth(25);
 }

@@ -1,12 +1,13 @@
 import fs from "node:fs";
 import {
   CodexLifecycleNormalizer,
-  decodeCodexRecord,
   type CodexLifecycleRecord,
   type CodexSessionRecord
 } from "@token-floor/adapter-codex";
 import type { AgentEvent } from "@token-floor/protocol";
 import { recentCodexSessionFiles } from "./codex-session-files.js";
+import type { ProviderCollectorReport } from "./source-diagnostics.js";
+import { decodeCodexLines, latestCodexRecordAt } from "./codex-session-lines.js";
 
 const PREFIX_BYTES = 128 * 1024;
 const TAIL_BYTES = 512 * 1024;
@@ -51,27 +52,27 @@ function completeLines(
   };
 }
 
-function decodeLines(lines: readonly string[]): Array<CodexSessionRecord | CodexLifecycleRecord> {
-  const records: Array<CodexSessionRecord | CodexLifecycleRecord> = [];
-  for (const line of lines) {
-    try {
-      const record = decodeCodexRecord(JSON.parse(line));
-      if (record) records.push(record);
-    } catch {
-      // A malformed record is isolated to its line; later complete records remain observable.
-    }
-  }
-  return records;
-}
-
 /** Incrementally tails recent Codex JSONL files without mutating provider-owned state. */
 export class CodexSessionCollector {
   private readonly cursors = new Map<string, Cursor>();
   private readonly normalizer = new CodexLifecycleNormalizer();
   private readonly hiddenAgents = new Set<string>();
   private recovering = true;
+  private report: ProviderCollectorReport;
 
-  constructor(private readonly root: string) {}
+  constructor(private readonly root: string) {
+    this.report = {
+      rootExists: fs.existsSync(root),
+      fileCount: 0,
+      validRecordCount: 0,
+      malformedRecordCount: 0,
+      readErrorCount: 0
+    };
+  }
+
+  diagnostics(): ProviderCollectorReport {
+    return this.report;
+  }
 
   /** Returns structurally identified provider-internal actors seen by this collector. */
   hiddenAgentIds(): ReadonlySet<string> {
@@ -82,10 +83,18 @@ export class CodexSessionCollector {
     const sessions: Array<{ sourceKey: string; record: CodexSessionRecord }> = [];
     const pending: PendingRecord[] = [];
     const files = recentCodexSessionFiles(this.root, now, new Set(this.cursors.keys()));
+    this.report = {
+      rootExists: fs.existsSync(this.root),
+      fileCount: files.length,
+      validRecordCount: 0,
+      malformedRecordCount: 0,
+      readErrorCount: 0
+    };
     for (const filename of files) {
       try {
         this.collectFile(filename, sessions, pending);
       } catch {
+        this.report.readErrorCount += 1;
         // One locked, replaced, or concurrently deleted file must not abort the collection cycle.
       }
     }
@@ -155,7 +164,13 @@ export class CodexSessionCollector {
       cursor.remainder = tail.remainder;
     }
     cursor.size = size;
-    return decodeLines(lines);
+    const records = decodeCodexLines(lines, () => {
+      this.report.malformedRecordCount += 1;
+    });
+    this.report.validRecordCount += records.length;
+    const latest = latestCodexRecordAt(records, this.report.latestRecordAt);
+    if (latest) this.report.latestRecordAt = latest;
+    return records;
   }
 
   private newRecords(filename: string, size: number, cursor: Cursor) {
@@ -169,6 +184,12 @@ export class CodexSessionCollector {
     const complete = completeLines(bytes, !contiguous);
     cursor.size = size;
     cursor.remainder = complete.remainder;
-    return decodeLines(complete.lines);
+    const records = decodeCodexLines(complete.lines, () => {
+      this.report.malformedRecordCount += 1;
+    });
+    this.report.validRecordCount += records.length;
+    const latest = latestCodexRecordAt(records, this.report.latestRecordAt);
+    if (latest) this.report.latestRecordAt = latest;
+    return records;
   }
 }

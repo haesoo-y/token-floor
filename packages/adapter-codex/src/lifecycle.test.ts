@@ -80,6 +80,33 @@ describe("Codex lifecycle decoding", () => {
     expect(active?.type).toBe("activity");
     expect(JSON.stringify(permission)).not.toContain("private material");
   });
+
+  it("decodes Codex work heartbeats without retaining sensitive payloads", () => {
+    const records = [
+      eventRecord({
+        type: "mcp_tool_call_begin",
+        call_id: "call-4",
+        invocation: { arguments: "private tool input" }
+      }),
+      eventRecord({
+        type: "mcp_tool_call_end",
+        call_id: "call-4",
+        result: "private tool output"
+      }),
+      eventRecord({ type: "agent_reasoning", text: "private chain of thought" })
+    ].map(decodeCodexRecord);
+
+    expect(records).toEqual([
+      {
+        type: "heartbeat",
+        timestamp: at,
+        heartbeatId: "mcp_tool_call_begin:call-4"
+      },
+      { type: "heartbeat", timestamp: at, heartbeatId: "mcp_tool_call_end:call-4" },
+      { type: "heartbeat", timestamp: at, heartbeatId: `agent_reasoning:${at}` }
+    ]);
+    expect(JSON.stringify(records)).not.toMatch(/private|invocation|result|text/);
+  });
 });
 
 describe("Codex lifecycle normalization", () => {
@@ -181,6 +208,25 @@ describe("Codex lifecycle normalization", () => {
         callId: "waiting-call"
       })[0]?.type
     ).toBe("agent.active");
+  });
+
+  it("normalizes payload-free heartbeats once as provider-neutral active events", () => {
+    const normalizer = new CodexLifecycleNormalizer();
+    normalizer.registerSession("main", main);
+    const heartbeat = {
+      type: "heartbeat" as const,
+      timestamp: "2026-08-17T01:04:30.000Z",
+      heartbeatId: "mcp_tool_call_end:call-4"
+    };
+    const event = normalizer.normalize("main", heartbeat)[0]!;
+
+    expect(event).toMatchObject({
+      type: "agent.active",
+      occurredAt: heartbeat.timestamp,
+      activity: { summary: "Working" }
+    });
+    expect(event).not.toHaveProperty("heartbeatId");
+    expect(normalizer.normalize("main", heartbeat)).toEqual([]);
   });
 
   it("links distinct subagents to the observed parent execution", () => {

@@ -1,7 +1,7 @@
 import type { NormalizedEvent, UsageUpdatedEvent } from "@token-floor/protocol";
 import { readLatestClaudeLocalUsage } from "./claude-local-usage-source.js";
 import { readLatestCodexUsage } from "./codex-usage-source.js";
-import { updateProviderUsageCache } from "./provider-usage-cache.js";
+import { readProviderUsageCache, updateProviderUsageCache } from "./provider-usage-cache.js";
 
 interface ProviderUsageMaintenanceOptions {
   cachePath?: string | undefined;
@@ -21,18 +21,31 @@ export function startProviderUsageMaintenance(
   const refresh = () => {
     if (!options.cachePath) return;
     const updates: UsageUpdatedEvent[] = [];
-    const claudeEvent = readLatestClaudeLocalUsage({
-      cliRoot: options.claudeCliRootPath,
-      desktopCache: options.claudeDesktopCachePath,
-      desktopHistory: options.claudeUsagePath
-    });
-    if (claudeEvent) updates.push(claudeEvent);
-    if (options.codexSessionsPath) {
-      const event = readLatestCodexUsage(options.codexSessionsPath);
-      if (event) updates.push(event);
+    try {
+      const claudeEvent = readLatestClaudeLocalUsage({
+        cliRoot: options.claudeCliRootPath,
+        desktopCache: options.claudeDesktopCachePath,
+        desktopHistory: options.claudeUsagePath
+      });
+      if (claudeEvent) updates.push(claudeEvent);
+    } catch {
+      // Claude usage is optional and must not hide Codex lifecycle or cached usage.
     }
-    const cache = updateProviderUsageCache(options.cachePath, updates);
-    for (const event of cache.events) {
+    if (options.codexSessionsPath) {
+      try {
+        const event = readLatestCodexUsage(options.codexSessionsPath);
+        if (event) updates.push(event);
+      } catch {
+        // One provider source failing does not abort the other provider's refresh.
+      }
+    }
+    let events: UsageUpdatedEvent[];
+    try {
+      events = updateProviderUsageCache(options.cachePath, updates).events;
+    } catch {
+      events = readProviderUsageCache(options.cachePath);
+    }
+    for (const event of events) {
       if (accepted.has(event.eventId)) continue;
       accepted.add(event.eventId);
       options.acceptEvent(event);

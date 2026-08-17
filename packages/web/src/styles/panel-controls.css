@@ -31,6 +31,6 @@
 .panel-toggle:hover,
 .panel-toggle:focus-visible {
   color: #f8fafc;
-  background: #282d36c8;
+  background: var(--control-active);
   outline: none;
 }

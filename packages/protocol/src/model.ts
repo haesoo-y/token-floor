@@ -12,6 +12,17 @@ export interface ProviderCapabilities {
   usage: UsageCapability;
 }
 
+export type ProviderSourceCondition =
+  "healthy" | "waiting" | "missing" | "stale" | "malformed" | "disconnected";
+
+/** Provider-neutral health for a read-only local lifecycle source. */
+export interface ProviderSourceSnapshot {
+  condition: ProviderSourceCondition;
+  checkedAt: string;
+  lastSuccessAt?: string;
+  capabilities: ProviderCapabilities;
+}
+
 export interface ProjectIdentity {
   id: string;
   label: string;

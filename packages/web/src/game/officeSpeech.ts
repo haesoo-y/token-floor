@@ -165,3 +165,11 @@ export function agentSpeech(locale: Locale, agent: AgentSnapshot, idle?: string)
   if (agent.status === "error") return systemPhrase(locale, "error");
   return agent.lastMessage?.text ?? agent.activity?.summary ?? systemPhrase(locale, "working");
 }
+
+export function transitionSpeech(locale: Locale, type: AgentSnapshot["lastEventType"]): string {
+  if (type === "agent.started") return systemPhrase(locale, "started");
+  if (type === "agent.waiting") return systemPhrase(locale, "waiting");
+  if (type === "agent.completed") return systemPhrase(locale, "completed");
+  if (type === "agent.failed") return systemPhrase(locale, "error");
+  return systemPhrase(locale, "working");
+}

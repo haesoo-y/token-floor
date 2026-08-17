@@ -4,11 +4,13 @@ import { ChatPanel, type PanelTab } from "./components/ChatPanel.js";
 import { HeaderStats } from "./components/HeaderStats.js";
 import { OfficeCanvas } from "./components/OfficeCanvas.js";
 import { SetupScreen } from "./components/SetupScreen.js";
+import { SettingsPanel } from "./components/SettingsPanel.js";
+import { ProviderAlerts } from "./components/ProviderAlerts.js";
 import { UsageCards } from "./components/UsageCards.js";
 import { useAgentStream } from "./hooks/useAgentStream.js";
 import { useAssetAvailability } from "./hooks/useAssetAvailability.js";
 import { resolveAvatarPreset, type AvatarPreset } from "./lib/avatar.js";
-import { translate, type Locale } from "./lib/i18n.js";
+import { resolveLocale, translate, type Locale } from "./lib/i18n.js";
 import { countAgentStatuses } from "./lib/stats.js";
 
 export function App() {
@@ -18,8 +20,9 @@ export function App() {
   const [selectedUsage, setSelectedUsage] = useState<"codex" | "claude-code">();
   const [panelTab, setPanelTab] = useState<PanelTab>("selected");
   const [panelMinimized, setPanelMinimized] = useState(false);
-  const [locale, setLocale] = useState<Locale>(
-    () => (localStorage.getItem("token-floor-locale") as Locale | null) ?? "en"
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [locale, setLocale] = useState<Locale>(() =>
+    resolveLocale(localStorage.getItem("token-floor-locale"))
   );
   const [preset, setPreset] = useState<AvatarPreset>(() =>
     resolveAvatarPreset(localStorage.getItem("token-floor-avatar"))
@@ -34,7 +37,6 @@ export function App() {
     <main className="app-shell">
       <header className="topbar">
         <div className="wordmark">
-          <span>TF</span>
           <div>
             <strong>TOKEN FLOOR</strong>
             <small>AGENT OFFICE / LOCAL</small>
@@ -61,13 +63,29 @@ export function App() {
             <option value="ko">KO</option>
             <option value="ja">JA</option>
           </select>
+          <button
+            type="button"
+            className="settings-toggle"
+            onClick={() => setSettingsOpen((open) => !open)}
+            aria-label={translate(locale, "settings")}
+          >
+            ⚙
+          </button>
         </div>
       </header>
       <section className="stage">
         <div className="stage-label">
           <span className={`live-dot ${connection}`} />
-          {translate(locale, connection === "connected" ? "connected" : "disconnected")}
+          {translate(
+            locale,
+            connection === "connected"
+              ? "connected"
+              : connection === "connecting"
+                ? "connecting"
+                : "disconnected"
+          )}
         </div>
+        <ProviderAlerts sources={state.sourceStatusByProvider ?? {}} locale={locale} />
         {assets.status === "ready" ? (
           <OfficeCanvas
             agents={state.agents}
@@ -92,6 +110,15 @@ export function App() {
           <div className="loading">CHECKING OFFICE ASSETS…</div>
         )}
         <CharacterPicker preset={preset} onChange={setPreset} locale={locale} />
+        <SettingsPanel
+          open={settingsOpen}
+          locale={locale}
+          preset={preset}
+          sources={state.sourceStatusByProvider ?? {}}
+          onLocaleChange={setLocale}
+          onPresetChange={setPreset}
+          onClose={() => setSettingsOpen(false)}
+        />
         <ChatPanel
           selected={selected}
           selectedUsage={selectedUsage}

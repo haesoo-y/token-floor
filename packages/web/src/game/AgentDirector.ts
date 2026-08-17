@@ -18,6 +18,7 @@ import { reservedRestSpots } from "./loungeOccupancy.js";
 import { recoverBlockedIdleRoute } from "./idleRouteRecovery.js";
 import { usageNpcOverlay } from "./usageNpcOverlay.js";
 import type { AgentActor, UsageActor } from "./agentDirectorTypes.js";
+import { createAgentSpeechState, syncAgentSpeechState } from "./agentSpeechState.js";
 
 /** Manages normalized agents and provider NPCs independently of camera and player input. */
 export class AgentDirector {
@@ -69,7 +70,15 @@ export class AgentDirector {
         id,
         ...projectAvatar(actor.avatar, camera),
         label: labelForAgent(actor.snapshot),
-        ...agentBubbleProps(this.locale, actor.snapshot, point, id === loungeSpeaker, actor.phrase),
+        ...agentBubbleProps(
+          this.locale,
+          actor.snapshot,
+          point,
+          id === loungeSpeaker,
+          actor.phrase,
+          actor,
+          this.clock
+        ),
         provider: actor.snapshot.provider,
         status: actor.snapshot.status
       });
@@ -82,7 +91,6 @@ export class AgentDirector {
     }
     return overlays;
   }
-
   private updateAgent(actor: AgentActor, time: number, delta: number): void {
     advanceActor(actor, delta, time, actor.speed, officeActorMotionConstraints);
     if (!routeComplete(actor)) {
@@ -145,6 +153,7 @@ export class AgentDirector {
         visit: 0,
         blockedMs: 0,
         arrivedAt: undefined,
+        ...createAgentSpeechState(),
         ...behaviorForAgent(snapshot, index)
       };
       this.agents.set(snapshot.id, actor);
@@ -155,6 +164,7 @@ export class AgentDirector {
       actor.index,
       index
     );
+    syncAgentSpeechState(actor, snapshot, this.clock);
     actor.snapshot = snapshot;
     actor.index = index;
     if (destinationChanged || actor.route.length === 0) {

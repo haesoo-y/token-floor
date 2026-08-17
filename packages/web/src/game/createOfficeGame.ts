@@ -19,7 +19,7 @@ export function createOfficeGame(
     pixelArt: true,
     antialias: false,
     roundPixels: true,
-    backgroundColor: "#071019",
+    backgroundColor: "#081522",
     scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.NO_CENTER },
     scene
   });

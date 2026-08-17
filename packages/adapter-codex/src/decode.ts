@@ -58,6 +58,27 @@ function decodeSession(
   };
 }
 
+function decodeHeartbeat(
+  payloadType: string | undefined,
+  payload: Record<string, unknown>,
+  occurredAt: string
+): CodexRecord | undefined {
+  if (
+    payloadType !== "mcp_tool_call_begin" &&
+    payloadType !== "mcp_tool_call_end" &&
+    payloadType !== "agent_reasoning"
+  ) {
+    return undefined;
+  }
+  // Only structural identity crosses the adapter boundary; reasoning and tool payloads stay local.
+  const structuralId = text(payload, "call_id") ?? occurredAt;
+  return {
+    type: "heartbeat",
+    timestamp: occurredAt,
+    heartbeatId: `${payloadType}:${structuralId}`
+  };
+}
+
 /** Decodes lifecycle metadata and visible chat text while excluding tool inputs and results. */
 export function decodeCodexRecord(value: unknown): CodexRecord | undefined {
   if (!isRecord(value) || !isRecord(value.payload)) return undefined;
@@ -66,6 +87,10 @@ export function decodeCodexRecord(value: unknown): CodexRecord | undefined {
   const occurredAt = timestamp(value.timestamp);
   if (!occurredAt) return undefined;
   const payloadType = text(payload, "type");
+  if (value.type === "event_msg") {
+    const heartbeat = decodeHeartbeat(payloadType, payload, occurredAt);
+    if (heartbeat) return heartbeat;
+  }
   if (
     value.type === "event_msg" &&
     (payloadType === "user_message" || payloadType === "agent_message")

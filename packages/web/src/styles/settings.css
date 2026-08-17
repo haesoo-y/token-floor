@@ -1,0 +1,134 @@
+.settings-toggle {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ffffff20;
+  border-radius: 9px;
+  color: #e4e4e7;
+  background: var(--control);
+  cursor: pointer;
+}
+.settings-panel {
+  position: absolute;
+  z-index: 9;
+  top: 94px;
+  right: 18px;
+  width: 330px;
+  max-height: calc(100vh - 116px);
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid #ffffff24;
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 18px 50px #0009;
+  backdrop-filter: blur(18px);
+}
+.settings-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.settings-panel > header button {
+  border: 0;
+  color: #aab3c0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+}
+.settings-panel > label,
+.settings-avatars {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+  color: #8f98a7;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.settings-panel select {
+  height: 36px;
+  padding: 0 9px;
+  border: 1px solid #ffffff20;
+  border-radius: 8px;
+  color: #f4f4f5;
+  background: var(--control);
+}
+.settings-avatars > div {
+  display: flex;
+  gap: 6px;
+}
+.settings-avatars button {
+  width: 54px;
+  height: 48px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #ffffff08;
+  cursor: pointer;
+}
+.settings-avatars button.selected {
+  border-color: var(--lime);
+  background: var(--lime-soft);
+}
+.settings-panel h3 {
+  margin: 18px 0 8px;
+  color: #8f98a7;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.source-status {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid #ffffff12;
+}
+.source-status > div {
+  display: grid;
+  min-width: 0;
+}
+.source-status small {
+  color: #9ca3af;
+}
+.source-status p {
+  margin: 4px 0 0;
+  color: #737d8c;
+  font-size: 9px;
+}
+.source-status.healthy small {
+  color: var(--lime);
+}
+.source-status.stale small,
+.source-status.malformed small,
+.source-status.waiting small {
+  color: var(--yellow);
+}
+.source-status.missing small,
+.source-status.disconnected small {
+  color: var(--red);
+}
+.provider-alerts {
+  position: absolute;
+  z-index: 5;
+  top: 134px;
+  left: 18px;
+  display: grid;
+  gap: 6px;
+}
+.provider-alert {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 1px solid #ffffff20;
+  border-radius: 8px;
+  color: #cbd5e1;
+  background: var(--panel);
+  box-shadow: 0 8px 24px #0007;
+  font-size: 10px;
+}
+.provider-alert > span:last-child {
+  color: var(--yellow);
+}
+.provider-alert.missing > span:last-child,
+.provider-alert.disconnected > span:last-child {
+  color: var(--red);
+}

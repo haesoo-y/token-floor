@@ -4,12 +4,13 @@ import type {
   AgentMessageEvent,
   AgentStatus,
   NormalizedEvent,
+  ProviderSourceSnapshot,
   UsageUpdatedEvent
 } from "./model.js";
 import { isAgentEvent } from "./model.js";
 
-export const DEFAULT_COMPLETION_TIMEOUT_MS = 5 * 60 * 1000;
-export const DEFAULT_COMPLETED_RETENTION_MS = 60 * 60 * 1000;
+export const MAX_CHAT_LOG_ENTRIES = 100;
+export const MAX_EVENT_LOG_ENTRIES = 100;
 
 export interface AgentSnapshot {
   id: string;
@@ -24,8 +25,13 @@ export interface AgentSnapshot {
   status: AgentStatus;
   lastEventAt: string;
   inferredCompletion: boolean;
+  completedAt?: string;
+  lastEventId: string;
+  lastEventType: Exclude<AgentEvent["type"], "agent.message">;
   activity?: { tool?: string; summary?: string };
   lastMessage?: AgentChatMessage;
+  lastMessageAt?: string;
+  lastMessageEventId?: string;
   waitReason?: "input" | "permission";
   error?: { code?: string; message: string };
 }
@@ -35,19 +41,29 @@ export type UsageSnapshot = UsageUpdatedEvent["usage"] & { checkedAt: string };
 export interface OfficeState {
   agents: Record<string, AgentSnapshot>;
   usageByProvider: Record<string, UsageSnapshot>;
+  sourceStatusByProvider: Record<string, ProviderSourceSnapshot>;
   messages: AgentMessageEvent[];
   recentEvents: NormalizedEvent[];
 }
 
 export function createOfficeState(): OfficeState {
-  return { agents: {}, usageByProvider: {}, messages: [], recentEvents: [] };
+  return {
+    agents: {},
+    usageByProvider: {},
+    sourceStatusByProvider: {},
+    messages: [],
+    recentEvents: []
+  };
 }
 
 function recordRecentEvent(state: OfficeState, event: NormalizedEvent): OfficeState {
   if (event.type === "agent.message") return state;
   const recentEvents = state.recentEvents ?? [];
   if (recentEvents.some((recent) => recent.eventId === event.eventId)) return state;
-  return { ...state, recentEvents: [event, ...recentEvents].slice(0, 50) };
+  return {
+    ...state,
+    recentEvents: [event, ...recentEvents].slice(0, MAX_EVENT_LOG_ENTRIES)
+  };
 }
 
 function statusFor(event: AgentEvent): AgentStatus {
@@ -70,7 +86,9 @@ function projectAgent(
     kind: event.agent.kind,
     status: statusFor(event),
     lastEventAt: event.occurredAt,
-    inferredCompletion: event.type === "agent.completed" && event.inferred
+    inferredCompletion: event.type === "agent.completed" && event.inferred,
+    lastEventId: event.eventId,
+    lastEventType: event.type
   };
   if (event.agent.parentId !== undefined) base.parentId = event.agent.parentId;
   if (event.agent.executionId !== undefined) base.executionId = event.agent.executionId;
@@ -78,7 +96,12 @@ function projectAgent(
   if (event.type === "agent.active") base.activity = event.activity;
   if (event.type === "agent.waiting") base.waitReason = event.reason;
   if (event.type === "agent.failed") base.error = event.error;
-  if (previous?.lastMessage) base.lastMessage = previous.lastMessage;
+  if (event.type === "agent.completed") base.completedAt = event.occurredAt;
+  if (previous?.lastMessage) {
+    base.lastMessage = previous.lastMessage;
+    if (previous.lastMessageAt) base.lastMessageAt = previous.lastMessageAt;
+    if (previous.lastMessageEventId) base.lastMessageEventId = previous.lastMessageEventId;
+  }
 
   // Each event is a full projection, so stale wait, error, and activity details are discarded.
   return base;
@@ -90,6 +113,7 @@ function projectAgent(
  * Older agent events are ignored so delayed adapter output cannot roll the UI back.
  */
 export function applyEvent(state: OfficeState, event: NormalizedEvent): OfficeState {
+  if ((state.recentEvents ?? []).some((recent) => recent.eventId === event.eventId)) return state;
   if (!isAgentEvent(event)) {
     return recordRecentEvent(
       {
@@ -108,16 +132,23 @@ export function applyEvent(state: OfficeState, event: NormalizedEvent): OfficeSt
     const previous = state.agents[event.agent.id];
     const agents = { ...state.agents };
     if (previous && event.message.role === "assistant") {
-      agents[event.agent.id] = { ...previous, lastMessage: event.message };
+      agents[event.agent.id] = {
+        ...previous,
+        lastMessage: event.message,
+        lastMessageAt: event.occurredAt,
+        lastMessageEventId: event.eventId
+      };
     } else if (previous) {
       const withoutLastMessage = { ...previous };
       delete withoutLastMessage.lastMessage;
       agents[event.agent.id] = withoutLastMessage;
+      delete agents[event.agent.id]!.lastMessageAt;
+      delete agents[event.agent.id]!.lastMessageEventId;
     }
     return {
       ...state,
       agents,
-      messages: [event, ...messages].slice(0, 100)
+      messages: [event, ...messages].slice(0, MAX_CHAT_LOG_ENTRIES)
     };
   }
   const previous = state.agents[event.agent.id];
@@ -131,45 +162,9 @@ export function applyEvent(state: OfficeState, event: NormalizedEvent): OfficeSt
   );
 }
 
-/**
- * Marks silent active agents as completed when a provider cannot emit a terminal event.
- * Waiting agents are deliberately excluded because they still require user action.
- */
-export function inferTimedOutCompletions(
-  state: OfficeState,
-  now: Date,
-  timeoutMs = DEFAULT_COMPLETION_TIMEOUT_MS
-): OfficeState {
-  let changed = false;
-  const agents: Record<string, AgentSnapshot> = { ...state.agents };
-  for (const [id, agent] of Object.entries(state.agents)) {
-    // Waiting agents require user action and must never be mistaken for completed work.
-    if (agent.status !== "active" || now.getTime() - Date.parse(agent.lastEventAt) < timeoutMs) {
-      continue;
-    }
-    changed = true;
-    agents[id] = { ...agent, status: "completed", inferredCompletion: true };
-  }
-  return changed ? { ...state, agents } : state;
-}
-
-/** Removes completed actors after the office's bounded history window expires. */
-export function pruneCompletedAgents(
-  state: OfficeState,
-  now: Date,
-  retentionMs = DEFAULT_COMPLETED_RETENTION_MS
-): OfficeState {
-  const agents = Object.fromEntries(
-    Object.entries(state.agents).filter(
-      ([, agent]) =>
-        agent.status !== "completed" || now.getTime() - Date.parse(agent.lastEventAt) < retentionMs
-    )
-  );
-  return Object.keys(agents).length === Object.keys(state.agents).length
-    ? state
-    : {
-        ...state,
-        agents,
-        messages: (state.messages ?? []).filter((message) => agents[message.agent.id])
-      };
-}
+export {
+  DEFAULT_COMPLETED_RETENTION_MS,
+  DEFAULT_COMPLETION_TIMEOUT_MS,
+  inferTimedOutCompletions,
+  pruneCompletedAgents
+} from "./state-maintenance.js";

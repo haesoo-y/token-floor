@@ -6,5 +6,6 @@ import "./styles/usage.css";
 import "./styles/panels.css";
 import "./styles/panel-controls.css";
 import "./styles/character.css";
+import "./styles/settings.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

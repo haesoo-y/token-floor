@@ -33,7 +33,7 @@ export const officeRooms = [
 export const officeLabels = [
   { roomId: "workspace", x: 120, y: 72, text: "AGENT WORKSPACE", color: 0x93c5fd },
   { roomId: "meeting-right", x: 456, y: 72, text: "MEETING ROOM", color: 0xc4b5fd },
-  { roomId: "lounge", x: 456, y: 184, text: "COFFEE LOUNGE", color: 0x5eead4 },
+  { roomId: "lounge", x: 456, y: 184, text: "COFFEE LOUNGE", color: 0x8bc34a },
   { roomId: "executive-codex", x: 120, y: 328, text: "CODEX", color: 0x60a5fa },
   { roomId: "executive-claude", x: 288, y: 328, text: "CLAUDE", color: 0xfb923c }
 ] as const;

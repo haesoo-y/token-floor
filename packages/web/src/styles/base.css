@@ -1,6 +1,6 @@
 :root {
   color: #f4f4f5;
-  background: #09090b;
+  background: #081522;
   font-family:
     Inter,
     ui-sans-serif,
@@ -12,13 +12,18 @@
   font-synthesis: none;
   --blue: #4f8cff;
   --orange: #f08a42;
-  --mint: #55d6be;
+  --lime: #8bc34a;
+  --lime-soft: #8bc34a14;
+  --lime-ring: #8bc34a40;
   --yellow: #f2c94c;
   --red: #fb7185;
-  --panel: #0c0f14b8;
-  --chat-panel: #0c0f1480;
-  --bubble: #05070a80;
-  --label: #05070a80;
+  --page: #081522;
+  --panel: #0d2033d9;
+  --chat-panel: #0d2033c7;
+  --bubble: #0a1a2ae6;
+  --label: #0a1a2ae6;
+  --control: #13283d;
+  --control-active: #1b3853d9;
   --line: #ffffff1f;
   --muted: #a1a1aa;
 }
@@ -40,11 +45,11 @@ select {
 }
 button:focus-visible,
 select:focus-visible {
-  outline: 2px solid #67e8f9;
+  outline: 2px solid var(--lime);
   outline-offset: 2px;
 }
 body {
-  background: #09090b;
+  background: var(--page);
 }
 .app-shell {
   position: relative;
@@ -73,18 +78,6 @@ body {
   display: flex;
   align-items: center;
   gap: 11px;
-}
-.wordmark > span {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border: 1px solid #7ce7d2;
-  border-radius: 10px;
-  color: #06241e;
-  background: #5eead4;
-  font-weight: 850;
-  letter-spacing: -0.04em;
 }
 .wordmark div {
   display: grid;
@@ -126,7 +119,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .status-active strong {
-  color: var(--mint);
+  color: var(--lime);
 }
 .status-waiting strong {
   color: var(--yellow);
@@ -148,7 +141,7 @@ body {
   border: 1px solid #ffffff20;
   border-radius: 9px;
   color: #f4f4f5;
-  background: #171a20;
+  background: var(--control);
 }
 @media (prefers-reduced-motion: reduce) {
   * {

@@ -15,28 +15,17 @@ import { removeUnobservedClaudeAgents } from "./claude-state-migration.js";
 import { ingestClaudeUsage } from "./claude-usage-ingestion.js";
 import { startCodexMaintenance } from "./codex-maintenance.js";
 import { removeHiddenCodexAgents, removeLegacyCodexAgents } from "./codex-state-migration.js";
-import type { EventStore } from "./event-store.js";
 import { createHealthPayload } from "./health.js";
 import { sendJson } from "./json-response.js";
 import { startProviderUsageMaintenance } from "./provider-usage-maintenance.js";
+import { applyProviderSourceReport } from "./provider-source-projection.js";
 import { readJsonBody } from "./request-body.js";
 import { createInitialEvents, createScenarioEvent } from "./simulation.js";
+import type { ProviderCollectorReport } from "./source-diagnostics.js";
+import type { TokenFloorServer, TokenFloorServerOptions } from "./server-types.js";
+import { terminateWebSocketClients } from "./websocket-shutdown.js";
 
-export interface TokenFloorServer {
-  server: http.Server;
-  close: () => Promise<void>;
-}
-
-export interface TokenFloorServerOptions {
-  claudeCliRootPath?: string;
-  claudeDesktopCachePath?: string;
-  claudeProjectsPath?: string;
-  claudeUsagePath?: string;
-  codexSessionsPath?: string;
-  providerUsageCachePath?: string;
-  eventStore?: EventStore;
-  simulation?: boolean;
-}
+export type { TokenFloorServer, TokenFloorServerOptions } from "./server-types.js";
 
 /** Creates the local HTTP and WebSocket projection server. */
 export function createTokenFloorServer(options: TokenFloorServerOptions = {}): TokenFloorServer {
@@ -58,35 +47,27 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
     }
   };
   const acceptEvent = (event: NormalizedEvent) => {
-    state = applyEvent(state, event);
-    options.eventStore?.append(event);
-    broadcast(event);
-  };
-  const acceptRecoveredEvent = (event: NormalizedEvent) => {
-    if (
-      event.type === "agent.message" &&
-      state.messages.some((message) => message.eventId === event.eventId)
-    )
-      return;
-    const before =
-      event.type === "usage.updated"
-        ? state.usageByProvider[event.provider]
-        : state.agents[event.agent.id];
     const next = applyEvent(state, event);
-    const after =
-      event.type === "usage.updated"
-        ? next.usageByProvider[event.provider]
-        : next.agents[event.agent.id];
-    if (event.type !== "agent.message" && JSON.stringify(before) === JSON.stringify(after)) return;
+    if (next === state) return;
     state = next;
     options.eventStore?.append(event);
     broadcast(event);
   };
+  const acceptRecoveredEvent = acceptEvent;
   const broadcastSnapshot = (snapshot: OfficeState) => {
     const message = JSON.stringify({ type: "snapshot", state: snapshot });
     for (const socket of sockets.clients) {
       if (socket.readyState === socket.OPEN) socket.send(message);
     }
+  };
+  const acceptSourceReport = (
+    provider: "codex" | "claude-code",
+    report: ProviderCollectorReport
+  ) => {
+    const next = applyProviderSourceReport(state, provider, report);
+    if (next === state) return;
+    state = next;
+    broadcastSnapshot(state);
   };
   const server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
     if (req.method === "OPTIONS") return res.writeHead(204).end();
@@ -139,7 +120,8 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
   const stopClaudeMaintenance = startClaudeMaintenance({
     getState: () => state,
     projectsPath: options.claudeProjectsPath,
-    acceptRecoveredEvent
+    acceptRecoveredEvent,
+    reportStatus: (report) => acceptSourceReport("claude-code", report)
   });
   const stopAgentMaintenance = startAgentMaintenance({
     getState: () => state,
@@ -170,7 +152,8 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
       if (next === state) return;
       state = next;
       broadcastSnapshot(state);
-    }
+    },
+    reportStatus: (report) => acceptSourceReport("codex", report)
   });
   const stopProviderUsageMaintenance = startProviderUsageMaintenance({
     cachePath: options.providerUsageCachePath,
@@ -189,6 +172,7 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
         stopAgentMaintenance();
         stopCodexMaintenance();
         stopProviderUsageMaintenance();
+        terminateWebSocketClients(sockets.clients);
         sockets.close();
         server.close((error) => {
           options.eventStore?.close();

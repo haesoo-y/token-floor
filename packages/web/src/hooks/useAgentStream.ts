@@ -5,6 +5,7 @@ import {
   type NormalizedEvent,
   type OfficeState
 } from "@token-floor/protocol";
+import { reconnectDelay } from "./connectionRetry.js";
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
@@ -29,19 +30,49 @@ export function useAgentStream(): {
   const [state, setState] = useState(createOfficeState);
   const [connection, setConnection] = useState<ConnectionStatus>("connecting");
 
-  // The hook owns exactly one socket for its mounted lifetime and closes it during unmount.
+  // This effect owns one sequential WebSocket lifecycle, its retry timer, and final cleanup.
   useEffect(() => {
     const url = import.meta.env.VITE_TOKEN_FLOOR_WS ?? "ws://127.0.0.1:4317/events";
-    const socket = new WebSocket(url);
-    socket.addEventListener("open", () => setConnection("connected"));
-    socket.addEventListener("close", () => setConnection("disconnected"));
-    socket.addEventListener("error", () => setConnection("disconnected"));
-    socket.addEventListener("message", (message) => {
-      const payload = JSON.parse(String(message.data)) as SnapshotMessage | EventMessage;
-      if (payload.type === "snapshot") return setState(payload.state);
-      setState((current) => applyEvent(current, payload.event));
-    });
-    return () => socket.close();
+    let socket: WebSocket | undefined;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let attempt = 0;
+    let active = true;
+    const connect = () => {
+      if (!active) return;
+      setConnection("connecting");
+      const current = new WebSocket(url);
+      socket = current;
+      current.addEventListener("open", () => {
+        attempt = 0;
+        setConnection("connected");
+      });
+      current.addEventListener("close", () => {
+        if (!active) return;
+        setConnection("disconnected");
+        retryTimer = setTimeout(connect, reconnectDelay(attempt++));
+      });
+      current.addEventListener("error", () => current.close());
+      current.addEventListener("message", (message) => {
+        try {
+          const payload = JSON.parse(String(message.data)) as SnapshotMessage | EventMessage;
+          if (payload.type === "snapshot") {
+            return setState({
+              ...payload.state,
+              sourceStatusByProvider: payload.state.sourceStatusByProvider ?? {}
+            });
+          }
+          setState((current) => applyEvent(current, payload.event));
+        } catch {
+          // A malformed frame is isolated; the live socket can still deliver its next snapshot.
+        }
+      });
+    };
+    connect();
+    return () => {
+      active = false;
+      if (retryTimer) clearTimeout(retryTimer);
+      socket?.close();
+    };
   }, []);
 
   return { state, events: state.recentEvents ?? [], connection };

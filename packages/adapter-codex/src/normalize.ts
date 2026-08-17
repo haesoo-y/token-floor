@@ -21,6 +21,8 @@ export class CodexLifecycleNormalizer {
   private readonly sessionAliases = new Map<string, Set<string>>();
   private readonly parentByChild = new Map<string, string>();
   private readonly waitingCalls = new Set<string>();
+  private readonly recentHeartbeatIds = new Set<string>();
+  private readonly heartbeatOrder: string[] = [];
 
   registerSession(sourceKey: string, record: CodexSessionRecord): void {
     const context = { ...record, sourceKey };
@@ -48,16 +50,19 @@ export class CodexLifecycleNormalizer {
     const discriminator =
       record.type === "message"
         ? `${record.timestamp}:${stableHash(`${record.role}:${record.text}`)}`
-        : "turnId" in record && record.turnId
-          ? record.turnId
-          : "callId" in record
-            ? record.callId
-            : record.timestamp;
+        : record.type === "heartbeat"
+          ? record.heartbeatId
+          : "turnId" in record && record.turnId
+            ? record.turnId
+            : "callId" in record
+              ? record.callId
+              : record.timestamp;
     const base = this.base(
       context,
       record.timestamp,
       `${record.type}:${discriminator ?? record.timestamp}`
     );
+    if (record.type === "heartbeat" && !this.admitHeartbeat(base.eventId)) return [];
     const callKey = "callId" in record ? `${context.threadId}:${record.callId}` : undefined;
     if (record.type === "message") {
       // Subagent user-role records are orchestration prompts, not user-authored conversation.
@@ -77,6 +82,8 @@ export class CodexLifecycleNormalizer {
     }
     if (record.type === "task.started")
       return [{ ...base, type: "agent.active", activity: { summary: "Working" } }];
+    if (record.type === "heartbeat")
+      return [{ ...base, type: "agent.active", activity: { summary: "Working" } }];
     const resumed = callKey ? this.waitingCalls.delete(callKey) : false;
     return [
       {
@@ -85,6 +92,15 @@ export class CodexLifecycleNormalizer {
         activity: { summary: resumed ? "Working" : "Using a local tool" }
       }
     ];
+  }
+
+  private admitHeartbeat(eventId: string): boolean {
+    if (this.recentHeartbeatIds.has(eventId)) return false;
+    this.recentHeartbeatIds.add(eventId);
+    this.heartbeatOrder.push(eventId);
+    const expired = this.heartbeatOrder.length > 2_048 ? this.heartbeatOrder.shift() : undefined;
+    if (expired) this.recentHeartbeatIds.delete(expired);
+    return true;
   }
 
   private normalizeSubagentActivity(

@@ -2,7 +2,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { recoverClaudeProjectTranscripts } from "./claude-transcript-source.js";
+import {
+  recoverClaudeProjectTranscripts,
+  recoverClaudeProjectTranscriptsWithDiagnostics
+} from "./claude-transcript-source.js";
 
 const directories: string[] = [];
 afterEach(() => {
@@ -39,5 +42,27 @@ describe("recoverClaudeProjectTranscripts", () => {
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({ sessionId: "session-1", type: "agent.active" });
     expect(JSON.stringify(events)).not.toContain("not retained");
+  });
+
+  it("isolates malformed rows and defers a partial final row", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "token-floor-transcripts-"));
+    directories.push(root);
+    const valid = JSON.stringify({
+      sessionId: "session-safe",
+      cwd: "/work/token-floor",
+      timestamp: "2026-08-17T00:09:00.000Z"
+    });
+    fs.writeFileSync(path.join(root, "mixed.jsonl"), `${valid}\n{broken\n{"partial":`);
+    const result = recoverClaudeProjectTranscriptsWithDiagnostics(
+      root,
+      new Date("2026-08-17T00:10:00.000Z"),
+      Number.POSITIVE_INFINITY
+    );
+    expect(result.events).toHaveLength(1);
+    expect(result.report).toMatchObject({
+      validRecordCount: 1,
+      malformedRecordCount: 1,
+      readErrorCount: 0
+    });
   });
 });

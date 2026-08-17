@@ -31,7 +31,7 @@
 }
 .ui-tabs-trigger[data-state="active"] {
   color: #f8fafc;
-  background: #282d36c8;
+  background: var(--control-active);
   box-shadow: 0 1px 3px #0008;
 }
 .ui-tabs-content:focus-visible {

@@ -100,6 +100,14 @@ export function ChatPanel({
                   <dd>{selected.activity?.summary ?? selected.waitReason ?? "—"}</dd>
                 </div>
                 <div>
+                  <dt>Waiting</dt>
+                  <dd>{selected.waitReason ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt>Error</dt>
+                  <dd>{selected.error?.message ?? "—"}</dd>
+                </div>
+                <div>
                   <dt>Parent</dt>
                   <dd>{selected.parentId ?? "—"}</dd>
                 </div>

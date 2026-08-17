@@ -15,6 +15,7 @@ export type CodexLifecycleRecord =
   | { type: "task.completed"; timestamp: string; turnId: string }
   | { type: "task.failed"; timestamp: string; turnId?: string }
   | { type: "activity"; timestamp: string; callId: string; turnId?: string }
+  | { type: "heartbeat"; timestamp: string; heartbeatId: string }
   | {
       type: "message";
       timestamp: string;

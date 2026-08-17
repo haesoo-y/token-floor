@@ -26,6 +26,22 @@
 - Keep explicit path overrides only as diagnostics or platform fallbacks; provider-owned local state remains the default source of truth.
 - Add tests for local-source precedence, normalization, cache persistence, malformed input, and last-known-good fallback whenever provider data collection changes.
 
+## Lifecycle and Retention
+
+- Normalize ongoing Codex `mcp_tool_call_begin`, `mcp_tool_call_end`, and `agent_reasoning` records as provider-neutral `agent.active` heartbeats without retaining reasoning text, tool input, tool output, invocation data, or other provider payloads.
+- Refresh `lastEventAt` from every admitted activity heartbeat. Infer completion only after five minutes without a newer active event, and never infer completion for waiting or error agents.
+- Keep normalized event processing idempotent. Duplicate provider records must converge on the same stable event identity and must not reset state or presentation timers.
+- Retain completed character projections for 60 minutes from their explicit or inferred completion boundary. Do not remove active, waiting, or error characters because of age alone.
+- Character retention and log retention are independent. Removing a completed character must not remove its sanitized chat or event history.
+- Keep the latest 100 sanitized chat messages and the latest 100 non-chat events as separate bounded logs. Restore both logs from SQLite after restart even when their character projection has expired.
+
+## Durable Log Safety
+
+- Persist only allowlisted normalized event fields to SQLite. Reapply the allowlist and credential redaction while loading legacy rows.
+- Never persist provider source records, reasoning text, tool inputs, tool results, invocations, credentials, guardian activity, or internal orchestration prompts as chat or event logs.
+- Continue to remove guardian and internal orchestration projections from agents and both logs when structural provider metadata identifies them.
+- Add tests for character/log retention separation, independent 100-entry bounds, SQLite restart recovery, legacy-row allowlisting, credential redaction, and duplicate event handling whenever persistence changes.
+
 ## Asset Source of Truth
 
 - Inspect `.agents/private/reference` before creating or replacing any visual asset.
@@ -112,6 +128,8 @@
 - Avoid synchronized spawn paths and identical passage coordinates for multiple agents.
 - Stagger agents through narrow passages while preserving cardinal-only motion.
 - Idle agents should move between valid lounge destinations and show randomized local phrases without immediately repeating their previous line.
+- Keep the approved 10-second lounge speaker rotation. Preserve the current role-based pause distribution of approximately 9–14.4 seconds for subagents and 11–15.4 seconds for main agents.
+- Do not make idle conversation timing configurable or replace the approved short cycle with the superseded 60–120-second proposal.
 - NPC movement must remain subtle and must not intersect solid props.
 - Recalculate a route when status or assigned destination changes.
 
@@ -125,6 +143,16 @@
 - Keep status cards, usage cards, character selection, and detail panels above the game with explicit z-index layers.
 - UI panels must use shared primitives before introducing service-specific components.
 - Do not override shared component styling without the required Korean explanatory comment.
+- Prefer actual assistant messages over state-transition speech, and state-transition speech over idle phrases. Never use user messages as agent speech.
+- Keep state-transition bubbles visible for 3–5 seconds and do not restart their lifetime when an idempotent event is replayed.
+- Keep chat and event panels usable after the related character leaves the office; logs are historical projections, not character-owned UI state.
+
+## Connection and Degraded Operation
+
+- Keep the app WebSocket connection state separate from each provider's normalized local-source condition.
+- Preserve the last valid snapshot while reconnecting. Use bounded retry backoff and recover the newest snapshot after reconnection.
+- Represent healthy, waiting, missing, stale last-known-good, malformed-but-continuing, and disconnected provider sources independently so one provider failure never masks the other.
+- Locale, avatar preset, provider status, and provider capability may appear in local settings. Do not add idle conversation timing, credentials, provider paths, OAuth, login, or API-key controls.
 
 ## Components and Hooks
 

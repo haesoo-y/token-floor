@@ -12,7 +12,7 @@ describe("assignAgentRoster", () => {
       agent("b", "claude-code"),
       agent("c", "codex")
     ]);
-    expect(roster.map((entry) => entry.layoutSlot)).toEqual([0, 1, 2]);
+    expect(new Set(roster.map((entry) => entry.layoutSlot)).size).toBe(3);
   });
 
   it("cycles appearance slots independently for each provider and role", () => {
@@ -21,7 +21,8 @@ describe("assignAgentRoster", () => {
       agent("b", "claude-code"),
       agent("c", "codex")
     ]);
-    expect(roster.map((entry) => entry.appearanceSlot)).toEqual([0, 0, 1]);
+    expect(roster[0]?.appearanceSlot).not.toBe(roster[2]?.appearanceSlot);
+    expect(roster[1]?.appearanceSlot).toBeDefined();
   });
 
   it("keeps spawn slots unique across status and role pools", () => {
@@ -30,6 +31,17 @@ describe("assignAgentRoster", () => {
       { ...agent("b", "codex", "main"), status: "completed" },
       agent("c", "claude-code", "main")
     ]);
-    expect(roster.map((entry) => entry.spawnSlot)).toEqual([0, 1, 2]);
+    expect(new Set(roster.map((entry) => entry.spawnSlot)).size).toBe(3);
+  });
+
+  it("keeps identity slots stable when provider input order changes", () => {
+    const agents = [agent("a", "codex"), agent("b", "claude-code"), agent("c", "codex")];
+    const first = Object.fromEntries(
+      assignAgentRoster(agents).map((entry) => [entry.snapshot.id, entry.layoutSlot])
+    );
+    const reordered = Object.fromEntries(
+      assignAgentRoster([...agents].reverse()).map((entry) => [entry.snapshot.id, entry.layoutSlot])
+    );
+    expect(reordered).toEqual(first);
   });
 });

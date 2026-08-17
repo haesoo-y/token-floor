@@ -56,9 +56,27 @@ describe("office state reducer", () => {
     expect(next.agents["agent-1"]?.lastMessage).toBeUndefined();
   });
 
-  it("keeps a bounded idempotent event history for snapshot recovery", () => {
+  it("keeps one hundred chat entries independently from the event log", () => {
+    let state = applyEvent(createOfficeState(), activeEvent);
+    for (let index = 0; index < 105; index += 1) {
+      state = applyEvent(state, {
+        ...activeEvent,
+        eventId: `message-${index}`,
+        occurredAt: new Date(Date.parse(activeEvent.occurredAt) + index + 1).toISOString(),
+        type: "agent.message",
+        message: { role: "assistant", text: `Message ${index}` }
+      });
+    }
+
+    expect(state.messages).toHaveLength(100);
+    expect(state.messages[0]?.eventId).toBe("message-104");
+    expect(state.messages.at(-1)?.eventId).toBe("message-5");
+    expect(state.recentEvents).toEqual([activeEvent]);
+  });
+
+  it("keeps one hundred idempotent event log entries for snapshot recovery", () => {
     let state = createOfficeState();
-    for (let index = 0; index < 55; index += 1) {
+    for (let index = 0; index < 105; index += 1) {
       state = applyEvent(state, {
         ...activeEvent,
         eventId: `history-${index}`,
@@ -66,8 +84,8 @@ describe("office state reducer", () => {
       });
     }
 
-    expect(state.recentEvents).toHaveLength(50);
-    expect(state.recentEvents[0]?.eventId).toBe("history-54");
+    expect(state.recentEvents).toHaveLength(100);
+    expect(state.recentEvents[0]?.eventId).toBe("history-104");
     expect(applyEvent(state, state.recentEvents[0]!)).toEqual(state);
   });
 
@@ -147,6 +165,58 @@ describe("office state reducer", () => {
     expect(
       pruneCompletedAgents(completed, new Date("2026-08-16T01:00:00.000Z")).agents["agent-1"]
     ).toBeUndefined();
+  });
+
+  it("retains inferred completion for an hour from its deterministic timeout boundary", () => {
+    const active = applyEvent(createOfficeState(), activeEvent);
+    const completed = inferTimedOutCompletions(active, new Date("2026-08-16T02:00:00.000Z"));
+    expect(
+      pruneCompletedAgents(completed, new Date("2026-08-16T01:04:59.999Z")).agents["agent-1"]
+    ).toBeDefined();
+    expect(
+      pruneCompletedAgents(completed, new Date("2026-08-16T01:05:00.000Z")).agents["agent-1"]
+    ).toBeUndefined();
+  });
+
+  it("keeps waiting and error agents regardless of age", () => {
+    const waiting = applyEvent(createOfficeState(), {
+      ...activeEvent,
+      type: "agent.waiting",
+      reason: "input"
+    });
+    const error = applyEvent(waiting, {
+      ...activeEvent,
+      eventId: "failed-1",
+      agent: { id: "agent-2", kind: "main" },
+      type: "agent.failed",
+      error: { message: "safe failure" }
+    });
+    const pruned = pruneCompletedAgents(error, new Date("2027-08-16T00:00:00.000Z"));
+    expect(Object.keys(pruned.agents).sort()).toEqual(["agent-1", "agent-2"]);
+  });
+
+  it("removes a completed character while retaining its chat and event logs", () => {
+    let state = applyEvent(createOfficeState(), activeEvent);
+    state = applyEvent(state, {
+      ...activeEvent,
+      eventId: "message-cleanup",
+      type: "agent.message",
+      message: { role: "assistant", text: "Done" }
+    });
+    state = applyEvent(state, {
+      ...activeEvent,
+      eventId: "completed-cleanup",
+      type: "agent.completed",
+      inferred: false
+    });
+    const pruned = pruneCompletedAgents(state, new Date("2026-08-16T01:00:00.000Z"));
+    expect(pruned.agents["agent-1"]).toBeUndefined();
+    expect(pruned.messages.map((event) => event.eventId)).toEqual(["message-cleanup"]);
+    expect(pruned.recentEvents.map((event) => event.eventId)).toEqual([
+      "completed-cleanup",
+      "event-1"
+    ]);
+    expect(pruneCompletedAgents(pruned, new Date("2026-08-16T02:00:00.000Z"))).toBe(pruned);
   });
 
   it("keeps Claude and Codex identities separate for the same provider execution token", () => {

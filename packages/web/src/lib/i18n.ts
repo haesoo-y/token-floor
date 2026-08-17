@@ -1,5 +1,9 @@
 export type Locale = "en" | "ko" | "ja";
 
+export function resolveLocale(value: string | null): Locale {
+  return value === "ko" || value === "ja" || value === "en" ? value : "en";
+}
+
 const messages = {
   en: {
     active: "Active",
@@ -18,12 +22,22 @@ const messages = {
     assetBody: "Extract both free packs into this local folder, then reload the page.",
     player: "My character",
     connected: "Live office",
+    connecting: "Connecting to server",
     disconnected: "Server disconnected",
     usageDetails: "Weekly usage details",
     weeklyLeft: "Weekly left",
     fiveHourLeft: "5-hour left",
     lastSyncedAt: "Last synced",
-    resetsAt: "Reset date"
+    resetsAt: "Reset date",
+    settings: "Settings",
+    providerStatus: "Provider sources",
+    capabilities: "Capabilities",
+    sourceHealthy: "Receiving local data",
+    sourceWaiting: "Waiting for local data",
+    sourceMissing: "Local source not found",
+    sourceStale: "Using last known good data",
+    sourceMalformed: "Malformed data skipped",
+    sourceDisconnected: "Collector disconnected"
   },
   ko: {
     active: "작업 중",
@@ -42,12 +56,22 @@ const messages = {
     assetBody: "두 무료 팩을 아래 로컬 폴더에 압축 해제한 뒤 페이지를 새로고침하세요.",
     player: "내 캐릭터",
     connected: "실시간 오피스",
+    connecting: "서버 연결 중",
     disconnected: "서버 연결 끊김",
     usageDetails: "주간 사용량 상세",
     weeklyLeft: "주간 잔여",
     fiveHourLeft: "5시간 잔여",
     lastSyncedAt: "마지막 동기화",
-    resetsAt: "초기화 날짜"
+    resetsAt: "초기화 날짜",
+    settings: "설정",
+    providerStatus: "Provider 연동 상태",
+    capabilities: "기능",
+    sourceHealthy: "로컬 데이터 수신 중",
+    sourceWaiting: "로컬 데이터 대기 중",
+    sourceMissing: "로컬 소스 없음",
+    sourceStale: "마지막 정상값 사용 중",
+    sourceMalformed: "잘못된 데이터 건너뜀",
+    sourceDisconnected: "수집기 연결 끊김"
   },
   ja: {
     active: "作業中",
@@ -66,12 +90,22 @@ const messages = {
     assetBody: "2つの無料パックを次のローカルフォルダに展開し、再読み込みしてください。",
     player: "マイキャラクター",
     connected: "ライブオフィス",
+    connecting: "サーバー接続中",
     disconnected: "サーバー未接続",
     usageDetails: "週間使用量の詳細",
     weeklyLeft: "週間残量",
     fiveHourLeft: "5時間残量",
     lastSyncedAt: "最終同期",
-    resetsAt: "リセット日時"
+    resetsAt: "リセット日時",
+    settings: "設定",
+    providerStatus: "プロバイダー接続状態",
+    capabilities: "機能",
+    sourceHealthy: "ローカルデータ受信中",
+    sourceWaiting: "ローカルデータ待機中",
+    sourceMissing: "ローカルソースなし",
+    sourceStale: "最後の正常値を使用中",
+    sourceMalformed: "不正なデータをスキップ",
+    sourceDisconnected: "コレクター切断"
   }
 } as const;
 

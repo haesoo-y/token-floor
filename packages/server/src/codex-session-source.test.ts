@@ -45,6 +45,14 @@ function message(role: "user_message" | "agent_message", text: string) {
   return { type: "event_msg", timestamp: at, payload: { type: role, message: text } };
 }
 
+function heartbeat(type: "mcp_tool_call_begin" | "mcp_tool_call_end" | "agent_reasoning") {
+  return {
+    type: "event_msg",
+    timestamp: "2026-08-17T01:04:30.000Z",
+    payload: { type, call_id: "call-1", result: "must not escape the collector" }
+  };
+}
+
 afterEach(() => {
   for (const directory of roots.splice(0)) fs.rmSync(directory, { recursive: true, force: true });
 });
@@ -60,6 +68,26 @@ describe("CodexSessionCollector", () => {
     const events = collector.poll(new Date(at));
     expect(events.map((event) => event.type)).toEqual(["agent.active"]);
     expect(collector.poll(new Date(at))).toEqual([]);
+  });
+
+  it("collects ongoing Codex heartbeats once and advances agent activity time", () => {
+    const directory = root();
+    const filename = path.join(directory, "heartbeat.jsonl");
+    fs.writeFileSync(filename, line(meta("heartbeat")) + line(task("task_started")));
+    const collector = new CodexSessionCollector(directory);
+    collector.poll(new Date(at));
+    const record = heartbeat("mcp_tool_call_end");
+    fs.appendFileSync(filename, line(record) + line(record));
+
+    const events = collector.poll(new Date("2026-08-17T01:04:30.000Z"));
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: "agent.active",
+      occurredAt: "2026-08-17T01:04:30.000Z",
+      agent: { id: "codex:heartbeat" },
+      activity: { summary: "Working" }
+    });
+    expect(JSON.stringify(events)).not.toContain("must not escape");
   });
 
   it("recovers bounded chat after admitting the lifecycle actor", () => {
@@ -135,9 +163,13 @@ describe("CodexSessionCollector", () => {
       path.join(directory, "malformed.jsonl"),
       line(meta("safe")) + "{broken\n" + line(task("task_started"))
     );
-    expect(new CodexSessionCollector(directory).poll(new Date(at)).at(-1)?.type).toBe(
-      "agent.active"
-    );
+    const collector = new CodexSessionCollector(directory);
+    expect(collector.poll(new Date(at)).at(-1)?.type).toBe("agent.active");
+    expect(collector.diagnostics()).toMatchObject({
+      validRecordCount: 2,
+      malformedRecordCount: 1,
+      readErrorCount: 0
+    });
   });
 
   it("isolates one unreadable file from another session", () => {

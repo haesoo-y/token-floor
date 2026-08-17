@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { agentSpeech, idlePhrase, scheduledSpeaker, systemPhrase } from "./officeSpeech.js";
+import {
+  agentSpeech,
+  idlePhrase,
+  scheduledSpeaker,
+  systemPhrase,
+  transitionSpeech
+} from "./officeSpeech.js";
 
 describe("office speech", () => {
   it("rotates one lounge speaker at a time", () => {
@@ -30,5 +36,15 @@ describe("office speech", () => {
   it("localizes owned system states", () => {
     expect(systemPhrase("ko", "waiting")).toBe("권한 확인이 필요해요");
     expect(agentSpeech("ja", { status: "error" } as never)).toBe("タスクに失敗しました");
+  });
+
+  it.each([
+    ["agent.started", "Starting now"],
+    ["agent.active", "Working"],
+    ["agent.waiting", "Permission needed"],
+    ["agent.completed", "Task complete"],
+    ["agent.failed", "Task failed"]
+  ] as const)("maps %s to a short transition phrase", (type, phrase) => {
+    expect(transitionSpeech("en", type)).toBe(phrase);
   });
 });
