@@ -2,7 +2,7 @@
 
 # Token Floor 아키텍처
 
-이 문서는 현재 구현된 Phase 00–04 아키텍처를 설명합니다. `npx`, CLI 생명주기 명령어, 패키지 provenance, 깨끗한 환경의 onboarding, 전체 브라우저 검증은 Phase 05의 준비 중 항목입니다.
+이 문서는 현재 구현된 Phase 00–05 아키텍처를 설명합니다. Registry 공개와 전체 browser release matrix는 외부 release 확인 항목으로 남아 있습니다.
 
 ## 1. 설계 목표
 
@@ -135,13 +135,13 @@ Claude 경로는 `packages/adapter-claude`와 server collector에서 시작합�
 
 ### 5.2 Hook 관찰
 
-Server 시작 시 자동 관찰을 끄지 않았다면 Claude 설정에 loopback observer를 멱등하게 병합합니다. 기존 사용자 설정과 hook을 유지하고 복구 backup은 한 번만 만들며, 짧고 실패를 허용하는 local POST를 사용하므로 Token Floor가 꺼져 있어도 Claude를 막지 않습니다.
+`token-floor install`은 Claude가 설치된 경우에만 loopback observer를 멱등하게 병합합니다. 일반 server 시작은 공급자 설정을 바꾸거나 없는 공급자 directory를 만들지 않습니다. 기존 사용자 설정과 hook을 유지하고 복구 backup은 한 번만 만듭니다.
 
 Session start, user prompt submit, tool 전·후, tool failure, permission request, notification, subagent start·stop, stop·failure, session end 경계를 관찰합니다.
 
 ```text
-POST http://127.0.0.1:4317/hooks/claude
-POST http://127.0.0.1:4317/hooks/claude-usage
+POST http://127.0.0.1:<resolved-port>/hooks/claude
+POST http://127.0.0.1:<resolved-port>/hooks/claude-usage
 ```
 
 구조적 field만 session, agent 종류, parent, 상태 전환, 안전한 요약을 결정합니다. Hook request의 prompt, tool input, command, tool result, assistant body 원문은 projection하지 않습니다.
@@ -206,7 +206,7 @@ Decoder는 구조적인 `request_user_input`, `require_escalated` 경계를 알�
 | `POST /hooks/claude-usage` | Claude usage handoff 수신          |
 | `WS /events`               | 최초 snapshot과 이후 정규화 event  |
 
-Server는 `127.0.0.1:4317`, Vite 개발 UI는 `127.0.0.1:5173`을 사용합니다.
+Production UI, HTTP API, WebSocket, Claude hook은 결정된 하나의 `127.0.0.1` port를 공유합니다. 우선순위는 CLI flag, environment, 설치 config, `4317`입니다. Vite 개발 UI는 `5173`을 사용하고 API·WS를 개발 server로 proxy합니다.
 HTTP CORS는 설정된 개발 origin에만 노출됩니다. Memo mutation은 정확한 origin을 요구하고,
 JSON body는 `application/json`이어야 하며, `/events`는 다른 모든 origin의 WebSocket upgrade를
 거부합니다. DNS rebinding 위험을 줄이기 위해 loopback이 아닌 `Host` 요청도 거부합니다.
@@ -296,6 +296,7 @@ token-floor/
 │   ├── adapter-claude/           # Claude hook, transcript, usage
 │   ├── adapter-codex/            # Codex session, usage
 │   ├── server/                   # HTTP/WS, collector, persistence
+│   ├── cli/                      # 배포 CLI·lifecycle 소유권
 │   ├── web/                      # React UI, Phaser office
 │   └── asset-contract/           # asset manifest·validation
 ├── scripts/                      # maintenance·asset tooling
@@ -332,4 +333,4 @@ token-floor/
 
 ## 13. Phase 경계
 
-Phase 00–04는 위 구조를 제공합니다. Phase 05의 CLI·`npx`, 설치 진단·제거, clean environment onboarding, npm package·provenance, third-party source·license, supply-chain, Chrome·Edge·Firefox·Safari 검증은 **준비 중**입니다.
+Phase 00–05는 위 구조를 제공합니다. Phase 05에는 배포 CLI, 명시적 install·diagnose·uninstall 소유권, 엄격한 port 우선순위, 단일-port production serving, 공급자 0개 동작, allowlist npm tarball이 포함됩니다. Registry 공개와 Chrome·Edge·Firefox·Safari 전체 matrix는 완료로 표시하지 않는 release 확인 항목입니다.

@@ -8,7 +8,7 @@ Token Floor turns the local activity already produced by Claude Code and Codex i
 
 There is no Token Floor account, provider OAuth screen, API-key form, or second Claude/Codex sign-in. If a provider is already configured on your machine, Token Floor observes its local state on `127.0.0.1` and starts lightly. Provider credentials and raw tool payloads stay out of Token Floor.
 
-> Token Floor is currently a local development preview. The zero-friction `npx` distribution flow is planned for Phase 05 and is not available yet.
+> Phase 05 packaging is implemented and verified locally. The npm registry package is not published yet.
 
 ![Claude Code and Codex agents working in the Token Floor office](docs/assets/agents-working.png)
 
@@ -99,7 +99,7 @@ Redaction is applied before persistence and applied again when legacy SQLite row
 
 _The whiteboard memo panel and activity panel reuse translucent dark-navy floating-panel primitives without backdrop blur._
 
-## Run locally
+## Run Token Floor
 
 ### Requirements
 
@@ -107,7 +107,31 @@ _The whiteboard memo panel and activity panel reuse translucent dark-navy floati
 - npm 10 or newer
 - macOS for the currently documented Claude Desktop cache path; Claude Code and Codex collectors use provider-owned local state when available
 
-### Start
+### Package CLI
+
+After the package is published, the default command and `start` are equivalent:
+
+```bash
+npx token-floor
+npx token-floor start
+npx token-floor --port 8080
+TOKEN_FLOOR_PORT=8080 npx token-floor
+```
+
+The production UI, HTTP API, and WebSocket share one loopback URL. Port precedence is `--port` > `TOKEN_FLOOR_PORT` > installed `.token-floor/config.json` > `4317`.
+
+Lifecycle commands never log in to or start a provider:
+
+```bash
+npx token-floor install --port 8080
+npx token-floor diagnose --port 8080
+npx token-floor uninstall
+npx token-floor uninstall --delete-local-data
+```
+
+`install` adds only Token Floor-owned Claude observers when Claude is present. `diagnose` is read-only. `uninstall` preserves events, usage cache, and memos unless `--delete-local-data` is explicit. Claude-only, Codex-only, and provider-free machines are supported.
+
+### Development
 
 ```bash
 git clone https://github.com/haesoo-y/token-floor.git
@@ -117,6 +141,8 @@ npm run dev
 ```
 
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The local collector/server listens on `127.0.0.1:4317`.
+
+Use `TOKEN_FLOOR_PORT` for the development server and `npm run dev -w @token-floor/web -- --port 5174` for a different Vite UI port. Set `TOKEN_FLOOR_BROWSER_ORIGIN` to that UI origin when changing the Vite port.
 
 No separate Claude or Codex login is performed by Token Floor. Use the providers normally once on your machine; Token Floor observes the local state they already own.
 
@@ -145,6 +171,7 @@ Runtime files are written under `.token-floor/` and ignored by Git:
 | `.token-floor/events.db`           | Allowlisted normalized lifecycle, chat, and usage events for restart recovery |
 | `.token-floor/provider-usage.json` | Atomic normalized usage cache and last-known-good fallback                    |
 | `.token-floor/memos.json`          | Versioned whiteboard memo store                                               |
+| `.token-floor/config.json`         | Token Floor-owned installed port configuration                                |
 
 The web UI never reads Claude or Codex files directly. See [Architecture](ARCHITECTURE.md) for the complete data flow and security boundary.
 
@@ -158,19 +185,19 @@ The web UI never reads Claude or Codex files directly. See [Architecture](ARCHIT
 | `packages/server`         | Loopback HTTP/WebSocket server, collectors, SQLite and JSON persistence, maintenance |
 | `packages/web`            | React interface, Phaser office, panels, settings, localization, reconnect behavior   |
 | `packages/asset-contract` | Runtime asset manifest and validation contracts                                      |
+| `packages/cli`            | CLI parsing, install/diagnose/uninstall ownership, and production startup            |
 
-## Coming soon — Phase 05
+## Phase 05 distribution status
 
-The following items are planned, not shipped:
+Implemented and locally verified:
 
-- `npx` launch and a distributable CLI;
-- install, diagnose, and uninstall commands;
-- clean-machine onboarding and recovery guidance;
-- npm package contents, provenance, and supply-chain hardening;
-- remaining third-party source-package review;
-- verified Chrome, Edge, Firefox, and Safari compatibility.
+- distributable CLI with start/install/diagnose/uninstall;
+- strict shared port resolution and one production HTTP/WS/UI port;
+- provider-free and independent Claude/Codex operation;
+- npm tarball allowlist and clean-install smoke tests;
+- MIT/CC0 notices and npm audit review.
 
-Until Phase 05 is complete, use `git clone`, `npm install`, and `npm run dev`.
+Registry publication and the complete Chrome, Edge, Firefox, and Safari matrix remain release checks. The public-readiness audit is `CONDITIONAL PASS`; no credential or high-risk PII blocker remains, while remote force-push, GitHub visibility, and npm publication require separate approval.
 
 ## Art credits
 
@@ -182,4 +209,4 @@ Token Floor source code is available under the [MIT License](LICENSE). Third-par
 
 ## Status
 
-Phases 00–04 are represented in the current local-development build. Phase 05 distribution and packaging work is **coming soon**.
+Phases 00–05 are implemented in the local build. npm publication and the complete browser release matrix remain pending.

@@ -2,7 +2,7 @@
 
 # Token Floor アーキテクチャ
 
-この文書は実装済みの Phase 00–04 を説明します。`npx`、CLI ライフサイクルコマンド、package provenance、クリーン環境のオンボーディング、全ブラウザー検証は Phase 05 の準備中項目です。
+この文書は実装済みの Phase 00–05 を説明します。Registry 公開と完全な browser release matrix は外部リリース確認項目です。
 
 ## 1. 設計目標
 
@@ -135,13 +135,13 @@ Claude の経路は `packages/adapter-claude` と server collector から始ま�
 
 ### 5.2 Hook 観察
 
-自動観察を無効にしていなければ、server 起動時に Claude 設定へ loopback observer を冪等に merge します。既存設定と hook を保ち、復旧 backup は一度だけ作成し、短く失敗許容の local POST を使うため Token Floor 停止中も Claude をブロックしません。
+`token-floor install` は Claude が存在するときだけ loopback observer を冪等に merge します。通常の server 起動は provider 設定を変更せず、存在しない provider directory を作りません。既存設定と hook を保ち、復旧 backup は一度だけ作成します。
 
 Session start、user prompt submit、tool 前後、tool failure、permission request、notification、subagent start/stop、stop/failure、session end を観察します。
 
 ```text
-POST http://127.0.0.1:4317/hooks/claude
-POST http://127.0.0.1:4317/hooks/claude-usage
+POST http://127.0.0.1:<resolved-port>/hooks/claude
+POST http://127.0.0.1:<resolved-port>/hooks/claude-usage
 ```
 
 構造 field だけで session、agent 種別、parent、状態遷移、安全な要約を決めます。Hook request 内の prompt、tool input、command、tool result、assistant body は projection しません。
@@ -206,7 +206,7 @@ Usage collector は bounded recent rollout と tail から `rate_limits` metadat
 | `POST /hooks/claude-usage` | Claude usage handoff                           |
 | `WS /events`               | 初回 snapshot と incremental event             |
 
-Server は `127.0.0.1:4317`、Vite 開発 UI は `127.0.0.1:5173` です。
+Production UI、HTTP API、WebSocket、Claude hook は解決された一つの `127.0.0.1` port を共有します。優先順位は CLI flag、environment、install config、`4317` です。Vite 開発 UI は `5173` を使い、API・WS を開発 server に proxy します。
 HTTP CORS は設定済み開発 origin だけに公開します。Memo mutation は正確な origin を要求し、
 JSON body は `application/json` に限定し、`/events` はその他すべての origin からの WebSocket
 upgrade を拒否します。DNS rebinding risk を抑えるため loopback 以外の `Host` も拒否します。
@@ -296,6 +296,7 @@ token-floor/
 │   ├── adapter-claude/           # Claude hook, transcript, usage
 │   ├── adapter-codex/            # Codex session, usage
 │   ├── server/                   # HTTP/WS, collectors, persistence
+│   ├── cli/                      # distribution CLI / lifecycle ownership
 │   ├── web/                      # React UI, Phaser office
 │   └── asset-contract/           # asset manifest / validation
 ├── scripts/                      # maintenance / asset tooling
@@ -332,4 +333,4 @@ token-floor/
 
 ## 13. Phase 境界
 
-Phase 00–04 は上記構成を提供します。Phase 05 の CLI・`npx`、install diagnostics・uninstall、clean environment onboarding、npm package・provenance、third-party source・license、supply-chain、Chrome・Edge・Firefox・Safari 検証は**準備中**です。
+Phase 00–05 は上記構成を提供します。Phase 05 には配布 CLI、明示的 install・diagnose・uninstall ownership、厳密な port 優先順位、単一 port production serving、provider 0 件動作、allowlist npm tarball が含まれます。Registry 公開と Chrome・Edge・Firefox・Safari の完全 matrix は完了扱いしない release check です。

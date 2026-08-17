@@ -3,6 +3,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { parseNormalizedEvent, type NormalizedEvent } from "@token-floor/protocol";
 import { persistedEvent } from "./persisted-event.js";
+import { ensurePrivateDirectory } from "./private-files.js";
 
 export interface EventStore {
   append: (event: NormalizedEvent) => void;
@@ -15,8 +16,9 @@ export class SqliteEventStore implements EventStore {
   private readonly database: DatabaseSync;
 
   constructor(filename: string) {
-    fs.mkdirSync(path.dirname(filename), { recursive: true });
+    ensurePrivateDirectory(path.dirname(filename));
     this.database = new DatabaseSync(filename);
+    fs.chmodSync(filename, 0o600);
     this.database.exec(`
       CREATE TABLE IF NOT EXISTS normalized_events (
         event_id TEXT PRIMARY KEY,

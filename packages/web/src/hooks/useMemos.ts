@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Memo, MemoDocument } from "@token-floor/protocol";
 
-const apiRoot = import.meta.env.VITE_TOKEN_FLOOR_API ?? "http://127.0.0.1:4317";
+const apiRoot = import.meta.env.VITE_TOKEN_FLOOR_API ?? "";
 
 /** Owns the local memo API lifecycle independently from provider event streaming. */
 export function useMemos() {

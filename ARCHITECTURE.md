@@ -2,7 +2,7 @@
 
 # Token Floor Architecture
 
-This document describes the implemented Phase 00–04 architecture. Phase 05 distribution work—`npx`, CLI lifecycle commands, package provenance, clean-machine onboarding, and the full browser matrix—is intentionally marked as future work.
+This document describes the implemented Phase 00–05 architecture. Registry publication and the complete browser release matrix remain external release checks.
 
 ## 1. Design goals
 
@@ -149,13 +149,13 @@ Explicit path overrides are diagnostics and platform fallbacks, not the primary 
 
 ### 5.2 Hook observation
 
-At server startup, Token Floor idempotently merges loopback observers into Claude settings unless automatic observation is disabled. It preserves unrelated user settings and existing hooks, creates a recovery backup once, and uses a short, failure-tolerant local POST so Claude is never blocked when Token Floor is stopped.
+`token-floor install` idempotently merges loopback observers only when Claude is installed. Normal server startup never changes provider settings or creates a missing provider directory. Installation preserves unrelated user settings and hooks, creates one recovery backup, and uses a short, failure-tolerant local POST.
 
 Observed boundaries include session start, user prompt submission, pre/post tool use, tool failure, permission request, notification, subagent start/stop, stop/failure, and session end. Hooks post to:
 
 ```text
-POST http://127.0.0.1:4317/hooks/claude
-POST http://127.0.0.1:4317/hooks/claude-usage
+POST http://127.0.0.1:<resolved-port>/hooks/claude
+POST http://127.0.0.1:<resolved-port>/hooks/claude-usage
 ```
 
 Only structural fields select the session, agent kind, parent, status transition, and safe summary. Raw prompt text, tool input, command, tool result, and assistant body from the hook request are not projected.
@@ -222,7 +222,7 @@ For usage, the collector scans a bounded set of recent rollout files, reads a bo
 | `POST /hooks/claude-usage` | Silent Claude usage handoff                                         |
 | `WS /events`               | Initial snapshot and incremental normalized events                  |
 
-The server listens on `127.0.0.1:4317`. Vite serves the development UI on `127.0.0.1:5173`.
+Production UI, HTTP API, WebSocket, and Claude hooks share the resolved `127.0.0.1` port. Resolution order is CLI flag, environment, installed config, then `4317`. Vite development uses `5173` and proxies same-origin API/WS traffic to the development server.
 HTTP responses expose CORS only to that configured development origin. Memo mutations require the
 exact origin, JSON bodies require `application/json`, and `/events` rejects WebSocket upgrades from
 every other origin. Requests with a non-loopback `Host` are rejected to reduce DNS-rebinding risk.
@@ -331,6 +331,7 @@ token-floor/
 │   ├── adapter-claude/               # Claude hooks, transcript and usage adapters
 │   ├── adapter-codex/                # Codex session and usage adapters
 │   ├── server/                       # HTTP/WS server, collectors and persistence
+│   ├── cli/                          # Distribution CLI and lifecycle ownership
 │   ├── web/                          # React UI and Phaser office
 │   └── asset-contract/               # Asset manifest and validation
 ├── scripts/                          # Repository maintenance and asset tooling
@@ -369,4 +370,4 @@ Each package exposes explicit TypeScript boundaries. Production source is split 
 
 ## 13. Phase boundary
 
-Phase 00–04 provide the architecture described above. Phase 05 remains **coming soon** and will own distributable CLI/`npx` startup, installation diagnostics and removal, clean-environment onboarding, npm package and provenance review, third-party source/license review, supply-chain hardening, and the Chrome/Edge/Firefox/Safari verification matrix.
+Phase 00–05 provide the architecture described above. Phase 05 adds the distributable CLI, explicit install/diagnose/uninstall ownership, strict port precedence, one-port production serving, provider-free operation, and an allowlisted npm tarball. Registry publication and the complete Chrome/Edge/Firefox/Safari matrix remain release checks and are not represented as completed.

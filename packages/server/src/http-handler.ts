@@ -8,6 +8,7 @@ import { sendCorsPreflight, sendJson } from "./json-response.js";
 import { handleMemoRequest } from "./memo-routes.js";
 import type { JsonMemoStore } from "./memo-store.js";
 import { readJsonBody } from "./request-body.js";
+import { serveStaticFile } from "./static-files.js";
 import {
   hasJsonContentType,
   hasLoopbackHost,
@@ -24,6 +25,7 @@ interface HttpHandlerOptions {
   claudeRegistry: ClaudeSubagentRegistry;
   acceptEvent: (event: NormalizedEvent) => void;
   providerUsageCachePath?: string;
+  webRootPath?: string;
 }
 
 /** Owns the loopback HTTP trust boundary and routes only admitted requests. */
@@ -93,6 +95,7 @@ export function createHttpHandler(options: HttpHandlerOptions) {
         .catch(() => sendJson(response, 400, { error: "Invalid Claude usage payload" }));
       return;
     }
+    if (serveStaticFile(request, response, options.webRootPath)) return;
     sendJson(response, 404, { error: "Not found" }, corsOrigin);
   };
 }

@@ -83,7 +83,8 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
       acceptEvent: acceptRecoveredEvent,
       ...(options.providerUsageCachePath
         ? { providerUsageCachePath: options.providerUsageCachePath }
-        : {})
+        : {}),
+      ...(options.webRootPath ? { webRootPath: options.webRootPath } : {})
     })
   );
   sockets.on("connection", (socket) => socket.send(JSON.stringify({ type: "snapshot", state })));

@@ -19,4 +19,5 @@ export interface TokenFloorServerOptions {
   providerUsageCachePath?: string;
   eventStore?: EventStore;
   simulation?: boolean;
+  webRootPath?: string;
 }

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Memo, MemoDocument } from "@token-floor/protocol";
+import { ensurePrivateDirectory } from "./private-files.js";
 
 const EMPTY_DOCUMENT: MemoDocument = { version: 1, memos: [] };
 
@@ -60,9 +61,12 @@ export class JsonMemoStore {
   }
 
   private save(document: MemoDocument): void {
-    fs.mkdirSync(path.dirname(this.filename), { recursive: true });
-    const temporary = `${this.filename}.tmp`;
-    fs.writeFileSync(temporary, `${JSON.stringify(document, null, 2)}\n`, { mode: 0o600 });
+    ensurePrivateDirectory(path.dirname(this.filename));
+    const temporary = `${this.filename}.${randomUUID()}.tmp`;
+    fs.writeFileSync(temporary, `${JSON.stringify(document, null, 2)}\n`, {
+      mode: 0o600,
+      flag: "wx"
+    });
     fs.renameSync(temporary, this.filename);
   }
 }

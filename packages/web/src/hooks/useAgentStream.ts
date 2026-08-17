@@ -32,7 +32,8 @@ export function useAgentStream(): {
 
   // This effect owns one sequential WebSocket lifecycle, its retry timer, and final cleanup.
   useEffect(() => {
-    const url = import.meta.env.VITE_TOKEN_FLOOR_WS ?? "ws://127.0.0.1:4317/events";
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    const url = import.meta.env.VITE_TOKEN_FLOOR_WS ?? `${protocol}//${location.host}/events`;
     let socket: WebSocket | undefined;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
     let attempt = 0;

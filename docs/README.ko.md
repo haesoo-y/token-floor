@@ -8,7 +8,7 @@ Token Floor는 Claude Code와 Codex가 로컬에 남긴 활동을 실시간 탑�
 
 Token Floor 계정, 공급자 OAuth 화면, API 키 입력, Claude·Codex 재로그인은 필요하지 않습니다. 컴퓨터에 이미 설정된 공급자의 로컬 상태를 `127.0.0.1`에서 읽으므로 가볍게 시작할 수 있습니다. 공급자 인증정보와 도구 원문 페이로드는 Token Floor에 저장하지 않습니다.
 
-> 현재 Token Floor는 로컬 개발 프리뷰입니다. 설치가 간편한 `npx` 배포 방식은 Phase 05에서 제공할 예정이며 아직 사용할 수 없습니다.
+> Phase 05 패키징은 로컬 구현·검증을 마쳤습니다. npm registry에는 아직 공개하지 않았습니다.
 
 ![Token Floor 오피스에서 작업 중인 Claude Code와 Codex 에이전트](assets/agents-working.png)
 
@@ -99,7 +99,7 @@ Token Floor는 오피스에 필요한 허용 목록 기반 정규화 필드만 �
 
 _화이트보드 메모 패널과 활동 패널은 backdrop blur 없이 반투명 어두운 남색 공통 패널을 사용합니다._
 
-## 로컬 실행
+## Token Floor 실행
 
 ### 요구사항
 
@@ -107,7 +107,29 @@ _화이트보드 메모 패널과 활동 패널은 backdrop blur 없이 반투�
 - npm 10 이상
 - 현재 문서화된 Claude Desktop 캐시 경로는 macOS 기준입니다. Claude Code와 Codex 수집기는 사용할 수 있는 공급자 소유 로컬 상태를 읽습니다.
 
-### 시작하기
+### 패키지 CLI
+
+패키지를 공개한 뒤에는 기본 명령과 `start`가 동일하게 동작합니다.
+
+```bash
+npx token-floor
+npx token-floor start
+npx token-floor --port 8080
+TOKEN_FLOOR_PORT=8080 npx token-floor
+```
+
+Production UI, HTTP API, WebSocket은 하나의 루프백 URL을 사용합니다. 포트 우선순위는 `--port` > `TOKEN_FLOOR_PORT` > `.token-floor/config.json` > `4317`입니다.
+
+```bash
+npx token-floor install --port 8080
+npx token-floor diagnose --port 8080
+npx token-floor uninstall
+npx token-floor uninstall --delete-local-data
+```
+
+`install`은 Claude가 있을 때만 Token Floor 소유 observer를 추가합니다. `diagnose`는 읽기 전용이고, `uninstall`은 `--delete-local-data`를 명시하지 않으면 이벤트·사용량·메모를 보존합니다. Claude만 있거나 Codex만 있거나 둘 다 없는 환경을 지원합니다.
+
+### 개발
 
 ```bash
 git clone https://github.com/haesoo-y/token-floor.git
@@ -117,6 +139,8 @@ npm run dev
 ```
 
 [http://127.0.0.1:5173](http://127.0.0.1:5173)을 여세요. 로컬 수집기·서버는 `127.0.0.1:4317`에서 동작합니다.
+
+개발 server port는 `TOKEN_FLOOR_PORT`, Vite UI port는 `npm run dev -w @token-floor/web -- --port 5174`로 바꿀 수 있습니다. Vite port를 바꾸면 `TOKEN_FLOOR_BROWSER_ORIGIN`도 해당 UI origin으로 설정하세요.
 
 Token Floor는 Claude나 Codex 로그인을 별도로 수행하지 않습니다. 컴퓨터에서 공급자를 평소처럼 한 번 설정하면, 공급자가 이미 소유한 로컬 상태를 관찰합니다.
 
@@ -145,6 +169,7 @@ npm run build
 | `.token-floor/events.db`           | 재시작 복구용 허용 목록 기반 정규화 생명주기·채팅·사용량 이벤트 |
 | `.token-floor/provider-usage.json` | 원자적으로 기록하는 정규화된 사용량 캐시와 마지막 정상 값       |
 | `.token-floor/memos.json`          | 버전이 있는 화이트보드 메모 저장소                              |
+| `.token-floor/config.json`         | Token Floor 소유 설치 port 설정                                 |
 
 웹 UI는 Claude나 Codex 파일을 직접 읽지 않습니다. 전체 데이터 흐름과 보안 경계는 [아키텍처 문서](ARCHITECTURE.ko.md)에서 확인하세요.
 
@@ -158,19 +183,19 @@ npm run build
 | `packages/server`         | 루프백 HTTP·WebSocket 서버, 수집기, SQLite·JSON 영속성, 유지 관리 |
 | `packages/web`            | React UI, Phaser 오피스, 패널, 설정, 다국어, 재연결 동작          |
 | `packages/asset-contract` | 런타임 에셋 매니페스트와 검증 계약                                |
+| `packages/cli`            | CLI 해석, 설치·진단·제거 소유권, production 시작                  |
 
-## 준비 중 — Phase 05
+## Phase 05 배포 상태
 
-다음 항목은 계획 단계이며 아직 제공하지 않습니다.
+로컬 구현과 검증을 마친 항목:
 
-- `npx` 실행과 배포 가능한 CLI
-- 설치, 진단, 제거 명령어
-- 깨끗한 환경에서의 온보딩과 복구 안내
-- npm 패키지 구성, provenance, 공급망 강화
-- 남은 서드파티 소스 패키지 검토
-- Chrome, Edge, Firefox, Safari 호환성 검증
+- start/install/diagnose/uninstall 배포 CLI
+- 엄격한 공통 port 계약과 단일 production UI·HTTP·WS port
+- 공급자 0개 및 Claude/Codex 독립 동작
+- npm tarball allowlist와 clean-install smoke
+- MIT/CC0 고지와 npm audit
 
-Phase 05 완료 전에는 `git clone`, `npm install`, `npm run dev`를 사용하세요.
+npm registry 공개와 Chrome, Edge, Firefox, Safari 전체 matrix는 release 전 확인 항목입니다. Public-readiness 감사는 `CONDITIONAL PASS`이며 credential·고위험 개인정보 blocker는 없습니다. 원격 force-push, GitHub public 전환, npm publish는 별도 승인이 필요합니다.
 
 ## 에셋 출처
 
@@ -182,4 +207,4 @@ Token Floor 소스 코드는 [MIT 라이선스](../LICENSE)로 제공됩니다. 
 
 ## 현재 상태
 
-현재 로컬 개발 빌드에는 Phase 00–04가 반영되어 있습니다. Phase 05 배포·패키징 작업은 **준비 중**입니다.
+현재 로컬 빌드에는 Phase 00–05가 반영되어 있습니다. npm 공개와 전체 browser release matrix는 남아 있습니다.

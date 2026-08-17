@@ -1,7 +1,6 @@
 {
   "name": "token-floor",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -12,23 +11,41 @@
     "npm": ">=10"
   },
   "type": "module",
+  "bin": {
+    "token-floor": "dist/cli.js"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "exports": {
+    "./package.json": "./package.json"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "dev": "concurrently -k -n server,web -c blue,magenta \"npm run dev -w @token-floor/server\" \"npm run dev -w @token-floor/web\"",
-    "build": "npm run build -w @token-floor/adapter-codex && npm run build -w @token-floor/adapter-claude && npm run build -w @token-floor/server && npm run build -w @token-floor/web",
+    "build": "npm run build -w @token-floor/adapter-codex && npm run build -w @token-floor/adapter-claude && npm run build -w @token-floor/server && npm run build -w @token-floor/cli && npm run build -w @token-floor/web && npm run build:cli",
+    "build:cli": "node scripts/prepare-cli-output.mjs && esbuild packages/cli/dist/index.js --bundle --splitting --platform=node --format=esm --target=node22 --outdir=dist --entry-names=cli --chunk-names=chunks/[name]-[hash] --banner:js=\"#!/usr/bin/env node\" --external:ws && node scripts/mark-cli-executable.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.2.0",
     "concurrently": "^10.0.5",
+    "esbuild": "^0.28.2",
     "eslint": "^10.8.1",
     "prettier": "^3.9.6",
     "typescript": "^6.0.3",

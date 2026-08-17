@@ -29,12 +29,16 @@ export function getClaudeObserverStatus(filename: string): ClaudeObserverStatus 
 }
 
 /** Installs idempotent local observers and creates one rollback backup. */
-export function installClaudeObservers(filename: string): ClaudeObserverStatus {
+export function installClaudeObservers(
+  filename: string,
+  url?: string,
+  usageUrl?: string
+): ClaudeObserverStatus {
   const settings = readSettings(filename);
   if (fs.existsSync(filename) && !fs.existsSync(`${filename}.token-floor.backup`)) {
     fs.copyFileSync(filename, `${filename}.token-floor.backup`);
   }
-  writeSettings(filename, mergeClaudeHookSettings(settings));
+  writeSettings(filename, mergeClaudeHookSettings(settings, url, usageUrl));
   return getClaudeObserverStatus(filename);
 }
 

@@ -1,0 +1,15 @@
+{
+  "name": "@token-floor/cli",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@token-floor/adapter-claude": "0.0.0",
+    "@token-floor/protocol": "0.0.0",
+    "@token-floor/server": "0.0.0"
+  }
+}

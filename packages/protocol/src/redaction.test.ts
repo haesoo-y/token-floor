@@ -5,7 +5,7 @@ describe("sanitizeSpeech", () => {
   it("redacts common credentials and user directories", () => {
     const input = "Bearer abc.def API_TOKEN=secret /Users/example/project sk-1234567890";
     expect(sanitizeSpeech(input)).toBe(
-      "Bearer [REDACTED_TOKEN] API_TOKEN=[REDACTED] /Users/example/project [REDACTED_KEY]"
+      "Bearer [REDACTED_TOKEN] API_TOKEN=[REDACTED] /Users/[USER]/project [REDACTED_KEY]"
     );
   });
 

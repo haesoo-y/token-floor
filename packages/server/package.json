@@ -4,6 +4,12 @@
   "private": true,
   "license": "MIT",
   "type": "module",
+  "exports": {
+    ".": "./dist/api.js",
+    "./runtime-paths": "./dist/runtime-paths.js",
+    "./start": "./dist/start-server.js"
+  },
+  "types": "./dist/api.d.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -b"

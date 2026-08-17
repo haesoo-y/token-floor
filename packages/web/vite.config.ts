@@ -3,6 +3,16 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  server: { host: "127.0.0.1", port: 5173, strictPort: true },
-  build: { outDir: "dist", emptyOutDir: true }
+  server: {
+    host: "127.0.0.1",
+    port: 5173,
+    strictPort: true,
+    proxy: {
+      "/events": { target: "ws://127.0.0.1:4317", ws: true },
+      "/health": "http://127.0.0.1:4317",
+      "/snapshot": "http://127.0.0.1:4317",
+      "/memos": "http://127.0.0.1:4317"
+    }
+  },
+  build: { outDir: "../../dist/web", emptyOutDir: true }
 });

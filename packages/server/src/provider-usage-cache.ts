@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { parseNormalizedEvent, type UsageUpdatedEvent } from "@token-floor/protocol";
+import { ensurePrivateDirectory } from "./private-files.js";
 
 interface ProviderUsageCache {
   schemaVersion: 1;
@@ -76,9 +78,12 @@ export function updateProviderUsageCache(
     updatedAt: now.toISOString(),
     providers
   };
-  fs.mkdirSync(path.dirname(filename), { recursive: true });
-  const temporary = `${filename}.${process.pid}.tmp`;
-  fs.writeFileSync(temporary, `${JSON.stringify(cache, null, 2)}\n`, { mode: 0o600 });
+  ensurePrivateDirectory(path.dirname(filename));
+  const temporary = `${filename}.${randomUUID()}.tmp`;
+  fs.writeFileSync(temporary, `${JSON.stringify(cache, null, 2)}\n`, {
+    mode: 0o600,
+    flag: "wx"
+  });
   fs.renameSync(temporary, filename);
   return { events: Object.values(providers), changed: true };
 }
