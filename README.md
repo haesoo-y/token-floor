@@ -38,6 +38,7 @@ _Active main agents and subagents have distinct sprites and work positions; comp
 - Keeps arrow keys assigned to the player even after a panel, tab, memo, button, or whiteboard receives focus; WASD remains available except while typing.
 - Uses a compact five-zone layout: agent workspace, meeting room, coffee lounge, separate Codex and Claude usage offices, and a future area.
 - Provides solid walls, meeting table, and whiteboard collision, agent route avoidance, depth sorting, camera follow, wheel zoom, and crisp nearest-neighbor pixel rendering.
+- More office furniture will arrive with the next version. Thank you for waiting.
 - Offers multiple player avatars, stored locally, through the character picker and settings.
 - Checks required runtime art before entering the office and shows a direct local asset-path diagnostic instead of a broken scene.
 
@@ -103,11 +104,11 @@ _The whiteboard memo panel and activity panel reuse translucent dark-navy floati
 
 - Node.js 22 or newer, including `node:sqlite`
 - npm 10 or newer
-- macOS for the currently documented Claude Desktop cache path; Claude Code and Codex collectors use provider-owned local state when available
+- macOS
 
 ### Package CLI
 
-After the package is published, the default command and `start` are equivalent:
+The default command and `start` are equivalent:
 
 ```bash
 npx token-floor

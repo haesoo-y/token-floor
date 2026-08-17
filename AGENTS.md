@@ -229,7 +229,7 @@
 - Credit the MetroCity Free Top-Down Character Pack at `https://jik-a-4.itch.io/metrocity-free-topdown-character-pack`. Do not imply that Token Floor owns or relicenses upstream artwork.
 - Keep documentation screenshots under `docs/assets/`, use descriptive alt text and captions, and update or remove screenshots when they materially misrepresent the current UI.
 - Keep architecture documents synchronized with actual provider sources, polling bounds, normalization rules, redaction boundaries, HTTP/WebSocket routes, persistence files, retention limits, package ownership, and degraded behavior.
-- Document locally verified distribution features consistently in every language. Distinguish package capability from registry availability, and keep npm publication, remote provenance, and untested supported-browser behavior visibly pending.
+- Document verified distribution features and current registry behavior consistently in every language. State unsupported browsers and any unverified browser behavior precisely without presenting them as release blockers.
 
 ## Verification
 
@@ -243,4 +243,4 @@
 - Move the player in all four directions with both input schemes and verify matching facing frames.
 - Check that retained solid props block movement.
 - Repeat visual inspection after each correction. Do not declare completion based only on unit tests or a build result.
-- For documentation changes, also verify translated heading parity, local Markdown links, image paths, Mermaid fence balance, feature inventory completeness, and accurate separation between local verification and pending external release checks.
+- For documentation changes, also verify translated heading parity, local Markdown links, image paths, Mermaid fence balance, feature inventory completeness, and accurate separation between verified and unverified behavior.
