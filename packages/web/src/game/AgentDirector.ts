@@ -1,5 +1,5 @@
 import type Phaser from "phaser";
-import type { AgentSnapshot, UsageSnapshot } from "@token-floor/protocol";
+import type { AgentSnapshot } from "@token-floor/protocol";
 import { framesForProvider } from "../lib/avatar.js";
 import type { Locale } from "../lib/i18n.js";
 import { routeForAgent, routeToNextRestSpot } from "./actorMotion.js";
@@ -8,7 +8,7 @@ import { createAvatar } from "./avatarFactory.js";
 import { projectAvatar, type OfficeOverlayActor } from "./officeOverlay.js";
 import { spawnSpotForAgent, usageSpots } from "./officeLayout.js";
 import { officeActorMotionConstraints } from "./officeCollision.js";
-import { idlePhrase, scheduledSpeaker, usageSpeech } from "./officeSpeech.js";
+import { idlePhrase, scheduledSpeaker } from "./officeSpeech.js";
 import { behaviorForAgent } from "./agentBehavior.js";
 import { labelForAgent } from "./agentLabel.js";
 import { assignAgentRoster } from "./agentRoster.js";
@@ -29,11 +29,21 @@ interface AgentActor extends MovingActor {
   phrase?: string;
 }
 type UsageActor = MovingActor & UsagePatrolState & { provider: "codex" | "claude-code" };
+
+/** Keeps usage NPC overlays informational and intentionally free of speech bubbles. */
+export function usageNpcOverlay(provider: "codex" | "claude-code") {
+  return {
+    id: `usage-${provider}`,
+    label: provider === "codex" ? "CODEX METER" : "CLAUDE METER",
+    provider,
+    status: "npc" as const
+  };
+}
+
 /** Manages normalized agents and provider NPCs independently of camera and player input. */
 export class AgentDirector {
   private readonly agents = new Map<string, AgentActor>();
   private readonly usageActors = new Map<string, UsageActor>();
-  private usage: Record<string, UsageSnapshot> = {};
   private locale: Locale = "en";
   private clock = 0;
 
@@ -56,10 +66,6 @@ export class AgentDirector {
     assignAgentRoster(Object.values(agents)).forEach((entry) =>
       this.upsertAgent(entry.snapshot, entry.layoutSlot, entry.appearanceSlot)
     );
-  }
-
-  syncUsage(usage: Record<string, UsageSnapshot>): void {
-    this.usage = usage;
   }
 
   setLocale(locale: Locale): void {
@@ -89,14 +95,10 @@ export class AgentDirector {
         status: actor.snapshot.status
       });
     }
-    for (const [id, actor] of this.usageActors) {
+    for (const actor of this.usageActors.values()) {
       overlays.push({
-        id: `usage-${id}`,
-        ...projectAvatar(actor.avatar, camera),
-        label: id === "codex" ? "CODEX METER" : "CLAUDE METER",
-        bubble: usageSpeech(this.locale, this.usage[actor.provider]),
-        provider: id,
-        status: "npc"
+        ...usageNpcOverlay(actor.provider),
+        ...projectAvatar(actor.avatar, camera)
       });
     }
     return overlays;
@@ -167,7 +169,8 @@ export class AgentDirector {
     actor.snapshot = snapshot;
     actor.index = index;
     if (statusChanged || actor.route.length === 0) {
-      replaceRoute(actor, routeForAgent(snapshot, index));
+      const current = { x: actor.avatar.container.x, y: actor.avatar.container.y };
+      replaceRoute(actor, routeForAgent(snapshot, index, current));
     }
   }
 

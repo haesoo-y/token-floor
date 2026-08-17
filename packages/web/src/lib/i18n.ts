@@ -16,14 +16,11 @@ const messages = {
     connected: "Live office",
     disconnected: "Server disconnected",
     controls: "WASD / arrow keys move · wheel zoom · click an agent for details",
-    claudeConnect: "Connect Claude",
-    claudeConnected: "Claude connected",
-    claudeChecking: "Checking Claude",
     usageDetails: "Weekly usage details",
     weeklyLeft: "Weekly left",
-    resetsAt: "Resets",
-    checkedAt: "Checked",
-    reason: "Reason"
+    fiveHourLeft: "5-hour left",
+    lastSyncedAt: "Last synced",
+    resetsAt: "Reset date"
   },
   ko: {
     active: "작업 중",
@@ -40,14 +37,11 @@ const messages = {
     connected: "실시간 오피스",
     disconnected: "서버 연결 끊김",
     controls: "WASD / 방향키 이동 · 휠 확대 · 에이전트를 클릭해 상세 보기",
-    claudeConnect: "Claude 연결",
-    claudeConnected: "Claude 연결됨",
-    claudeChecking: "Claude 확인 중",
     usageDetails: "주간 사용량 상세",
     weeklyLeft: "주간 잔여",
-    resetsAt: "초기화",
-    checkedAt: "확인 시각",
-    reason: "사유"
+    fiveHourLeft: "5시간 잔여",
+    lastSyncedAt: "마지막 동기화",
+    resetsAt: "초기화 날짜"
   },
   ja: {
     active: "作業中",
@@ -64,14 +58,11 @@ const messages = {
     connected: "ライブオフィス",
     disconnected: "サーバー未接続",
     controls: "WASD / 矢印キーで移動 · ホイールでズーム · エージェントをクリック",
-    claudeConnect: "Claudeを接続",
-    claudeConnected: "Claude接続済み",
-    claudeChecking: "Claude確認中",
     usageDetails: "週間使用量の詳細",
     weeklyLeft: "週間残量",
-    resetsAt: "リセット",
-    checkedAt: "確認日時",
-    reason: "理由"
+    fiveHourLeft: "5時間残量",
+    lastSyncedAt: "最終同期",
+    resetsAt: "リセット日時"
   }
 } as const;
 

@@ -10,4 +10,5 @@ __pycache__/
 *.tsbuildinfo
 assets/vendor/metrocity/
 packages/web/public/vendor/metrocity/
+.token-floor/provider-usage.json
 .token-floor/

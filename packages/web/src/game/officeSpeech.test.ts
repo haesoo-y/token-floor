@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  agentSpeech,
-  idlePhrase,
-  scheduledSpeaker,
-  systemPhrase,
-  usageSpeech
-} from "./officeSpeech.js";
+import { agentSpeech, idlePhrase, scheduledSpeaker, systemPhrase } from "./officeSpeech.js";
 
 describe("office speech", () => {
   it("rotates one lounge speaker at a time", () => {
@@ -36,6 +30,5 @@ describe("office speech", () => {
   it("localizes owned system states", () => {
     expect(systemPhrase("ko", "waiting")).toBe("권한 확인이 필요해요");
     expect(agentSpeech("ja", { status: "error" } as never)).toBe("タスクに失敗しました");
-    expect(usageSpeech("ko", undefined)).toBe("사용량을 확인할 수 없어요");
   });
 });

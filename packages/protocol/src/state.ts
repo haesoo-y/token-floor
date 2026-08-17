@@ -2,6 +2,7 @@ import type { AgentEvent, AgentStatus, NormalizedEvent, UsageUpdatedEvent } from
 import { isAgentEvent } from "./model.js";
 
 export const DEFAULT_COMPLETION_TIMEOUT_MS = 5 * 60 * 1000;
+export const DEFAULT_COMPLETED_RETENTION_MS = 60 * 60 * 1000;
 
 export interface AgentSnapshot {
   id: string;
@@ -11,6 +12,8 @@ export interface AgentSnapshot {
   projectLabel: string;
   kind: "main" | "subagent";
   parentId?: string;
+  executionId?: string;
+  role?: string;
   status: AgentStatus;
   lastEventAt: string;
   inferredCompletion: boolean;
@@ -50,6 +53,8 @@ function projectAgent(event: AgentEvent): AgentSnapshot {
     inferredCompletion: event.type === "agent.completed" && event.inferred
   };
   if (event.agent.parentId !== undefined) base.parentId = event.agent.parentId;
+  if (event.agent.executionId !== undefined) base.executionId = event.agent.executionId;
+  if (event.agent.role !== undefined) base.role = event.agent.role;
   if (event.type === "agent.active") base.activity = event.activity;
   if (event.type === "agent.waiting") base.waitReason = event.reason;
   if (event.type === "agent.failed") base.error = event.error;
@@ -101,4 +106,21 @@ export function inferTimedOutCompletions(
     agents[id] = { ...agent, status: "completed", inferredCompletion: true };
   }
   return changed ? { ...state, agents } : state;
+}
+
+/** Removes completed actors after the office's bounded history window expires. */
+export function pruneCompletedAgents(
+  state: OfficeState,
+  now: Date,
+  retentionMs = DEFAULT_COMPLETED_RETENTION_MS
+): OfficeState {
+  const agents = Object.fromEntries(
+    Object.entries(state.agents).filter(
+      ([, agent]) =>
+        agent.status !== "completed" || now.getTime() - Date.parse(agent.lastEventAt) < retentionMs
+    )
+  );
+  return Object.keys(agents).length === Object.keys(state.agents).length
+    ? state
+    : { ...state, agents };
 }

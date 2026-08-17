@@ -4,6 +4,7 @@ import {
   LOUNGE_LANE_Y,
   LOUNGE_PASSAGE,
   PASSAGE_Y,
+  isLoungePoint,
   restSpots,
   spotForAgent
 } from "./officeLayout.js";
@@ -36,7 +37,7 @@ export function moveToward(
   return { point, facing: facingForDelta(horizontal ? dx : 0, horizontal ? 0 : dy), reached };
 }
 
-export function routeForAgent(agent: AgentSnapshot, index: number): Point[] {
+export function routeForAgent(agent: AgentSnapshot, index: number, current?: Point): Point[] {
   const destination = spotForAgent(agent, index);
   if (agent.status === "completed") {
     const passageY = PASSAGE_Y - 16 + (index % 2) * 32;
@@ -44,6 +45,14 @@ export function routeForAgent(agent: AgentSnapshot, index: number): Point[] {
       { x: LOUNGE_PASSAGE.left, y: passageY },
       { x: LOUNGE_PASSAGE.right, y: passageY },
       ...routeToRestSpot({ x: LOUNGE_PASSAGE.right, y: passageY }, destination, passageY)
+    ];
+  }
+  if (current && isLoungePoint(current)) {
+    const passageY = PASSAGE_Y - 16 + (index % 2) * 32;
+    return [
+      { x: LOUNGE_PASSAGE.right, y: passageY },
+      { x: LOUNGE_PASSAGE.left, y: passageY },
+      destination
     ];
   }
   if (agent.kind === "subagent") {

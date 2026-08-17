@@ -10,7 +10,7 @@ describe("Claude hook endpoint", () => {
         session_id: "live-session",
         transcript_path: "/private/transcript.jsonl",
         cwd: "/work/token-floor",
-        hook_event_name: "SessionStart"
+        hook_event_name: "UserPromptSubmit"
       },
       new Date("2026-08-16T00:00:00.000Z")
     );
@@ -18,5 +18,20 @@ describe("Claude hook endpoint", () => {
       provider: "claude-code",
       status: "active"
     });
+  });
+
+  it("ignores terminal events for sessions that never entered the office", () => {
+    const result = ingestClaudeHook(
+      createOfficeState(),
+      {
+        session_id: "helper-session",
+        transcript_path: "/private/transcript.jsonl",
+        cwd: "/work/token-floor",
+        hook_event_name: "SessionEnd"
+      },
+      new Date("2026-08-16T00:00:00.000Z")
+    );
+    expect(result.event).toBeUndefined();
+    expect(result.state.agents).toEqual({});
   });
 });

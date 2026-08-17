@@ -1,4 +1,4 @@
-import { createClaudeHookSettings } from "./hook-config.js";
+import { createClaudeHookSettings, createClaudeStatusLineSetting } from "./hook-config.js";
 
 type SettingsRecord = Record<string, unknown>;
 
@@ -8,32 +8,53 @@ function isRecord(value: unknown): value is SettingsRecord {
 
 function tokenFloorUrl(value: unknown, url: string): boolean {
   if (!isRecord(value) || !Array.isArray(value.hooks)) return false;
-  return value.hooks.some((hook) => isRecord(hook) && hook.type === "http" && hook.url === url);
+  return value.hooks.some(
+    (hook) =>
+      isRecord(hook) &&
+      ((hook.type === "http" && hook.url === url) ||
+        (hook.type === "command" && Array.isArray(hook.args) && hook.args.includes(url)))
+  );
+}
+
+function tokenFloorStatusLine(value: unknown, url: string): boolean {
+  return (
+    isRecord(value) &&
+    value.type === "command" &&
+    typeof value.command === "string" &&
+    value.command.includes(url)
+  );
 }
 
 /** Adds Token Floor observers without replacing hooks owned by the user or other tools. */
 export function mergeClaudeHookSettings(
   settings: SettingsRecord,
-  url = "http://127.0.0.1:4317/hooks/claude"
+  url = "http://127.0.0.1:4317/hooks/claude",
+  usageUrl = "http://127.0.0.1:4317/hooks/claude-usage"
 ): SettingsRecord {
   const generated = createClaudeHookSettings(url).hooks;
   const currentHooks = isRecord(settings.hooks) ? settings.hooks : {};
   const hooks: SettingsRecord = { ...currentHooks };
   for (const [event, observers] of Object.entries(generated)) {
     const existing = Array.isArray(currentHooks[event]) ? currentHooks[event] : [];
-    hooks[event] = existing.some((entry) => tokenFloorUrl(entry, url))
-      ? existing
-      : [...existing, ...observers];
+    const unrelated = existing.filter((entry) => !tokenFloorUrl(entry, url));
+    hooks[event] = [...unrelated, ...observers];
   }
-  return { ...settings, hooks };
+  const statusLine =
+    settings.statusLine === undefined || tokenFloorStatusLine(settings.statusLine, usageUrl)
+      ? createClaudeStatusLineSetting(usageUrl)
+      : settings.statusLine;
+  return { ...settings, hooks, statusLine };
 }
 
 /** Removes only Token Floor observers and leaves all unrelated Claude settings intact. */
 export function removeClaudeHookSettings(
   settings: SettingsRecord,
-  url = "http://127.0.0.1:4317/hooks/claude"
+  url = "http://127.0.0.1:4317/hooks/claude",
+  usageUrl = "http://127.0.0.1:4317/hooks/claude-usage"
 ): SettingsRecord {
-  if (!isRecord(settings.hooks)) return { ...settings };
+  const base = { ...settings };
+  if (tokenFloorStatusLine(base.statusLine, usageUrl)) delete base.statusLine;
+  if (!isRecord(settings.hooks)) return base;
   const hooks = Object.fromEntries(
     Object.entries(settings.hooks).flatMap(([event, value]) => {
       if (!Array.isArray(value)) return [[event, value]];
@@ -41,5 +62,5 @@ export function removeClaudeHookSettings(
       return retained.length > 0 ? [[event, retained]] : [];
     })
   );
-  return { ...settings, hooks };
+  return { ...base, hooks };
 }

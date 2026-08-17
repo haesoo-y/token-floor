@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { AgentSnapshot, UsageSnapshot } from "@token-floor/protocol";
+import type { AgentSnapshot } from "@token-floor/protocol";
 import { createOfficeGame } from "../game/createOfficeGame.js";
 import type { AvatarPreset } from "../lib/avatar.js";
 import type { OfficeOverlayActor } from "../game/officeOverlay.js";
@@ -8,14 +8,12 @@ import type { Locale } from "../lib/i18n.js";
 
 export function OfficeCanvas({
   agents,
-  usage,
   preset,
   locale,
   onSelect,
   onSelectUsage
 }: {
   agents: Record<string, AgentSnapshot>;
-  usage: Record<string, UsageSnapshot>;
   preset: AvatarPreset;
   locale: Locale;
   onSelect: (id: string) => void;
@@ -46,8 +44,6 @@ export function OfficeCanvas({
 
   // Push immutable React projections into the existing scene without recreating the Phaser game.
   useEffect(() => runtime.current?.scene.syncAgents(agents), [agents]);
-  // Usage NPCs share the same normalized stream but update independently from agent sprites.
-  useEffect(() => runtime.current?.scene.syncUsage(usage), [usage]);
   // Avatar customization updates the live sprite while preserving player position and camera state.
   useEffect(() => runtime.current?.scene.setPlayerPreset(preset), [preset]);
   // Locale changes update owned game speech without rebuilding the long-lived Phaser scene.

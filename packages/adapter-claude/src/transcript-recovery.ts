@@ -47,7 +47,7 @@ export function recoverClaudeTranscript(
   const inferred = now.getTime() - Date.parse(latest.timestamp) >= completionTimeoutMs;
   const base = {
     schemaVersion: 1 as const,
-    eventId: `claude-recovery:${latest.sessionId}:${latest.timestamp}`,
+    eventId: `claude-recovery:${latest.sessionId}:${latest.timestamp}:${inferred ? "completed" : "active"}`,
     occurredAt: latest.timestamp,
     provider: "claude-code",
     sessionId: latest.sessionId,

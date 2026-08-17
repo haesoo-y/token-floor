@@ -9,6 +9,23 @@
 - Split production source files by responsibility before they exceed 200 lines.
 - Never mention or copy assets from unrelated public code repositories in source comments, documentation, prompts, or product UI.
 
+## Provider Local State
+
+- Before designing a provider integration, inspect and document the relevant provider-owned local files. Do not assume the data is unavailable until the local roots have been searched.
+- Prefer Claude data from `~/Library/Application Support/Claude` and `~/.claude`, and Codex data from `~/.codex`.
+- Collect both Claude Desktop and Claude CLI local state when available. Select the newest valid
+  snapshot, preferring the more complete snapshot when the provider writes summary and detailed
+  cache entries within the same five-second refresh window.
+- For CLI-only Claude users, capture provider-supplied rate-limit metadata through a silent local
+  observer only when no user-owned status line exists. Never replace a user's status-line command,
+  persist its raw input, or launch a helper Claude process to refresh usage.
+- Do not introduce OAuth, login, API-key, credential storage, visible terminals, or helper agent processes when provider-owned local state can supply the required data.
+- Read provider-owned files only in provider collectors. Normalize the result and atomically persist it as JSON under the Git-ignored `.token-floor/` runtime directory.
+- Server projections and UI code must consume the normalized Token Floor cache, never provider files, credentials, browser storage, or provider-specific payloads directly.
+- Refresh local provider caches on a bounded interval, avoid rewriting unchanged snapshots, and retain the last valid cache when a provider file is missing, locked, partially written, or malformed.
+- Keep explicit path overrides only as diagnostics or platform fallbacks; provider-owned local state remains the default source of truth.
+- Add tests for local-source precedence, normalization, cache persistence, malformed input, and last-known-good fallback whenever provider data collection changes.
+
 ## Asset Source of Truth
 
 - Inspect `.agents/private/reference` before creating or replacing any visual asset.

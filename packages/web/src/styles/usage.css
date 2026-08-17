@@ -2,37 +2,12 @@
   display: flex;
   gap: 7px;
 }
-.integration-button,
 .usage-card {
   border: 1px solid #ffffff1c;
   border-radius: 9px;
   color: #e4e4e7;
   background: #ffffff08;
   cursor: pointer;
-}
-.integration-button {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: 40px;
-  padding: 0 11px;
-  font-size: 10px;
-  font-weight: 650;
-  white-space: nowrap;
-}
-.integration-button:disabled {
-  cursor: wait;
-  opacity: 0.65;
-}
-.integration-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--yellow);
-}
-.integration-button.installed .integration-dot {
-  background: var(--mint);
-  box-shadow: 0 0 8px #55d6beaa;
 }
 .usage-card {
   display: flex;
@@ -43,8 +18,7 @@
   padding: 4px 9px 4px 5px;
   text-align: left;
 }
-.usage-card:hover,
-.integration-button:hover {
+.usage-card:hover {
   background: #ffffff10;
 }
 .usage-card > span:last-child {

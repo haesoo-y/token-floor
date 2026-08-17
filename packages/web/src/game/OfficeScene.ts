@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import type { AgentSnapshot, UsageSnapshot } from "@token-floor/protocol";
+import type { AgentSnapshot } from "@token-floor/protocol";
 import { framesForPlayer, type AvatarPreset } from "../lib/avatar.js";
 import type { Locale } from "../lib/i18n.js";
 import { resolveMovement } from "../lib/movement.js";
@@ -29,7 +29,6 @@ export class OfficeScene extends Phaser.Scene {
   private readonly publishOverlays: PublishOverlays;
   private readonly selectUsage: (provider: "codex" | "claude-code") => void;
   private pendingAgents: Record<string, AgentSnapshot> = {};
-  private pendingUsage: Record<string, UsageSnapshot> = {};
   private player: AvatarParts | undefined;
   private director: AgentDirector | undefined;
   private playerInput: PlayerInput | undefined;
@@ -70,7 +69,6 @@ export class OfficeScene extends Phaser.Scene {
     );
     this.director = new AgentDirector(this, this.selectAgent, this.selectUsage);
     this.director.syncAgents(this.pendingAgents);
-    this.director.syncUsage(this.pendingUsage);
     this.director.setLocale(this.locale);
     this.cameras.main.setBounds(0, 0, OFFICE_WIDTH, OFFICE_HEIGHT).setRoundPixels(true);
     this.resizeCamera();
@@ -102,11 +100,6 @@ export class OfficeScene extends Phaser.Scene {
   syncAgents(agents: Record<string, AgentSnapshot>): void {
     this.pendingAgents = agents;
     this.director?.syncAgents(agents);
-  }
-
-  syncUsage(usage: Record<string, UsageSnapshot>): void {
-    this.pendingUsage = usage;
-    this.director?.syncUsage(usage);
   }
 
   setLocale(locale: Locale): void {

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { mergeClaudeHookSettings, removeClaudeHookSettings } from "./settings-merge.js";
 
-export interface ClaudeIntegrationStatus {
+export interface ClaudeObserverStatus {
   installed: boolean;
   settingsPath: string;
 }
@@ -19,8 +19,8 @@ function writeSettings(filename: string, settings: Record<string, unknown>): voi
   fs.renameSync(temporary, filename);
 }
 
-/** Reports whether the user settings already contain a Token Floor observer. */
-export function getClaudeIntegrationStatus(filename: string): ClaudeIntegrationStatus {
+/** Reports whether the provider-owned settings already contain Token Floor observers. */
+export function getClaudeObserverStatus(filename: string): ClaudeObserverStatus {
   const settings = readSettings(filename);
   return {
     installed: JSON.stringify(removeClaudeHookSettings(settings)) !== JSON.stringify(settings),
@@ -28,18 +28,19 @@ export function getClaudeIntegrationStatus(filename: string): ClaudeIntegrationS
   };
 }
 
-/** Installs idempotent hooks after explicit onboarding consent and creates one rollback backup. */
-export function installClaudeIntegration(filename: string): ClaudeIntegrationStatus {
+/** Installs idempotent local observers and creates one rollback backup. */
+export function installClaudeObservers(filename: string): ClaudeObserverStatus {
   const settings = readSettings(filename);
   if (fs.existsSync(filename) && !fs.existsSync(`${filename}.token-floor.backup`)) {
     fs.copyFileSync(filename, `${filename}.token-floor.backup`);
   }
   writeSettings(filename, mergeClaudeHookSettings(settings));
-  return getClaudeIntegrationStatus(filename);
+  return getClaudeObserverStatus(filename);
 }
 
 /** Removes only Token Floor entries; other Claude settings and hooks remain untouched. */
-export function uninstallClaudeIntegration(filename: string): ClaudeIntegrationStatus {
-  writeSettings(filename, removeClaudeHookSettings(readSettings(filename)));
-  return getClaudeIntegrationStatus(filename);
+export function uninstallClaudeObservers(filename: string): ClaudeObserverStatus {
+  const settings = removeClaudeHookSettings(readSettings(filename));
+  writeSettings(filename, settings);
+  return getClaudeObserverStatus(filename);
 }

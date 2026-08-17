@@ -3,6 +3,7 @@
   "references": [
     { "path": "./packages/protocol" },
     { "path": "./packages/asset-contract" },
+    { "path": "./packages/adapter-codex" },
     { "path": "./packages/adapter-claude" },
     { "path": "./packages/server" },
     { "path": "./packages/web" }

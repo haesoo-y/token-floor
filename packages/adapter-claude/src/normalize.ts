@@ -1,18 +1,30 @@
 import path from "node:path";
 import { sanitizeSpeech, type AgentEvent } from "@token-floor/protocol";
+import { ClaudeSubagentRegistry } from "./subagent-registry.js";
 import { parseClaudeHookInput, type ClaudeHookInput } from "./types.js";
 
-function identity(input: ClaudeHookInput) {
+function identity(input: ClaudeHookInput, registry: ClaudeSubagentRegistry) {
   const isSubagent = input.agent_id !== undefined;
+  if (isSubagent) {
+    const executionId = input.agent_id as string;
+    const assignment = registry.resolve(input.session_id, executionId);
+    return {
+      id: assignment.actorId,
+      kind: "subagent" as const,
+      parentId: `claude:${input.session_id}`,
+      executionId,
+      ...(input.agent_type ? { role: input.agent_type } : {})
+    };
+  }
   return {
-    id: isSubagent ? `claude:${input.session_id}:${input.agent_id}` : `claude:${input.session_id}`,
-    kind: isSubagent ? ("subagent" as const) : ("main" as const),
-    ...(isSubagent ? { parentId: `claude:${input.session_id}` } : {})
+    id: `claude:${input.session_id}`,
+    kind: "main" as const,
+    executionId: input.session_id
   };
 }
 
-function eventBase(input: ClaudeHookInput, occurredAt: string) {
-  const agent = identity(input);
+function eventBase(input: ClaudeHookInput, occurredAt: string, registry: ClaudeSubagentRegistry) {
+  const agent = identity(input, registry);
   const discriminator = input.tool_use_id ?? input.agent_id ?? input.hook_event_name;
   return {
     schemaVersion: 1 as const,
@@ -38,11 +50,27 @@ function activitySummary(input: ClaudeHookInput): string {
  * Converts one untrusted Claude lifecycle hook into the provider-neutral event contract.
  * Raw prompts, tool inputs, commands, and assistant responses are deliberately never projected.
  */
-export function normalizeClaudeHook(value: unknown, now = new Date()): AgentEvent | undefined {
+export function normalizeClaudeHook(
+  value: unknown,
+  now = new Date(),
+  registry = new ClaudeSubagentRegistry()
+): AgentEvent | undefined {
   const input = parseClaudeHookInput(value);
-  const base = eventBase(input, now.toISOString());
+  if (
+    input.agent_id &&
+    registry.isCompleted(input.session_id, input.agent_id) &&
+    input.hook_event_name !== "SubagentStop"
+  ) {
+    return undefined;
+  }
+  const base = eventBase(input, now.toISOString(), registry);
+  const terminalSubagent = () => {
+    if (input.agent_id) registry.release(input.session_id, input.agent_id);
+    return { ...base, type: "agent.completed" as const, inferred: false };
+  };
   switch (input.hook_event_name) {
     case "SessionStart":
+      return undefined;
     case "SubagentStart":
       return { ...base, type: "agent.started" };
     case "PermissionRequest":
@@ -52,10 +80,12 @@ export function normalizeClaudeHook(value: unknown, now = new Date()): AgentEven
         ? { ...base, type: "agent.waiting", reason: "permission" }
         : undefined;
     case "StopFailure":
+      if (input.agent_id) registry.release(input.session_id, input.agent_id);
       return { ...base, type: "agent.failed", error: { message: "Claude request failed" } };
     case "SessionEnd":
-    case "SubagentStop":
       return { ...base, type: "agent.completed", inferred: false };
+    case "SubagentStop":
+      return terminalSubagent();
     case "Stop":
       if (!input.background_tasks?.length) {
         return { ...base, type: "agent.completed", inferred: false };

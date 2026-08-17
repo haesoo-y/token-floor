@@ -1,5 +1,5 @@
 import type { Locale } from "../lib/i18n.js";
-import type { AgentSnapshot, UsageSnapshot } from "@token-floor/protocol";
+import type { AgentSnapshot } from "@token-floor/protocol";
 import { geekIdlePhrases } from "./geekIdlePhrases.js";
 import { randomChoiceExcept } from "./randomChoice.js";
 import { systemPhrase } from "./systemSpeech.js";
@@ -164,10 +164,4 @@ export function agentSpeech(locale: Locale, agent: AgentSnapshot, idle?: string)
   if (agent.status === "waiting") return systemPhrase(locale, "waiting");
   if (agent.status === "error") return systemPhrase(locale, "error");
   return agent.activity?.summary ?? systemPhrase(locale, "working");
-}
-
-export function usageSpeech(locale: Locale, usage: UsageSnapshot | undefined): string {
-  return usage?.capability === "weekly-percentage"
-    ? `${usage.remainingPercent}% ${systemPhrase(locale, "left")}`
-    : systemPhrase(locale, "unavailable");
 }

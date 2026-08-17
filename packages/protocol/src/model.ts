@@ -21,6 +21,10 @@ export interface AgentIdentity {
   id: string;
   kind: AgentKind;
   parentId?: string;
+  /** Identifies one provider execution independently from its reusable office actor. */
+  executionId?: string;
+  /** Provider-neutral display role such as a named subagent type. */
+  role?: string;
 }
 
 interface EventBase {
@@ -65,6 +69,7 @@ export interface UsageUpdatedEvent extends EventBase {
   usage: {
     capability: UsageCapability;
     remainingPercent?: number;
+    fiveHourRemainingPercent?: number;
     resetsAt?: string;
     unavailableReason?: string;
   };

@@ -36,6 +36,8 @@ function hasAgentFields(value: Record<string, unknown>): boolean {
     hasString(agent, "id") &&
     (agent.kind === "main" || agent.kind === "subagent") &&
     (agent.parentId === undefined || typeof agent.parentId === "string") &&
+    (agent.executionId === undefined || hasString(agent, "executionId")) &&
+    (agent.role === undefined || hasString(agent, "role")) &&
     hasString(project, "id") &&
     hasString(project, "label")
   );
@@ -61,7 +63,11 @@ function hasUsagePayload(value: Record<string, unknown>): boolean {
     usage.capability === "weekly-percentage" &&
     typeof usage.remainingPercent === "number" &&
     usage.remainingPercent >= 0 &&
-    usage.remainingPercent <= 100
+    usage.remainingPercent <= 100 &&
+    (usage.fiveHourRemainingPercent === undefined ||
+      (typeof usage.fiveHourRemainingPercent === "number" &&
+        usage.fiveHourRemainingPercent >= 0 &&
+        usage.fiveHourRemainingPercent <= 100))
   );
 }
 

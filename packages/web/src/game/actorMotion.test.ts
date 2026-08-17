@@ -27,6 +27,15 @@ describe("actor motion", () => {
     ]);
   });
 
+  it("routes reactivated agents from the lounge back through the open passage", () => {
+    const agent = { status: "active", kind: "main" } as AgentSnapshot;
+    expect(routeForAgent(agent, 0, { x: 544, y: 288 })).toEqual([
+      { x: 432, y: 256 },
+      { x: 384, y: 256 },
+      { x: 144, y: 128 }
+    ]);
+  });
+
   it("stagger completed agents while they cross the shared passage", () => {
     const agent = { status: "completed" } as AgentSnapshot;
     const passageYs = [0, 1, 2, 3].map((index) => routeForAgent(agent, index)[0]?.y);

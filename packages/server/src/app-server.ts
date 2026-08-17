@@ -1,14 +1,21 @@
 import http, { type IncomingMessage, type ServerResponse } from "node:http";
+import { ClaudeSubagentRegistry } from "@token-floor/adapter-claude";
 import {
-  getClaudeIntegrationStatus,
-  installClaudeIntegration,
-  uninstallClaudeIntegration
-} from "@token-floor/adapter-claude";
-import { applyEvent, createOfficeState, type OfficeState } from "@token-floor/protocol";
+  applyEvent,
+  createOfficeState,
+  pruneCompletedAgents,
+  type NormalizedEvent,
+  type OfficeState
+} from "@token-floor/protocol";
 import { WebSocketServer } from "ws";
 import { ingestClaudeHook } from "./claude-ingestion.js";
+import { startClaudeMaintenance } from "./claude-maintenance.js";
+import { removeUnobservedClaudeAgents } from "./claude-state-migration.js";
+import { ingestClaudeUsage } from "./claude-usage-ingestion.js";
 import type { EventStore } from "./event-store.js";
 import { createHealthPayload } from "./health.js";
+import { sendJson } from "./json-response.js";
+import { startProviderUsageMaintenance } from "./provider-usage-maintenance.js";
 import { readJsonBody } from "./request-body.js";
 import { createInitialEvents, createScenarioEvent } from "./simulation.js";
 
@@ -18,19 +25,14 @@ export interface TokenFloorServer {
 }
 
 export interface TokenFloorServerOptions {
-  claudeSettingsPath?: string;
+  claudeCliRootPath?: string;
+  claudeDesktopCachePath?: string;
+  claudeProjectsPath?: string;
+  claudeUsagePath?: string;
+  codexSessionsPath?: string;
+  providerUsageCachePath?: string;
   eventStore?: EventStore;
   simulation?: boolean;
-}
-
-function json(res: ServerResponse, status: number, value: unknown): void {
-  res.writeHead(status, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": "http://127.0.0.1:5173",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-    "Cache-Control": "no-store"
-  });
-  res.end(JSON.stringify(value));
 }
 
 /**
@@ -45,6 +47,9 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
   const seed =
     restored.length > 0 ? restored : options.simulation === false ? [] : createInitialEvents();
   let state: OfficeState = seed.reduce(applyEvent, createOfficeState());
+  state = pruneCompletedAgents(state, new Date());
+  state = removeUnobservedClaudeAgents(state, restored);
+  const claudeRegistry = ClaudeSubagentRegistry.fromEvents(restored);
   let step = 0;
   const sockets = new WebSocketServer({ noServer: true });
   const broadcast = (event: Parameters<typeof applyEvent>[1]) => {
@@ -53,43 +58,64 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
       if (socket.readyState === socket.OPEN) socket.send(message);
     }
   };
+  const acceptEvent = (event: NormalizedEvent) => {
+    state = applyEvent(state, event);
+    options.eventStore?.append(event);
+    broadcast(event);
+  };
+  const acceptRecoveredEvent = (event: NormalizedEvent) => {
+    const before =
+      event.type === "usage.updated"
+        ? state.usageByProvider[event.provider]
+        : state.agents[event.agent.id];
+    const next = applyEvent(state, event);
+    const after =
+      event.type === "usage.updated"
+        ? next.usageByProvider[event.provider]
+        : next.agents[event.agent.id];
+    if (JSON.stringify(before) === JSON.stringify(after)) return;
+    state = next;
+    options.eventStore?.append(event);
+    broadcast(event);
+  };
+  const broadcastSnapshot = (snapshot: OfficeState) => {
+    const message = JSON.stringify({ type: "snapshot", state: snapshot });
+    for (const socket of sockets.clients) {
+      if (socket.readyState === socket.OPEN) socket.send(message);
+    }
+  };
   const server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
     if (req.method === "OPTIONS") return res.writeHead(204).end();
     if (req.method === "GET" && req.url === "/health") {
-      return json(res, 200, createHealthPayload((Date.now() - startedAt) / 1000));
+      return sendJson(res, 200, createHealthPayload((Date.now() - startedAt) / 1000));
     }
-    if (req.method === "GET" && req.url === "/snapshot") return json(res, 200, state);
-    if (req.url === "/integrations/claude" && options.claudeSettingsPath) {
-      try {
-        if (req.method === "GET") {
-          return json(res, 200, getClaudeIntegrationStatus(options.claudeSettingsPath));
-        }
-        if (req.method === "POST") {
-          return json(res, 200, installClaudeIntegration(options.claudeSettingsPath));
-        }
-        if (req.method === "DELETE") {
-          return json(res, 200, uninstallClaudeIntegration(options.claudeSettingsPath));
-        }
-      } catch {
-        return json(res, 500, { error: "Unable to update Claude settings" });
-      }
-    }
+    if (req.method === "GET" && req.url === "/snapshot") return sendJson(res, 200, state);
     if (req.method === "POST" && req.url === "/hooks/claude") {
       void readJsonBody(req)
         .then((payload) => {
-          const result = ingestClaudeHook(state, payload);
+          const result = ingestClaudeHook(state, payload, new Date(), claudeRegistry);
           const event = result.event;
-          if (event) {
-            state = result.state;
-            options.eventStore?.append(event);
-            broadcast(event);
-          }
+          if (event) acceptEvent(event);
           res.writeHead(204).end();
         })
-        .catch(() => json(res, 400, { error: "Invalid Claude hook payload" }));
+        .catch(() => sendJson(res, 400, { error: "Invalid Claude hook payload" }));
       return;
     }
-    json(res, 404, { error: "Not found" });
+    if (req.method === "POST" && req.url === "/hooks/claude-usage") {
+      void readJsonBody(req)
+        .then((payload) => {
+          ingestClaudeUsage(
+            payload,
+            options.providerUsageCachePath,
+            acceptRecoveredEvent,
+            new Date()
+          );
+          res.writeHead(204).end();
+        })
+        .catch(() => sendJson(res, 400, { error: "Invalid Claude usage payload" }));
+      return;
+    }
+    sendJson(res, 404, { error: "Not found" });
   });
   sockets.on("connection", (socket) => socket.send(JSON.stringify({ type: "snapshot", state })));
   server.on("upgrade", (request, socket, head) => {
@@ -106,11 +132,31 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
           state = applyEvent(state, event);
           broadcast(event);
         }, 3_500);
+  const stopClaudeMaintenance = startClaudeMaintenance({
+    getState: () => state,
+    setState: (next) => {
+      state = next;
+    },
+    registry: claudeRegistry,
+    projectsPath: options.claudeProjectsPath,
+    acceptRecoveredEvent,
+    broadcastSnapshot
+  });
+  const stopProviderUsageMaintenance = startProviderUsageMaintenance({
+    cachePath: options.providerUsageCachePath,
+    claudeCliRootPath: options.claudeCliRootPath,
+    claudeDesktopCachePath: options.claudeDesktopCachePath,
+    claudeUsagePath: options.claudeUsagePath,
+    codexSessionsPath: options.codexSessionsPath,
+    acceptEvent: acceptRecoveredEvent
+  });
   return {
     server,
     close: () =>
       new Promise((resolve, reject) => {
         if (timer) clearInterval(timer);
+        stopClaudeMaintenance();
+        stopProviderUsageMaintenance();
         sockets.close();
         server.close((error) => {
           options.eventStore?.close();

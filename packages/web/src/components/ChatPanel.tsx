@@ -70,16 +70,16 @@ export function ChatPanel({
                   <dd>{usageValues.weekly}</dd>
                 </div>
                 <div>
+                  <dt>{translate(locale, "fiveHourLeft")}</dt>
+                  <dd>{usageValues.fiveHour}</dd>
+                </div>
+                <div>
+                  <dt>{translate(locale, "lastSyncedAt")}</dt>
+                  <dd>{usageValues.lastSyncedAt}</dd>
+                </div>
+                <div>
                   <dt>{translate(locale, "resetsAt")}</dt>
                   <dd>{usageValues.resetsAt}</dd>
-                </div>
-                <div>
-                  <dt>{translate(locale, "checkedAt")}</dt>
-                  <dd>{usageValues.checkedAt}</dd>
-                </div>
-                <div>
-                  <dt>{translate(locale, "reason")}</dt>
-                  <dd>{usageValues.reason}</dd>
                 </div>
               </dl>
             </>

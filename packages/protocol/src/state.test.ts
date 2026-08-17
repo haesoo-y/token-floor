@@ -4,7 +4,8 @@ import {
   applyEvent,
   createOfficeState,
   DEFAULT_COMPLETION_TIMEOUT_MS,
-  inferTimedOutCompletions
+  inferTimedOutCompletions,
+  pruneCompletedAgents
 } from "./state.js";
 
 const activeEvent: AgentActiveEvent = {
@@ -26,6 +27,23 @@ describe("office state reducer", () => {
       status: "active",
       provider: "codex",
       projectLabel: "token-floor"
+    });
+  });
+
+  it("retains reusable actor execution metadata", () => {
+    const state = applyEvent(createOfficeState(), {
+      ...activeEvent,
+      agent: {
+        id: "claude:session-1:sub:0",
+        kind: "subagent",
+        parentId: "claude:session-1",
+        executionId: "agent-7",
+        role: "Explore"
+      }
+    });
+    expect(state.agents["claude:session-1:sub:0"]).toMatchObject({
+      executionId: "agent-7",
+      role: "Explore"
     });
   });
 
@@ -62,12 +80,31 @@ describe("office state reducer", () => {
       provider: "claude-code",
       sessionId: "account",
       type: "usage.updated",
-      usage: { capability: "weekly-percentage", remainingPercent: 42 }
+      usage: {
+        capability: "weekly-percentage",
+        remainingPercent: 42,
+        fiveHourRemainingPercent: 73
+      }
     });
     expect(state.usageByProvider["claude-code"]).toEqual({
       capability: "weekly-percentage",
       remainingPercent: 42,
+      fiveHourRemainingPercent: 73,
       checkedAt: "2026-08-16T01:00:00.000Z"
     });
+  });
+
+  it("retains completed actors for one hour and then prunes them", () => {
+    const completed = applyEvent(createOfficeState(), {
+      ...activeEvent,
+      type: "agent.completed",
+      inferred: false
+    });
+    expect(
+      pruneCompletedAgents(completed, new Date("2026-08-16T00:59:59.000Z")).agents["agent-1"]
+    ).toBeDefined();
+    expect(
+      pruneCompletedAgents(completed, new Date("2026-08-16T01:00:00.000Z")).agents["agent-1"]
+    ).toBeUndefined();
   });
 });

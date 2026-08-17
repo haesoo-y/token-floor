@@ -17,6 +17,20 @@ describe("parseNormalizedEvent", () => {
     expect(parseNormalizedEvent(validEvent)).toEqual(validEvent);
   });
 
+  it("accepts reusable actor metadata for provider executions", () => {
+    const event = {
+      ...validEvent,
+      agent: {
+        id: "claude:session-1:sub:0",
+        kind: "subagent",
+        parentId: "claude:session-1",
+        executionId: "agent-7",
+        role: "Explore"
+      }
+    };
+    expect(parseNormalizedEvent(event)).toEqual(event);
+  });
+
   it("rejects unknown versions and incomplete payloads", () => {
     expect(() => parseNormalizedEvent({ ...validEvent, schemaVersion: 2 })).toThrow(
       "Invalid event envelope"
@@ -36,5 +50,15 @@ describe("parseNormalizedEvent", () => {
       }
     };
     expect(() => parseNormalizedEvent(usage)).toThrow("Invalid event payload");
+    expect(() =>
+      parseNormalizedEvent({
+        ...usage,
+        usage: {
+          capability: "weekly-percentage",
+          remainingPercent: 50,
+          fiveHourRemainingPercent: -1
+        }
+      })
+    ).toThrow("Invalid event payload");
   });
 });
