@@ -23,6 +23,7 @@ export function startAgentMaintenance(options: AgentMaintenanceOptions): () => v
     options.setState(next);
     options.broadcastSnapshot(next);
   };
+  refresh();
   const timer = setInterval(refresh, options.intervalMs ?? 15_000);
   return () => clearInterval(timer);
 }

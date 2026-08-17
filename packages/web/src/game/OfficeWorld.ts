@@ -14,7 +14,9 @@ export function createOfficeWorld(scene: Phaser.Scene): void {
   officeRooms.forEach((room) =>
     scene.add.tileSprite(room.x, room.y, room.width, room.height, room.texture).setOrigin(0)
   );
-  officeProps.forEach((prop) => scene.add.image(prop.x, prop.y, prop.texture).setDepth(prop.y));
+  officeProps.forEach((prop) => {
+    scene.add.image(prop.x, prop.y, prop.texture).setDepth(prop.y);
+  });
   officeWalls.forEach((wall) =>
     scene.add
       .rectangle(wall.x, wall.y, wall.width, wall.height, 0x101820)

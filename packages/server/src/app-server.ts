@@ -16,7 +16,9 @@ import { ingestClaudeUsage } from "./claude-usage-ingestion.js";
 import { startCodexMaintenance } from "./codex-maintenance.js";
 import { removeHiddenCodexAgents, removeLegacyCodexAgents } from "./codex-state-migration.js";
 import { createHealthPayload } from "./health.js";
-import { sendJson } from "./json-response.js";
+import { sendCorsPreflight, sendJson } from "./json-response.js";
+import { handleMemoRequest } from "./memo-routes.js";
+import { JsonMemoStore } from "./memo-store.js";
 import { startProviderUsageMaintenance } from "./provider-usage-maintenance.js";
 import { applyProviderSourceReport } from "./provider-source-projection.js";
 import { readJsonBody } from "./request-body.js";
@@ -38,6 +40,7 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
   state = removeUnobservedClaudeAgents(state, restored);
   if (restored.length > 0) state = removeLegacyCodexAgents(state);
   const claudeRegistry = ClaudeSubagentRegistry.fromEvents(restored);
+  const memoStore = new JsonMemoStore(options.memosPath ?? ".token-floor/memos.json");
   let step = 0;
   const sockets = new WebSocketServer({ noServer: true });
   const broadcast = (event: Parameters<typeof applyEvent>[1]) => {
@@ -70,11 +73,12 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
     broadcastSnapshot(state);
   };
   const server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
-    if (req.method === "OPTIONS") return res.writeHead(204).end();
+    if (req.method === "OPTIONS") return sendCorsPreflight(res);
     if (req.method === "GET" && req.url === "/health") {
       return sendJson(res, 200, createHealthPayload((Date.now() - startedAt) / 1000));
     }
     if (req.method === "GET" && req.url === "/snapshot") return sendJson(res, 200, state);
+    if (handleMemoRequest(req, res, memoStore)) return;
     if (req.method === "POST" && req.url === "/hooks/claude") {
       void readJsonBody(req)
         .then((payload) => {
@@ -123,6 +127,17 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
     acceptRecoveredEvent,
     reportStatus: (report) => acceptSourceReport("claude-code", report)
   });
+  const stopCodexMaintenance = startCodexMaintenance({
+    sessionsPath: options.codexSessionsPath,
+    acceptEvent: acceptRecoveredEvent,
+    excludeAgents: (ids) => {
+      const next = removeHiddenCodexAgents(state, ids);
+      if (next === state) return;
+      state = next;
+      broadcastSnapshot(state);
+    },
+    reportStatus: (report) => acceptSourceReport("codex", report)
+  });
   const stopAgentMaintenance = startAgentMaintenance({
     getState: () => state,
     setState: (next) => {
@@ -143,17 +158,6 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
         }
       }
     }
-  });
-  const stopCodexMaintenance = startCodexMaintenance({
-    sessionsPath: options.codexSessionsPath,
-    acceptEvent: acceptRecoveredEvent,
-    excludeAgents: (ids) => {
-      const next = removeHiddenCodexAgents(state, ids);
-      if (next === state) return;
-      state = next;
-      broadcastSnapshot(state);
-    },
-    reportStatus: (report) => acceptSourceReport("codex", report)
   });
   const stopProviderUsageMaintenance = startProviderUsageMaintenance({
     cachePath: options.providerUsageCachePath,

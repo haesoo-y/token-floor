@@ -16,7 +16,7 @@ describe("agent bubble placement", () => {
     ).toEqual({ bubble: "Resting" });
   });
 
-  it("expires transition speech instead of keeping workspace bubbles forever", () => {
+  it("keeps task speech visible while an agent remains in the workspace", () => {
     const active = { status: "active" } as AgentSnapshot;
     const speech = {
       ...createAgentSpeechState(),
@@ -28,6 +28,18 @@ describe("agent bubble placement", () => {
     ).toEqual({ bubble: "Working" });
     expect(
       agentBubbleProps("en", active, { x: 304, y: 192 }, false, undefined, speech, 4_000)
+    ).toEqual({ bubble: "Working" });
+  });
+
+  it("expires task speech outside the workspace", () => {
+    const active = { status: "active" } as AgentSnapshot;
+    const speech = {
+      ...createAgentSpeechState(),
+      transitionType: "agent.active" as const,
+      transitionBubbleUntil: 4_000
+    };
+    expect(
+      agentBubbleProps("en", active, { x: 464, y: 192 }, false, undefined, speech, 4_000)
     ).toEqual({});
   });
 

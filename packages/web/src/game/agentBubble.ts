@@ -1,8 +1,8 @@
 import type { AgentSnapshot } from "@token-floor/protocol";
 import type { Locale } from "../lib/i18n.js";
 import type { Point } from "../lib/movement.js";
-import { isLoungePoint } from "./officeLayout.js";
-import { transitionSpeech } from "./officeSpeech.js";
+import { isLoungePoint, isWorkspacePoint } from "./officeLayout.js";
+import { agentSpeech, transitionSpeech } from "./officeSpeech.js";
 import { truncateChatText } from "../lib/chatText.js";
 import type { AgentSpeechState } from "./agentSpeechState.js";
 
@@ -21,6 +21,10 @@ export function agentBubbleProps(
   }
   if (speech.transitionType && speech.transitionBubbleUntil > now) {
     return { bubble: transitionSpeech(locale, speech.transitionType) };
+  }
+  if (agent.status !== "completed" && isWorkspacePoint(point)) {
+    const persistent = agent.lastMessage?.text ?? agentSpeech(locale, agent);
+    return { bubble: truncateChatText(persistent, 50) };
   }
   if (agent.status !== "completed") return {};
   if (!isScheduledSpeaker || !isLoungePoint(point)) return {};

@@ -14,10 +14,10 @@ import {
   type Facing
 } from "./avatarFactory.js";
 import type { OfficeOverlayActor } from "./officeOverlay.js";
-import { OFFICE_HEIGHT, OFFICE_WIDTH, PLAYER_START } from "./officeLayout.js";
+import { OFFICE_HEIGHT, OFFICE_WIDTH, PLAYER_START, officeProps } from "./officeLayout.js";
 import { officeActorMotionConstraints } from "./officeCollision.js";
 import { createOfficeWorld } from "./OfficeWorld.js";
-import { projectAvatar } from "./officeOverlay.js";
+import { projectAvatar, projectWorldRect } from "./officeOverlay.js";
 import { PlayerInput } from "./PlayerInput.js";
 import { PLAYER_MOVE_PER_MS } from "./movementTuning.js";
 
@@ -139,7 +139,16 @@ export class OfficeScene extends Phaser.Scene {
       provider: "player",
       status: "player"
     };
-    this.publishOverlays([player, ...this.director.projectOverlays(this.cameras.main)]);
+    const whiteboard = officeProps.find((prop) => prop.id === "whiteboard")!;
+    const tool: OfficeOverlayActor = {
+      id: "whiteboard-tool",
+      ...projectWorldRect(whiteboard, this.cameras.main),
+      label: "Whiteboard memos",
+      provider: "tool",
+      status: "tool",
+      tool: "memos"
+    };
+    this.publishOverlays([player, ...this.director.projectOverlays(this.cameras.main), tool]);
   }
 
   private handleWheel(

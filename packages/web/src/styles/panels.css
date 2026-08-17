@@ -1,14 +1,20 @@
-.chat-panel {
+.floating-panel {
   position: absolute;
   z-index: 7;
-  right: 18px;
   bottom: 18px;
-  width: min(468px, calc(100vw - 36px));
-  height: min(600px, calc(100vh - 120px));
+  width: min(400px, calc(100vw - 36px));
+  height: 70vh;
   overflow: hidden;
   border: 1px solid #ffffff24;
   border-radius: 14px;
   background: var(--chat-panel);
+  box-shadow: 0 18px 52px #02091299;
+}
+.floating-panel--right {
+  right: 18px;
+}
+.floating-panel--left {
+  left: 18px;
 }
 .ui-tabs-list {
   display: grid;

@@ -1,4 +1,4 @@
-.chat-panel.is-minimized {
+.floating-panel.is-minimized {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -6,7 +6,7 @@
   height: 46px;
   padding: 0 7px 0 14px;
 }
-.chat-panel.is-minimized strong {
+.floating-panel.is-minimized strong {
   color: #d4d4d8;
   font-size: 11px;
 }

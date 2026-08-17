@@ -11,13 +11,15 @@ export function OfficeCanvas({
   preset,
   locale,
   onSelect,
-  onSelectUsage
+  onSelectUsage,
+  onOpenMemos
 }: {
   agents: Record<string, AgentSnapshot>;
   preset: AvatarPreset;
   locale: Locale;
   onSelect: (id: string) => void;
   onSelectUsage: (provider: "codex" | "claude-code") => void;
+  onOpenMemos: () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const runtime = useRef<ReturnType<typeof createOfficeGame> | undefined>(undefined);
@@ -51,7 +53,7 @@ export function OfficeCanvas({
   return (
     <div className="office-canvas">
       <div className="office-game" ref={host} />
-      <OfficeOverlays actors={overlays} />
+      <OfficeOverlays actors={overlays} locale={locale} onOpenMemos={onOpenMemos} />
     </div>
   );
 }

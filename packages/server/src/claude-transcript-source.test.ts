@@ -65,4 +65,29 @@ describe("recoverClaudeProjectTranscripts", () => {
       readErrorCount: 0
     });
   });
+
+  it("discards the incomplete first row of a bounded transcript tail", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "token-floor-transcripts-"));
+    directories.push(root);
+    const oversized = JSON.stringify({ ignored: "x".repeat(128 * 1024) });
+    const valid = JSON.stringify({
+      sessionId: "session-tail",
+      cwd: "/work/token-floor",
+      timestamp: "2026-08-17T00:09:00.000Z"
+    });
+    fs.writeFileSync(path.join(root, "large.jsonl"), `${oversized}\n${valid}\n`);
+
+    const result = recoverClaudeProjectTranscriptsWithDiagnostics(
+      root,
+      new Date("2026-08-17T00:10:00.000Z"),
+      Number.POSITIVE_INFINITY
+    );
+
+    expect(result.events).toHaveLength(1);
+    expect(result.report).toMatchObject({
+      validRecordCount: 1,
+      malformedRecordCount: 0,
+      readErrorCount: 0
+    });
+  });
 });

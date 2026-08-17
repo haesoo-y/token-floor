@@ -7,6 +7,9 @@ import { SqliteEventStore } from "./event-store.js";
 const host = "127.0.0.1";
 const port = Number(process.env.TOKEN_FLOOR_PORT ?? 4317);
 const databasePath = process.env.TOKEN_FLOOR_DB ?? path.resolve(".token-floor/events.db");
+const memosPath =
+  process.env.TOKEN_FLOOR_MEMOS ??
+  path.resolve(import.meta.dirname, "../../..", ".token-floor/memos.json");
 const providerUsageCachePath =
   process.env.TOKEN_FLOOR_PROVIDER_USAGE_CACHE ??
   path.resolve(import.meta.dirname, "../../..", ".token-floor/provider-usage.json");
@@ -44,6 +47,7 @@ const app = createTokenFloorServer({
   claudeProjectsPath,
   claudeUsagePath,
   codexSessionsPath,
+  memosPath,
   providerUsageCachePath,
   eventStore: new SqliteEventStore(databasePath),
   simulation: process.env.TOKEN_FLOOR_SIMULATION === "true"

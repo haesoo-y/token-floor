@@ -11,15 +11,15 @@ describe("overlay transparency", () => {
     );
 
     expect(base).toContain("--page: #081522");
-    expect(base).toContain("--panel: #0d2033d9");
-    expect(base).toContain("--chat-panel: #0d2033c7");
+    expect(base).toContain("--panel: #0d2033c9");
+    expect(base).toContain("--chat-panel: #0d2033dc");
     expect(base).toContain("--bubble: #0a1a2ae6");
     expect(base).toContain("--label: #0a1a2ae6");
     expect(base).toContain("--control: #13283d");
     expect(base).toContain("--control-active: #1b3853d9");
-    expect(base).toContain("--lime: #8bc34a");
-    expect(base).toContain("--lime-soft: #8bc34a14");
-    expect(base).toContain("--lime-ring: #8bc34a40");
+    expect(base).toContain("--lime: #7bd88f");
+    expect(base).toContain("--lime-soft: #7bd88f14");
+    expect(base).toContain("--lime-ring: #7bd88f40");
     expect(combined).not.toMatch(/#5eead4|#55d6be|#67e8f9|var\(--mint\)/i);
     expect(base).not.toMatch(/#09090b|#0c0f14|#05070a|#171a20|#282d36/);
     expect(combined.match(/background: var\(--panel\)/g)).toHaveLength(3);
@@ -27,15 +27,19 @@ describe("overlay transparency", () => {
     expect(combined).toContain("background: var(--bubble)");
     expect(combined).toContain("background: var(--label)");
 
-    const chatPanelRule = readStyle("panels").match(/\.chat-panel\s*\{([^}]+)\}/)?.[1] ?? "";
-    expect(chatPanelRule).toContain("width: min(468px, calc(100vw - 36px))");
-    expect(chatPanelRule).toContain("height: min(600px, calc(100vh - 120px))");
-    expect(chatPanelRule).not.toContain("backdrop-filter");
-    expect(chatPanelRule).not.toContain("box-shadow");
+    const floatingPanelRule =
+      readStyle("panels").match(/\.floating-panel\s*\{([^}]+)\}/)?.[1] ?? "";
+    expect(floatingPanelRule).toContain("width: min(400px, calc(100vw - 36px))");
+    expect(floatingPanelRule).toContain("height: 70vh");
+    expect(combined).not.toContain("backdrop-filter");
+    expect(floatingPanelRule).toContain("box-shadow");
     expect(readStyle("panels")).toContain(".chat-row.assistant.claude-code strong");
     expect(readStyle("panels")).toContain(".event-row.claude-code span");
     expect(readStyle("panels")).toContain('.ui-tabs-content[data-state="inactive"]');
-    expect(readStyle("panel-controls")).toContain(".chat-panel.is-minimized");
+    expect(readStyle("panel-controls")).toContain(".floating-panel.is-minimized");
     expect(readStyle("stage")).not.toContain("control-hint");
+    expect(readStyle("memos")).toMatch(/\.memo-footer\s*\{[^}]*display: flex;/s);
+    expect(readStyle("memos")).toMatch(/\.memo-footer\s*\{[^}]*justify-content: space-between;/s);
+    expect(readStyle("memos")).toMatch(/\.memo-actions\s*\{[^}]*flex: 0 0 auto;/s);
   });
 });

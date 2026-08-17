@@ -12,7 +12,6 @@
   color: #a1a1aa;
   background: var(--panel);
   box-shadow: 0 14px 40px #0006;
-  backdrop-filter: blur(16px);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;

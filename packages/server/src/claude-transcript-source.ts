@@ -42,9 +42,13 @@ function readTail(filename: string): string {
   try {
     const size = fs.fstatSync(descriptor).size;
     const start = Math.max(0, size - TAIL_BYTES);
-    const buffer = Buffer.alloc(size - start);
-    fs.readSync(descriptor, buffer, 0, buffer.length, start);
-    return buffer.toString("utf8");
+    const readStart = start > 0 ? start - 1 : 0;
+    const buffer = Buffer.alloc(size - readStart);
+    fs.readSync(descriptor, buffer, 0, buffer.length, readStart);
+    const content = buffer.toString("utf8");
+    if (start === 0) return content;
+    const firstNewline = content.indexOf("\n");
+    return firstNewline >= 0 ? content.slice(firstNewline + 1) : "";
   } finally {
     fs.closeSync(descriptor);
   }

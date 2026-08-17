@@ -2,25 +2,30 @@ import { useEffect, useMemo, useState } from "react";
 import { CharacterPicker } from "./components/CharacterPicker.js";
 import { ChatPanel, type PanelTab } from "./components/ChatPanel.js";
 import { HeaderStats } from "./components/HeaderStats.js";
+import { MemoPanel } from "./components/MemoPanel.js";
 import { OfficeCanvas } from "./components/OfficeCanvas.js";
 import { SetupScreen } from "./components/SetupScreen.js";
 import { SettingsPanel } from "./components/SettingsPanel.js";
 import { ProviderAlerts } from "./components/ProviderAlerts.js";
 import { UsageCards } from "./components/UsageCards.js";
 import { useAgentStream } from "./hooks/useAgentStream.js";
+import { useMemos } from "./hooks/useMemos.js";
 import { useAssetAvailability } from "./hooks/useAssetAvailability.js";
 import { resolveAvatarPreset, type AvatarPreset } from "./lib/avatar.js";
 import { resolveLocale, translate, type Locale } from "./lib/i18n.js";
 import { countAgentStatuses } from "./lib/stats.js";
+import { nextMemoPanelOpenState } from "./game/officeInteraction.js";
 
 export function App() {
   const assets = useAssetAvailability();
   const { state, events, connection } = useAgentStream();
+  const memoState = useMemos();
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedUsage, setSelectedUsage] = useState<"codex" | "claude-code">();
   const [panelTab, setPanelTab] = useState<PanelTab>("selected");
   const [panelMinimized, setPanelMinimized] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [memosOpen, setMemosOpen] = useState(false);
   const [locale, setLocale] = useState<Locale>(() =>
     resolveLocale(localStorage.getItem("token-floor-locale"))
   );
@@ -103,6 +108,7 @@ export function App() {
               setPanelTab("selected");
               setPanelMinimized(false);
             }}
+            onOpenMemos={() => setMemosOpen(nextMemoPanelOpenState)}
           />
         ) : assets.status === "missing" ? (
           <SetupScreen files={assets.files} locale={locale} />
@@ -130,6 +136,18 @@ export function App() {
           minimized={panelMinimized}
           onTabChange={setPanelTab}
           onMinimizedChange={setPanelMinimized}
+        />
+        <MemoPanel
+          open={memosOpen}
+          memos={memoState.memos}
+          loading={memoState.loading}
+          error={memoState.error}
+          locale={locale}
+          onClose={() => setMemosOpen(false)}
+          onRefresh={memoState.refresh}
+          onCreate={memoState.createMemo}
+          onUpdate={memoState.updateMemo}
+          onDelete={memoState.deleteMemo}
         />
       </section>
     </main>

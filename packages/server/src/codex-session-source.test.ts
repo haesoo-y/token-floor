@@ -2,6 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { applyEvent, createOfficeState } from "@token-floor/protocol";
+import { startAgentMaintenance } from "./agent-maintenance.js";
 import { CodexSessionCollector } from "./codex-session-source.js";
 
 const roots: string[] = [];
@@ -55,6 +57,7 @@ function heartbeat(type: "mcp_tool_call_begin" | "mcp_tool_call_end" | "agent_re
 
 afterEach(() => {
   for (const directory of roots.splice(0)) fs.rmSync(directory, { recursive: true, force: true });
+  vi.useRealTimers();
 });
 
 describe("CodexSessionCollector", () => {
@@ -147,6 +150,33 @@ describe("CodexSessionCollector", () => {
     expect(events.at(-1)?.type).toBe("agent.completed");
   });
 
+  it("prunes an expired recovered character before the first maintenance interval", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-17T03:00:00.000Z"));
+    const directory = root();
+    fs.writeFileSync(
+      path.join(directory, "expired.jsonl"),
+      line(meta("expired")) + line(task("task_started")) + line(task("task_complete"))
+    );
+    let state = new CodexSessionCollector(directory)
+      .poll(new Date("2026-08-17T03:00:00.000Z"))
+      .reduce(applyEvent, createOfficeState());
+
+    const stop = startAgentMaintenance({
+      getState: () => state,
+      setState: (next) => {
+        state = next;
+      },
+      broadcastSnapshot: () => undefined
+    });
+
+    expect(state.agents["codex:expired"]).toBeUndefined();
+    expect(
+      state.recentEvents.some((event) => "agent" in event && event.agent.id === "codex:expired")
+    ).toBe(true);
+    stop();
+  });
+
   it("holds a partial final row until the next poll", () => {
     const directory = root();
     const filename = path.join(directory, "partial.jsonl");
@@ -168,6 +198,27 @@ describe("CodexSessionCollector", () => {
     expect(collector.diagnostics()).toMatchObject({
       validRecordCount: 2,
       malformedRecordCount: 1,
+      readErrorCount: 0
+    });
+  });
+
+  it("does not classify valid unsupported provider records as malformed", () => {
+    const directory = root();
+    const unsupported = {
+      type: "event_msg",
+      timestamp: at,
+      payload: { type: "token_count", info: { total_token_usage: 42 } }
+    };
+    fs.writeFileSync(
+      path.join(directory, "unsupported.jsonl"),
+      line(meta("safe")) + line(unsupported) + line(task("task_started"))
+    );
+
+    const collector = new CodexSessionCollector(directory);
+    expect(collector.poll(new Date(at)).at(-1)?.type).toBe("agent.active");
+    expect(collector.diagnostics()).toMatchObject({
+      validRecordCount: 2,
+      malformedRecordCount: 0,
       readErrorCount: 0
     });
   });

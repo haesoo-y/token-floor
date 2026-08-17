@@ -14,6 +14,7 @@ export interface TokenFloorServerOptions {
   claudeProjectsPath?: string;
   claudeUsagePath?: string;
   codexSessionsPath?: string;
+  memosPath?: string;
   providerUsageCachePath?: string;
   eventStore?: EventStore;
   simulation?: boolean;

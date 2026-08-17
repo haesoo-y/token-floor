@@ -7,6 +7,7 @@ import type {
 import { translate, type Locale } from "../lib/i18n.js";
 import { truncateChatText } from "../lib/chatText.js";
 import { usageDetailValues } from "../lib/usageDetails.js";
+import { FloatingPanel } from "./common/FloatingPanel.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs.js";
 
 export type PanelTab = "selected" | "chat" | "events";
@@ -37,22 +38,20 @@ export function ChatPanel({
   const usageValues = usageDetailValues(usage, locale, translate(locale, "tokenUnavailable"));
   if (minimized) {
     return (
-      <aside className="chat-panel is-minimized">
-        <strong>{translate(locale, "activityPanel")}</strong>
-        <button
-          type="button"
-          className="panel-toggle"
-          aria-label={translate(locale, "restorePanel")}
-          title={translate(locale, "restorePanel")}
-          onClick={() => onMinimizedChange(false)}
-        >
-          ↗
-        </button>
-      </aside>
+      <FloatingPanel
+        placement="right"
+        className="chat-panel"
+        minimized
+        minimizedLabel={translate(locale, "activityPanel")}
+        restoreLabel={translate(locale, "restorePanel")}
+        onRestore={() => onMinimizedChange(false)}
+      >
+        {null}
+      </FloatingPanel>
     );
   }
   return (
-    <aside className="chat-panel">
+    <FloatingPanel placement="right" className="chat-panel">
       <Tabs
         value={activeTab}
         onValueChange={(value) => onTabChange(value as PanelTab)}
@@ -177,6 +176,6 @@ export function ChatPanel({
           )}
         </TabsContent>
       </Tabs>
-    </aside>
+    </FloatingPanel>
   );
 }

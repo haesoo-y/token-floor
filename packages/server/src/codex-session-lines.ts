@@ -11,13 +11,16 @@ export function decodeCodexLines(
 ): Array<CodexSessionRecord | CodexLifecycleRecord> {
   const records: Array<CodexSessionRecord | CodexLifecycleRecord> = [];
   for (const line of lines) {
+    let value: unknown;
     try {
-      const record = decodeCodexRecord(JSON.parse(line));
-      if (record) records.push(record);
-      else onMalformed();
+      value = JSON.parse(line);
     } catch {
       onMalformed();
+      continue;
     }
+    const record = decodeCodexRecord(value);
+    // Valid provider records outside the normalized lifecycle contract are intentionally ignored.
+    if (record) records.push(record);
   }
   return records;
 }

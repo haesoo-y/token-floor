@@ -14,6 +14,7 @@ import {
   officeWalls,
   OFFICE_WIDTH,
   PLAYER_BOUNDS,
+  PLAYER_START,
   restSpots,
   spawnSpotForAgent,
   spotForAgent,
@@ -43,7 +44,7 @@ describe("office layout", () => {
       height: 240
     });
     expect(officeRooms.find((room) => room.id === "meeting-right")).toMatchObject({
-      width: 288,
+      width: 256,
       height: 96
     });
     expect(officeRooms.find((room) => room.id === "lounge")).toMatchObject({ height: 128 });
@@ -58,7 +59,7 @@ describe("office layout", () => {
     });
     expect(officeRooms.find((room) => room.id === "future")).toMatchObject({
       x: 448,
-      width: 288
+      width: 256
     });
   });
 
@@ -118,7 +119,7 @@ describe("office layout", () => {
     expect(officeRooms.find((room) => room.id === "meeting-lounge-passage")).toMatchObject({
       x: 480,
       y: 160,
-      width: 224,
+      width: 192,
       height: 16,
       texture: "floor-lounge"
     });
@@ -138,14 +139,31 @@ describe("office layout", () => {
     }
   });
 
-  it("removes the meeting-room plant and moves the larger whiteboard to the upper right", () => {
+  it("keeps the whiteboard on the meeting room's upper-right wall", () => {
     expect(officeProps.some((prop) => prop.id === "meeting-plant")).toBe(false);
     expect(officeProps.find((prop) => prop.id === "whiteboard")).toMatchObject({
-      x: 672,
+      x: 640,
       y: 96,
       width: 64,
       height: 48
     });
+  });
+
+  it("spawns the player in the meeting room without intersecting a solid", () => {
+    const meetingRoom = officeRooms.find((room) => room.id === "meeting-right")!;
+    expect(PLAYER_START.x).toBeGreaterThanOrEqual(meetingRoom.x);
+    expect(PLAYER_START.x).toBeLessThanOrEqual(meetingRoom.x + meetingRoom.width);
+    expect(PLAYER_START.y).toBeGreaterThanOrEqual(meetingRoom.y);
+    expect(PLAYER_START.y).toBeLessThanOrEqual(meetingRoom.y + meetingRoom.height);
+    expect(
+      collisionObstacles.some(
+        (obstacle) =>
+          PLAYER_START.x + AVATAR_COLLISION_RADIUS > obstacle.x &&
+          PLAYER_START.x - AVATAR_COLLISION_RADIUS < obstacle.x + obstacle.width &&
+          PLAYER_START.y + AVATAR_COLLISION_RADIUS > obstacle.y &&
+          PLAYER_START.y - AVATAR_COLLISION_RADIUS < obstacle.y + obstacle.height
+      )
+    ).toBe(false);
   });
 
   it("assigns stable work and lounge destinations", () => {

@@ -12,14 +12,14 @@
   font-synthesis: none;
   --blue: #4f8cff;
   --orange: #f08a42;
-  --lime: #8bc34a;
-  --lime-soft: #8bc34a14;
-  --lime-ring: #8bc34a40;
+  --lime: #7bd88f;
+  --lime-soft: #7bd88f14;
+  --lime-ring: #7bd88f40;
   --yellow: #f2c94c;
   --red: #fb7185;
   --page: #081522;
-  --panel: #0d2033d9;
-  --chat-panel: #0d2033c7;
+  --panel: #0d2033c9;
+  --chat-panel: #0d2033dc;
   --bubble: #0a1a2ae6;
   --label: #0a1a2ae6;
   --control: #13283d;
@@ -72,7 +72,6 @@ body {
   border-radius: 14px;
   background: var(--panel);
   box-shadow: 0 18px 50px #00000066;
-  backdrop-filter: blur(18px) saturate(130%);
 }
 .wordmark {
   display: flex;
