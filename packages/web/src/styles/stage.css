@@ -7,35 +7,117 @@
   position: absolute;
   z-index: 0;
   inset: 0;
+  overflow: hidden;
+  background: #111820;
 }
-.office-canvas canvas {
+.office-game {
+  position: absolute;
+  inset: 0;
+}
+.office-game canvas {
   display: block;
   image-rendering: pixelated;
+  outline: none;
+}
+.office-overlays {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.actor-overlay {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  color: #f5f8fa;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+.actor-label {
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 5px;
+  border: 1px solid #ffffff26;
+  border-radius: 5px;
+  background: var(--label);
+  box-shadow: 0 2px 8px #0008;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.actor-bubble {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  padding: 7px 10px;
+  border: 1px solid #ffffff24;
+  border-radius: 8px;
+  color: #f8fbfc;
+  background: var(--bubble);
+  box-shadow: 0 5px 16px #0009;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: center;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.actor-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid #ffffff24;
+  border-bottom: 1px solid #ffffff24;
+  background: var(--bubble);
+  transform: translate(-50%, -4px) rotate(45deg);
+}
+.actor-overlay.codex .actor-label,
+.actor-overlay.codex .actor-bubble {
+  border-color: #6f9fff66;
+}
+.actor-overlay.claude-code .actor-label,
+.actor-overlay.claude-code .actor-bubble {
+  border-color: #ff9f5a66;
+}
+.actor-overlay.status-completed .actor-bubble {
+  color: #d9f5ea;
 }
 .stage-label,
 .control-hint {
   position: absolute;
   z-index: 4;
-  background: #071019dc;
-  border: 1px solid var(--line);
-  color: #a9bbc8;
-  font:
-    11px ui-monospace,
-    monospace;
+  border: 1px solid #ffffff20;
+  border-radius: 9px;
+  color: #cbd5e1;
+  background: var(--panel);
+  box-shadow: 0 12px 32px #0006;
+  backdrop-filter: blur(14px);
+  font-size: 11px;
+  font-weight: 600;
 }
 .stage-label {
-  top: 102px;
-  left: 16px;
+  top: 94px;
+  right: 18px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
+  padding: 8px 11px;
 }
 .control-hint {
   left: 50%;
-  bottom: 14px;
+  bottom: 20px;
   transform: translateX(-50%);
-  padding: 6px 9px;
+  padding: 7px 11px;
 }
 .live-dot {
   width: 8px;

@@ -13,12 +13,17 @@ const messages = {
     assetTitle: "MetroCity assets are required",
     assetBody: "Extract both free packs into this local folder, then reload the page.",
     player: "My character",
-    connected: "Live simulation",
+    connected: "Live office",
     disconnected: "Server disconnected",
-    controls: "WASD move · wheel zoom · click an agent for details",
+    controls: "WASD / arrow keys move · wheel zoom · click an agent for details",
     claudeConnect: "Connect Claude",
     claudeConnected: "Claude connected",
-    claudeChecking: "Checking Claude"
+    claudeChecking: "Checking Claude",
+    usageDetails: "Weekly usage details",
+    weeklyLeft: "Weekly left",
+    resetsAt: "Resets",
+    checkedAt: "Checked",
+    reason: "Reason"
   },
   ko: {
     active: "작업 중",
@@ -32,12 +37,17 @@ const messages = {
     assetTitle: "MetroCity 에셋이 필요합니다",
     assetBody: "두 무료 팩을 아래 로컬 폴더에 압축 해제한 뒤 페이지를 새로고침하세요.",
     player: "내 캐릭터",
-    connected: "실시간 시뮬레이션",
+    connected: "실시간 오피스",
     disconnected: "서버 연결 끊김",
-    controls: "WASD 이동 · 휠 확대 · 에이전트를 클릭해 상세 보기",
+    controls: "WASD / 방향키 이동 · 휠 확대 · 에이전트를 클릭해 상세 보기",
     claudeConnect: "Claude 연결",
     claudeConnected: "Claude 연결됨",
-    claudeChecking: "Claude 확인 중"
+    claudeChecking: "Claude 확인 중",
+    usageDetails: "주간 사용량 상세",
+    weeklyLeft: "주간 잔여",
+    resetsAt: "초기화",
+    checkedAt: "확인 시각",
+    reason: "사유"
   },
   ja: {
     active: "作業中",
@@ -51,12 +61,17 @@ const messages = {
     assetTitle: "MetroCityアセットが必要です",
     assetBody: "2つの無料パックを次のローカルフォルダに展開し、再読み込みしてください。",
     player: "マイキャラクター",
-    connected: "ライブシミュレーション",
+    connected: "ライブオフィス",
     disconnected: "サーバー未接続",
-    controls: "WASDで移動 · ホイールでズーム · エージェントをクリック",
+    controls: "WASD / 矢印キーで移動 · ホイールでズーム · エージェントをクリック",
     claudeConnect: "Claudeを接続",
     claudeConnected: "Claude接続済み",
-    claudeChecking: "Claude確認中"
+    claudeChecking: "Claude確認中",
+    usageDetails: "週間使用量の詳細",
+    weeklyLeft: "週間残量",
+    resetsAt: "リセット",
+    checkedAt: "確認日時",
+    reason: "理由"
   }
 } as const;
 

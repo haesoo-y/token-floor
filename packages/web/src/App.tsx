@@ -8,7 +8,7 @@ import { SetupScreen } from "./components/SetupScreen.js";
 import { UsageCards } from "./components/UsageCards.js";
 import { useAgentStream } from "./hooks/useAgentStream.js";
 import { useAssetAvailability } from "./hooks/useAssetAvailability.js";
-import type { AvatarPreset } from "./lib/avatar.js";
+import { resolveAvatarPreset, type AvatarPreset } from "./lib/avatar.js";
 import { translate, type Locale } from "./lib/i18n.js";
 import { countAgentStatuses } from "./lib/stats.js";
 
@@ -16,11 +16,12 @@ export function App() {
   const assets = useAssetAvailability();
   const { state, events, connection } = useAgentStream();
   const [selectedId, setSelectedId] = useState<string>();
+  const [selectedUsage, setSelectedUsage] = useState<"codex" | "claude-code">();
   const [locale, setLocale] = useState<Locale>(
     () => (localStorage.getItem("token-floor-locale") as Locale | null) ?? "en"
   );
-  const [preset, setPreset] = useState<AvatarPreset>(
-    () => (localStorage.getItem("token-floor-avatar") as AvatarPreset | null) ?? "rose"
+  const [preset, setPreset] = useState<AvatarPreset>(() =>
+    resolveAvatarPreset(localStorage.getItem("token-floor-avatar"))
   );
   const stats = useMemo(() => countAgentStatuses(state.agents), [state.agents]);
   const selected = selectedId ? state.agents[selectedId] : undefined;
@@ -41,7 +42,14 @@ export function App() {
         <HeaderStats stats={stats} locale={locale} />
         <div className="top-actions">
           <ClaudeIntegrationButton locale={locale} />
-          <UsageCards usage={state.usageByProvider} locale={locale} />
+          <UsageCards
+            usage={state.usageByProvider}
+            locale={locale}
+            onSelect={(provider) => {
+              setSelectedId(undefined);
+              setSelectedUsage(provider);
+            }}
+          />
           <select
             value={locale}
             onChange={(event) => setLocale(event.target.value as Locale)}
@@ -59,15 +67,34 @@ export function App() {
           {translate(locale, connection === "connected" ? "connected" : "disconnected")}
         </div>
         {assets.status === "ready" ? (
-          <OfficeCanvas agents={state.agents} preset={preset} onSelect={setSelectedId} />
+          <OfficeCanvas
+            agents={state.agents}
+            usage={state.usageByProvider}
+            preset={preset}
+            locale={locale}
+            onSelect={(id) => {
+              setSelectedUsage(undefined);
+              setSelectedId(id);
+            }}
+            onSelectUsage={(provider) => {
+              setSelectedId(undefined);
+              setSelectedUsage(provider);
+            }}
+          />
         ) : assets.status === "missing" ? (
           <SetupScreen files={assets.files} locale={locale} />
         ) : (
-          <div className="loading">CHECKING METROCITY ASSETS…</div>
+          <div className="loading">CHECKING OFFICE ASSETS…</div>
         )}
         <div className="control-hint">{translate(locale, "controls")}</div>
         <CharacterPicker preset={preset} onChange={setPreset} locale={locale} />
-        <ChatPanel selected={selected} events={events} locale={locale} />
+        <ChatPanel
+          selected={selected}
+          selectedUsage={selectedUsage}
+          usage={selectedUsage ? state.usageByProvider[selectedUsage] : undefined}
+          events={events}
+          locale={locale}
+        />
       </section>
     </main>
   );

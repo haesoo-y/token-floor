@@ -5,6 +5,8 @@ node_modules/
 dist/
 dist-types/
 coverage/
+__pycache__/
+*.pyc
 *.tsbuildinfo
 assets/vendor/metrocity/
 packages/web/public/vendor/metrocity/

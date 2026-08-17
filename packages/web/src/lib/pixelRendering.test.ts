@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveCanvasDimension } from "./pixelRendering.js";
+import { resolveCanvasDimension, resolveOfficeZoom } from "./pixelRendering.js";
 
 describe("resolveCanvasDimension", () => {
   it("removes fractional layout sizes that distort pixel widths", () => {
@@ -15,5 +15,12 @@ describe("resolveCanvasDimension", () => {
   it("preserves whole fullscreen viewport dimensions", () => {
     expect(resolveCanvasDimension(1920)).toBe(1920);
     expect(resolveCanvasDimension(1080)).toBe(1080);
+  });
+});
+
+describe("resolveOfficeZoom", () => {
+  it("returns integer zoom levels only", () => {
+    expect(resolveOfficeZoom(1920, 1080, 960, 640)).toBe(2);
+    expect(resolveOfficeZoom(3840, 2160, 960, 640)).toBe(3);
   });
 });

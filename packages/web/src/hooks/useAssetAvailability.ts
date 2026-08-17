@@ -4,7 +4,7 @@ import { findMissingAssets } from "../lib/assets.js";
 export type AssetAvailability =
   { status: "checking" } | { status: "ready" } | { status: "missing"; files: string[] };
 
-/** Checks that the locally licensed asset files required by the scene are browser-accessible. */
+/** Checks that the locally bundled original game assets are browser-accessible. */
 export function useAssetAvailability(): AssetAvailability {
   const [availability, setAvailability] = useState<AssetAvailability>({ status: "checking" });
   // The active guard prevents an asynchronous HEAD response from updating an unmounted screen.

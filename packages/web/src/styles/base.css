@@ -1,15 +1,26 @@
 :root {
-  color: #eaf2f7;
-  background: #050b11;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #f4f4f5;
+  background: #09090b;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   font-synthesis: none;
-  --blue: #4b8cff;
-  --orange: #f28b3c;
-  --mint: #64d6b2;
-  --yellow: #f5c451;
-  --red: #f06b75;
-  --panel: #0a141dcc;
-  --line: #2a3d4d;
+  --blue: #4f8cff;
+  --orange: #f08a42;
+  --mint: #55d6be;
+  --yellow: #f2c94c;
+  --red: #fb7185;
+  --panel: #0c0f14b8;
+  --chat-panel: #0c0f1480;
+  --bubble: #05070a80;
+  --label: #05070a80;
+  --line: #ffffff1f;
+  --muted: #a1a1aa;
 }
 
 * {
@@ -29,99 +40,90 @@ select {
 }
 button:focus-visible,
 select:focus-visible {
-  outline: 3px solid var(--mint);
+  outline: 2px solid #67e8f9;
   outline-offset: 2px;
 }
-
 body {
-  background-color: #050b11;
-  background-image:
-    linear-gradient(#0d1a24 1px, transparent 1px),
-    linear-gradient(90deg, #0d1a24 1px, transparent 1px);
-  background-size: 28px 28px;
+  background: #09090b;
 }
-
 .app-shell {
   position: relative;
   height: 100%;
-  min-width: 900px;
+  min-width: 960px;
 }
 .topbar {
   position: absolute;
   z-index: 10;
-  top: 0;
-  right: 0;
-  left: 0;
+  top: 14px;
+  right: 16px;
+  left: 16px;
   display: grid;
-  grid-template-columns: 280px 1fr auto;
+  grid-template-columns: 250px minmax(390px, 1fr) auto;
   align-items: center;
-  gap: 22px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--line);
-  background: #071019e6;
-  box-shadow: 0 8px 22px #0008;
-  backdrop-filter: blur(8px);
+  gap: 18px;
+  min-height: 64px;
+  padding: 9px 12px;
+  border: 1px solid #ffffff24;
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 18px 50px #00000066;
+  backdrop-filter: blur(18px) saturate(130%);
 }
 .wordmark {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
 }
 .wordmark > span {
   display: grid;
   place-items: center;
-  width: 45px;
-  height: 45px;
-  color: #071019;
-  background: var(--mint);
-  border: 3px solid #d8fff3;
-  box-shadow: 4px 4px 0 #1d604d;
-  font:
-    900 16px ui-monospace,
-    monospace;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #7ce7d2;
+  border-radius: 10px;
+  color: #06241e;
+  background: #5eead4;
+  font-weight: 850;
+  letter-spacing: -0.04em;
 }
 .wordmark div {
   display: grid;
+  gap: 2px;
 }
 .wordmark strong {
-  font:
-    900 19px "Arial Narrow",
-    Impact,
-    sans-serif;
+  font-size: 15px;
+  font-weight: 750;
   letter-spacing: 0.08em;
 }
 .wordmark small {
-  color: #7990a1;
-  font:
-    10px ui-monospace,
-    monospace;
-  letter-spacing: 0.1em;
+  color: #8b95a5;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
 }
 .status-strip {
   display: flex;
-  gap: 8px;
-  justify-self: start;
+  gap: 7px;
 }
 .status-stat {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  min-width: 94px;
+  align-items: center;
+  gap: 10px;
+  min-width: 86px;
   padding: 8px 10px;
-  border: 1px solid var(--line);
-  background: #0d1922;
+  border: 1px solid #ffffff18;
+  border-radius: 9px;
+  background: #ffffff08;
 }
 .status-stat span {
-  color: #8da3b4;
-  font:
-    700 10px ui-monospace,
-    monospace;
+  color: #9ca3af;
+  font-size: 9px;
+  font-weight: 700;
   text-transform: uppercase;
 }
 .status-stat strong {
-  font:
-    900 22px ui-monospace,
-    monospace;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
 }
 .status-active strong {
   color: var(--mint);
@@ -130,7 +132,7 @@ body {
   color: var(--yellow);
 }
 .status-completed strong {
-  color: #8da3b4;
+  color: #cbd5e1;
 }
 .status-error strong {
   color: var(--red);
@@ -138,14 +140,15 @@ body {
 .top-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 .top-actions select {
-  height: 38px;
-  color: #eaf2f7;
-  background: #101c25;
-  border: 1px solid var(--line);
-  padding: 0 8px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid #ffffff20;
+  border-radius: 9px;
+  color: #f4f4f5;
+  background: #171a20;
 }
 @media (prefers-reduced-motion: reduce) {
   * {

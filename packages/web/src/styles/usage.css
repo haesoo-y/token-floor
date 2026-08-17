@@ -2,90 +2,67 @@
   display: flex;
   gap: 7px;
 }
+.integration-button,
+.usage-card {
+  border: 1px solid #ffffff1c;
+  border-radius: 9px;
+  color: #e4e4e7;
+  background: #ffffff08;
+  cursor: pointer;
+}
 .integration-button {
   display: flex;
   align-items: center;
   gap: 7px;
-  height: 38px;
-  padding: 0 10px;
-  color: #a9bbc8;
-  background: #0d1922;
-  border: 1px solid var(--line);
-  cursor: pointer;
-  font:
-    700 10px ui-monospace,
-    monospace;
+  height: 40px;
+  padding: 0 11px;
+  font-size: 10px;
+  font-weight: 650;
   white-space: nowrap;
 }
 .integration-button:disabled {
   cursor: wait;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 .integration-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--yellow);
 }
 .integration-button.installed .integration-dot {
   background: var(--mint);
-  box-shadow: 0 0 8px #64d6b2aa;
+  box-shadow: 0 0 8px #55d6beaa;
 }
 .usage-card {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   min-width: 128px;
   height: 48px;
-  padding: 6px 9px;
-  color: #eaf2f7;
-  background: #0d1922;
-  border: 1px solid var(--line);
-  cursor: pointer;
+  padding: 4px 9px 4px 5px;
   text-align: left;
 }
-.usage-card:hover {
-  background: #142532;
-}
-.usage-avatar {
-  position: relative;
-  width: 24px;
-  height: 29px;
-  background: var(--blue);
-  border: 2px solid #03070a;
-}
-.usage-avatar::before {
-  content: "";
-  position: absolute;
-  width: 15px;
-  height: 11px;
-  left: 2px;
-  top: -10px;
-  border: 2px solid #03070a;
-  border-radius: 50%;
-  background: #bd8b6b;
-}
-.usage-card.claude-code .usage-avatar {
-  background: var(--orange);
+.usage-card:hover,
+.integration-button:hover {
+  background: #ffffff10;
 }
 .usage-card > span:last-child {
   display: grid;
 }
 .usage-card small {
-  color: #839aaa;
-  font:
-    9px ui-monospace,
-    monospace;
+  color: #8f98a7;
+  font-size: 8px;
+  font-weight: 700;
   text-transform: uppercase;
 }
 .usage-card strong {
-  font:
-    800 13px ui-monospace,
-    monospace;
+  font-size: 12px;
+  font-weight: 750;
 }
 .usage-card.codex strong {
-  color: #8fb7ff;
+  color: #93b8ff;
 }
 .usage-card.claude-code strong {
-  color: #ffb780;
+  color: #ffb37d;
 }
