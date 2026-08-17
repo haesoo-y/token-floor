@@ -1,37 +1,181 @@
+[English](README.md) | [한국어](docs/README.ko.md) | [日本語](docs/README.ja.md)
+
 # Token Floor
 
-Watch Claude Code, Codex, and other coding agents work as animated coworkers in a real-time pixel office.
+**Your Claude Code and Codex agents, alive in one local pixel office — with no extra login.**
 
-## Local development
+Token Floor turns the local activity already produced by Claude Code and Codex into a live, top-down office. Open it and see which agents are working, waiting, done, or in error; read sanitized conversations and events; check remaining usage; walk around the office; and keep project memos on the meeting-room whiteboard.
 
-```sh
+There is no Token Floor account, provider OAuth screen, API-key form, or second Claude/Codex sign-in. If a provider is already configured on your machine, Token Floor observes its local state on `127.0.0.1` and starts lightly. Provider credentials and raw tool payloads stay out of Token Floor.
+
+> Token Floor is currently a local development preview. The zero-friction `npx` distribution flow is planned for Phase 05 and is not available yet.
+
+![Claude Code and Codex agents working in the Token Floor office](docs/assets/agents-working.png)
+
+_Active main agents and subagents have distinct sprites and work positions; completed agents take a break in the lounge._
+
+## Why Token Floor
+
+- **No additional login:** no Token Floor account, no copied API key, no OAuth consent flow, and no repeated provider login.
+- **Local-first and read-only:** provider-owned files are read locally, the server binds to loopback, and normalized runtime data stays in the Git-ignored `.token-floor/` directory.
+- **Two providers, one vocabulary:** Claude- and Codex-specific records become the same small lifecycle contract before reaching the server or UI.
+- **A glanceable office, not another terminal:** status, movement, bubbles, usage, logs, and memos share one compact scene.
+- **Safe by construction:** reasoning, raw provider records, tool inputs/results, credentials, guardian activity, and internal orchestration messages are excluded.
+
+## Features
+
+### Live multi-provider office
+
+- Watches Claude Code and Codex at the same time, while allowing either provider to be absent or temporarily unhealthy.
+- Shows active, waiting, completed, and error totals in the header.
+- Represents main agents, subagents, and provider usage NPCs with distinct precomposed pixel sprites.
+- Assigns stable labels, role-specific work destinations, staggered cardinal routes, varied speed and pause timing, and collision-aware movement.
+- Moves completed agents into the coffee lounge, where they rotate short localized idle phrases without covering the office with simultaneous bubbles.
+- Keeps work-area speech visible while an agent is present, prioritizing sanitized assistant messages over state transitions and idle lines.
+- Retains completed characters for 60 minutes, while hiding already-expired characters immediately after a restart.
+
+### Interactive office
+
+- Lets you walk with **WASD or the arrow keys**, using the same four-direction movement and facing logic.
+- Keeps arrow keys assigned to the player even after a panel, tab, memo, button, or whiteboard receives focus; WASD remains available except while typing.
+- Uses a compact five-zone layout: agent workspace, meeting room, coffee lounge, separate Codex and Claude usage offices, and a future area.
+- Provides solid walls, meeting table, and whiteboard collision, agent route avoidance, depth sorting, camera follow, wheel zoom, and crisp nearest-neighbor pixel rendering.
+- Offers multiple player avatars, stored locally, through the character picker and settings.
+- Checks required runtime art before entering the office and shows a direct local asset-path diagnostic instead of a broken scene.
+
+### Agent details, chat, and event history
+
+- Opens an agent detail panel by selecting a character and shows provider, status, project, session, activity, wait/error context, and parent agent.
+- Keeps **sanitized chat** separate from **non-chat lifecycle events**, with independent tabs and up to 100 recent entries in each log.
+- Stores normalized logs in SQLite and restores them after a server restart, independently of the 60-minute character lifetime.
+- Handles duplicate records idempotently and prevents older events from rolling back newer state.
+- Keeps the last valid office snapshot visible while the WebSocket reconnects.
+
+### Reliable activity and completion
+
+- Converts Codex task, message, subagent, function, MCP, custom-tool, and reasoning boundaries into provider-neutral lifecycle events.
+- Treats `mcp_tool_call_begin`, `mcp_tool_call_end`, and `agent_reasoning` as payload-free active heartbeats, preventing a genuinely busy Codex agent from being marked complete after five minutes.
+- Infers completion only after five minutes without newer activity, and never times out waiting or failed agents as completed.
+- Skips valid but unsupported records quietly and reports actual malformed-source conditions separately.
+
+### Usage meters without provider login
+
+- Reads provider-supplied local rate-limit metadata without calling provider APIs or launching helper agents.
+- Shows separate five-hour and weekly remaining percentages, reset details, last synchronization time, and unavailable states.
+- Opens the same usage details from the header cards or the provider NPCs in their separate offices.
+- Collects Claude usage from supported CLI/Desktop local sources and selects the newest, most complete valid sample.
+- Collects Codex usage from recent local rollout records.
+- Keeps last-known-good usage during missing, locked, partial, or malformed source updates and writes only normalized usage to an atomic local cache.
+
+### Whiteboard memos
+
+- Opens and closes the memo panel by clicking the meeting-room whiteboard.
+- Creates memos up to 1,000 characters with `Ctrl`/`Cmd` + `Enter`, and supports refresh, expand/collapse, and copy.
+- Lets active memos be edited or archived.
+- Lets archived memos be restored or permanently deleted; deletion is intentionally unavailable for active memos.
+- Saves versioned memo JSON atomically to `.token-floor/memos.json`, outside Git.
+
+### Language, settings, and degraded operation
+
+- Ships the interface in English, Korean, and Japanese.
+- Persists locale and avatar preferences in browser local storage with safe fallbacks.
+- Reports the app connection and each provider's `healthy`, `waiting`, `missing`, `stale`, `malformed`, or `disconnected` condition independently.
+- Shows provider capabilities and actionable local-source diagnostics without requesting credentials or provider paths in the UI.
+
+### Privacy boundary
+
+Token Floor stores only allowlisted normalized fields needed for the office. It deliberately excludes:
+
+- raw Claude or Codex records;
+- reasoning and chain-of-thought content;
+- tool arguments, inputs, outputs, invocation payloads, and commands;
+- API keys, bearer tokens, environment secrets, authentication data, and local usernames;
+- Claude sidechains, Codex guardian agents, and internal orchestration prompts;
+- tool-use/tool-result blocks as chat messages.
+
+Redaction is applied before persistence and applied again when legacy SQLite rows are loaded.
+
+![Token Floor with memo, agent chat, event, usage, and character panels open](docs/assets/all-panels-open.png)
+
+_The whiteboard memo panel and activity panel reuse translucent dark-navy floating-panel primitives without backdrop blur._
+
+## Run locally
+
+### Requirements
+
+- Node.js 22 or newer, including `node:sqlite`
+- npm 10 or newer
+- macOS for the currently documented Claude Desktop cache path; Claude Code and Codex collectors use provider-owned local state when available
+
+### Start
+
+```bash
+git clone https://github.com/haesoo-y/token-floor.git
+cd token-floor
 npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. On startup, Token Floor automatically installs localhost lifecycle
-observers in `~/.claude/settings.json`. The persisted settings are reused on later launches.
-Token Floor creates
-`~/.claude/settings.json.token-floor.backup` before the first change and removes only its own
-entries when disconnected.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The local collector/server listens on `127.0.0.1:4317`.
 
-The integration stores normalized lifecycle metadata in `.token-floor/events.db`. It does not
-store prompts, assistant responses, tool inputs, commands, or tool results. Enable the Phase 01
-sample agents explicitly with `TOKEN_FLOOR_SIMULATION=true npm run dev`.
+No separate Claude or Codex login is performed by Token Floor. Use the providers normally once on your machine; Token Floor observes the local state they already own.
 
-Claude usage is collected from both provider-owned roots. Token Floor reads Claude Desktop's
-local HTTP cache and `plan-usage-history.json`, and inspects `~/.claude` for Claude Code CLI
-rate-limit snapshots and session data. When no user-owned Claude status line exists, a silent local
-observer captures the rate-limit metadata Claude Code already supplies; raw status input is not
-persisted. The newest valid snapshot wins, while detailed reset data is preferred when Desktop
-writes detailed and summary entries in the same refresh. Lifecycle recovery also reads
-`~/.claude/projects`. Token Floor has no OAuth, login, API-key, or credential-storage flow. Set
-`TOKEN_FLOOR_AUTO_OBSERVE_CLAUDE=false` only when automatic lifecycle observer installation is
-unwanted.
+To run the deterministic demo instead of local collectors:
 
-The Codex collector reads provider-owned token-count records under `~/.codex/sessions`; Token
-Floor does not launch or authenticate Codex.
+```bash
+TOKEN_FLOOR_SIMULATION=true npm run dev
+```
 
-Provider collectors refresh on a bounded interval and atomically write normalized snapshots to
-the Git-ignored `.token-floor/provider-usage.json`. The server projects usage from this cache and
-keeps its last valid values when provider files are temporarily unavailable or incomplete.
+### Useful commands
+
+```bash
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+## Local data
+
+Runtime files are written under `.token-floor/` and ignored by Git:
+
+| File                               | Purpose                                                                       |
+| ---------------------------------- | ----------------------------------------------------------------------------- |
+| `.token-floor/events.db`           | Allowlisted normalized lifecycle, chat, and usage events for restart recovery |
+| `.token-floor/provider-usage.json` | Atomic normalized usage cache and last-known-good fallback                    |
+| `.token-floor/memos.json`          | Versioned whiteboard memo store                                               |
+
+The web UI never reads Claude or Codex files directly. See [Architecture](ARCHITECTURE.md) for the complete data flow and security boundary.
+
+## Project packages
+
+| Package                   | Responsibility                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------ |
+| `packages/protocol`       | Provider-neutral events, validation, redaction, reducer, retention, memo contracts   |
+| `packages/adapter-claude` | Claude hooks, transcript recovery, local usage decoding and normalization            |
+| `packages/adapter-codex`  | Codex JSONL session/usage decoding and normalization                                 |
+| `packages/server`         | Loopback HTTP/WebSocket server, collectors, SQLite and JSON persistence, maintenance |
+| `packages/web`            | React interface, Phaser office, panels, settings, localization, reconnect behavior   |
+| `packages/asset-contract` | Runtime asset manifest and validation contracts                                      |
+
+## Coming soon — Phase 05
+
+The following items are planned, not shipped:
+
+- `npx` launch and a distributable CLI;
+- install, diagnose, and uninstall commands;
+- clean-machine onboarding and recovery guidance;
+- npm package contents, provenance, and supply-chain hardening;
+- third-party asset/license and source-package review;
+- verified Chrome, Edge, Firefox, and Safari compatibility.
+
+Until Phase 05 is complete, use `git clone`, `npm install`, and `npm run dev`.
+
+## Art credits
+
+Character and office art used by Token Floor is sourced from the [MetroCity Free Top-Down Character Pack by JIK-A-4](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack). Token Floor's runtime character sheets are composed for provider roles while preserving the pack's authored pixel-art direction. Upstream artwork remains subject to its original terms.
+
+## Status
+
+Phases 00–04 are represented in the current local-development build. Phase 05 distribution and packaging work is **coming soon**.

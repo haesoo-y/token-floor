@@ -1,5 +1,13 @@
 # Token Floor Development Rules
 
+## Product Identity and Scope
+
+- Token Floor is a local-first, read-only observability office for Claude Code and Codex sessions. Preserve the core promise: no Token Floor account, provider OAuth flow, API key, copied credential, or second provider sign-in is required.
+- Treat the provider's existing local runtime state as the integration boundary. Token Floor may observe files, hooks, and cache metadata produced by an already configured provider, but it must never impersonate the user, start a helper agent, or send prompts on the user's behalf.
+- Keep the product useful when only one provider is installed. Claude and Codex collection, source health, usage, and presentation must degrade independently.
+- Preserve the current Phase 00–04 scope: normalized contracts, the live pixel office, Claude integration, Codex integration, lifecycle reliability, durable sanitized logs, and whiteboard memos.
+- Treat all Phase 05 distribution work as not yet shipped: CLI install/diagnose/uninstall, `npx` execution, clean-machine onboarding, package/license review, npm supply-chain hardening, and the full Chrome/Edge/Firefox/Safari matrix must remain labeled `Coming soon` until implemented and verified.
+
 ## Product Standard
 
 - Treat every visible office screen as production game art. A technically functional placeholder is not an acceptable completion state.
@@ -20,11 +28,38 @@
   observer only when no user-owned status line exists. Never replace a user's status-line command,
   persist its raw input, or launch a helper Claude process to refresh usage.
 - Do not introduce OAuth, login, API-key, credential storage, visible terminals, or helper agent processes when provider-owned local state can supply the required data.
-- Read provider-owned files only in provider collectors. Normalize the result and atomically persist it as JSON under the Git-ignored `.token-floor/` runtime directory.
-- Server projections and UI code must consume the normalized Token Floor cache, never provider files, credentials, browser storage, or provider-specific payloads directly.
+- Read provider-owned files only in provider collectors and adapters. Normalize observations before they cross into the server, persistence, protocol, or UI layers.
+- Persist normalized usage cache data atomically as JSON and normalized lifecycle events in SQLite under the Git-ignored `.token-floor/` runtime directory. Do not persist raw provider records in either store.
+- Server projections and UI code must consume normalized Token Floor contracts, never provider files, credentials, browser storage, or provider-specific payloads directly.
 - Refresh local provider caches on a bounded interval, avoid rewriting unchanged snapshots, and retain the last valid cache when a provider file is missing, locked, partially written, or malformed.
 - Keep explicit path overrides only as diagnostics or platform fallbacks; provider-owned local state remains the default source of truth.
 - Add tests for local-source precedence, normalization, cache persistence, malformed input, and last-known-good fallback whenever provider data collection changes.
+
+## Provider-Neutral Contract
+
+- Keep the normalized lifecycle vocabulary limited to `agent.started`, `agent.active`, `agent.message`, `agent.waiting`, `agent.completed`, `agent.failed`, and `usage.updated` unless a versioned protocol change is approved.
+- Keep provider source health in the normalized `healthy`, `waiting`, `missing`, `stale`, `malformed`, and `disconnected` conditions. A valid but unsupported provider record is not malformed input.
+- Preserve the separation between agent projections, provider usage, provider source status, sanitized chat messages, and sanitized non-chat events in `OfficeState`.
+- Make every event identity stable and provider-scoped. Replaying a record, rereading a partial file, reconnecting a socket, or restarting the server must converge without duplicate logs or renewed UI timers.
+- Do not let older events roll an agent projection back from a newer lifecycle state.
+
+## Claude Integration Boundary
+
+- Keep the Claude hook receiver on the loopback-only server. Hook installation must be idempotent, preserve unrelated settings, create at most one recovery backup, and never delay Claude when Token Floor is unavailable.
+- Observe Claude session, prompt, tool, permission, notification, subagent, stop, failure, and end boundaries through structural hook fields only. Never project raw prompts, tool inputs, commands, tool results, or assistant payloads from a hook body.
+- Admit transcript messages only for agents first established by a meaningful hook. Ignore sidechains and internal orchestration records, exclude tool-use and tool-result blocks, and sanitize visible user and assistant text before normalization.
+- Tail Claude project transcripts with bounded reads and tolerate incomplete first or final lines. Never rescan unbounded transcript history on every refresh.
+- Preserve user-owned Claude status-line configuration. Install the silent local usage observer only when no user status line exists, and never run a helper Claude process to refresh usage.
+- Select Claude usage from supported CLI cache, Desktop cache, plan history, and status-line handoff samples by newest validity; within the same five-second window, prefer the more complete sample.
+
+## Codex Integration Boundary
+
+- Discover recent and already tracked Codex session JSONL files under `~/.codex/sessions` with bounded file counts, prefix reads, tail reads, and incremental cursors.
+- Keep incomplete JSONL fragments until the next poll and recover safely when a file is truncated or replaced.
+- Derive main-agent, subagent, parent, role, workspace, and execution identities from structural session metadata. Exclude guardian actors and internal orchestration messages from agents, chat, and event logs.
+- Normalize `mcp_tool_call_begin`, `mcp_tool_call_end`, and `agent_reasoning` as payload-free `agent.active` heartbeats. Decoder-local inspection may identify a waiting boundary, but opaque tool arguments, tool results, invocation payloads, and reasoning must never cross the adapter boundary.
+- Infer waiting only from structurally recognized user-input or escalated-permission requests. Unsupported but valid JSON records must be skipped without raising the malformed-source warning.
+- Read Codex rate-limit metadata from recent local rollout records only. Do not introduce Codex authentication, API calls, browser storage, or a helper CLI invocation for usage refresh.
 
 ## Lifecycle and Retention
 
@@ -41,6 +76,14 @@
 - Never persist provider source records, reasoning text, tool inputs, tool results, invocations, credentials, guardian activity, or internal orchestration prompts as chat or event logs.
 - Continue to remove guardian and internal orchestration projections from agents and both logs when structural provider metadata identifies them.
 - Add tests for character/log retention separation, independent 100-entry bounds, SQLite restart recovery, legacy-row allowlisting, credential redaction, and duplicate event handling whenever persistence changes.
+
+## Runtime Storage and Memo Safety
+
+- Keep every runtime artifact under the Git-ignored `.token-floor/` directory. The current durable files are `events.db`, `provider-usage.json`, and `memos.json`.
+- Keep memo storage versioned and atomic. Write through a same-directory temporary file, rename on success, and retain the previous valid file when parsing or writing fails.
+- Accept memo text only from 1 to 1,000 characters. Preserve stable IDs and ISO creation/update timestamps.
+- Allow active memos to be copied, edited, or archived. Allow archived memos to be copied, restored, or permanently deleted; never expose edit or delete actions in the wrong tab.
+- Never mix memo persistence with provider logs, SQLite lifecycle retention, or browser local storage.
 
 ## Asset Source of Truth
 
@@ -146,6 +189,17 @@
 - Prefer actual assistant messages over state-transition speech, and state-transition speech over idle phrases. Never use user messages as agent speech.
 - Keep state-transition bubbles visible for 3–5 seconds and do not restart their lifetime when an idempotent event is replayed.
 - Keep chat and event panels usable after the related character leaves the office; logs are historical projections, not character-owned UI state.
+- Use the shared floating-panel and action-icon primitives for chat, event, memo, and future overlay tools. Panels use translucent dark navy surfaces without backdrop blur.
+- Keep the memo and activity panels responsive at 70 viewport-height units and narrow enough that the office remains observable. Position the memo panel above the character picker and away from the right-side activity panel.
+- The whiteboard is the memo-panel toggle. One activation opens the panel and the next closes it; do not create a second competing Phaser interaction path beneath the accessible DOM overlay.
+- Keep memo actions on the same row as the timestamp and expand control, aligned to the far edge. Use recognizable, accessible icons with labels or tooltips.
+
+## Input and Interaction Ownership
+
+- Arrow keys always control the player, even after a panel, tab, memo, button, or whiteboard receives focus. Capture and prevent arrow-key focus navigation before forwarding the same direction to the game input state.
+- WASD controls the player through the same cardinal resolver, except while an input, textarea, or editable element owns text entry.
+- Never allow simultaneous horizontal and vertical player displacement. When both axes are held, use the most recently engaged axis.
+- Keep the player spawn in the meeting room and preserve the whiteboard at the meeting room's upper-right side unless the office layout is deliberately redesigned and reverified.
 
 ## Connection and Degraded Operation
 
@@ -168,6 +222,16 @@
 - Add a comment to any `useEffect` that manages subscriptions, external runtimes, cleanup, or race prevention. Explain why the effect runs and the lifecycle it owns.
 - When service-level code overrides the internal styles of a shared UI component, add a Korean comment immediately above the override. The comment must explain the shared component's original behavior and why the override is necessary.
 
+## Documentation Source of Truth
+
+- Keep `README.md`, `docs/README.ko.md`, and `docs/README.ja.md` feature-equivalent. Keep `ARCHITECTURE.md`, `docs/ARCHITECTURE.ko.md`, and `docs/ARCHITECTURE.ja.md` architecture-equivalent.
+- Put English, Korean, and Japanese navigation links at the top of every translated document and verify every relative link from the document's own directory.
+- Every README must mention all shipped user-visible features, the no-additional-login local-first advantage, current local development commands, runtime storage privacy, and MetroCity asset attribution.
+- Credit the MetroCity Free Top-Down Character Pack at `https://jik-a-4.itch.io/metrocity-free-topdown-character-pack`. Do not imply that Token Floor owns or relicenses upstream artwork.
+- Keep documentation screenshots under `docs/assets/`, use descriptive alt text and captions, and update or remove screenshots when they materially misrepresent the current UI.
+- Keep architecture documents synchronized with actual provider sources, polling bounds, normalization rules, redaction boundaries, HTTP/WebSocket routes, persistence files, retention limits, package ownership, and degraded behavior.
+- Do not document Phase 05 distribution features as available. `npx` execution and the remaining install, packaging, browser-matrix, and supply-chain work must be visibly marked `Coming soon` in every language.
+
 ## Verification
 
 - Add unit tests for every behavioral change.
@@ -180,3 +244,4 @@
 - Move the player in all four directions with both input schemes and verify matching facing frames.
 - Check that retained solid props block movement.
 - Repeat visual inspection after each correction. Do not declare completion based only on unit tests or a build result.
+- For documentation changes, also verify translated heading parity, local Markdown links, image paths, Mermaid fence balance, feature inventory completeness, and the absence of claims that Phase 05 is already shipped.
