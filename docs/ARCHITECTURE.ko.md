@@ -70,6 +70,15 @@ flowchart LR
 | Web                      | HTTP snapshot, WebSocket event, memo API                   | locale·avatar browser preference                             | 공급자 파일, 인증정보, tool 원문                                            |
 
 서버는 `127.0.0.1`에 바인딩합니다. 원격 서비스가 아니라 로컬 process 경계입니다.
+요청의 `Host`도 숫자 loopback 주소여야 합니다. 브라우저 mutation과 WebSocket upgrade는
+설정된 Token Floor `Origin`만 허용하며, Claude hook은 JSON과 Token Floor 전용의 고정된
+non-simple observer header를 함께 요구합니다. 따라서 무관한 웹페이지가 CORS 없는 form
+POST나 WebSocket으로 loopback 상태를 읽거나 바꿀 수 없습니다.
+
+공급자의 작업 directory는 adapter 내부에만 남습니다. 각 adapter는 `cwd`를 안정적이고
+provider-scoped인 opaque project ID와 길이가 제한된 표시 label로 바꿉니다. 절대 경로와
+로컬 사용자명은 저장하거나 broadcast하지 않으며, legacy 저장 project ID도 load할 때 같은
+경계를 다시 적용합니다.
 
 ## 4. 공급자 중립 protocol
 
@@ -136,6 +145,9 @@ POST http://127.0.0.1:4317/hooks/claude-usage
 ```
 
 구조적 field만 session, agent 종류, parent, 상태 전환, 안전한 요약을 결정합니다. Hook request의 prompt, tool input, command, tool result, assistant body 원문은 projection하지 않습니다.
+생성된 curl observer는 고정 `X-Token-Floor-Hook` header와 JSON content type도 전송합니다.
+이 header는 공급자 credential이 아니라 요청을 non-simple로 만들어, 무관한 browser origin이
+거부되는 preflight 없이 hook을 위조하지 못하게 하는 경계입니다.
 
 ### 5.3 메인·서브에이전트
 
@@ -195,6 +207,9 @@ Decoder는 구조적인 `request_user_input`, `require_escalated` 경계를 알�
 | `WS /events`               | 최초 snapshot과 이후 정규화 event  |
 
 Server는 `127.0.0.1:4317`, Vite 개발 UI는 `127.0.0.1:5173`을 사용합니다.
+HTTP CORS는 설정된 개발 origin에만 노출됩니다. Memo mutation은 정확한 origin을 요구하고,
+JSON body는 `application/json`이어야 하며, `/events`는 다른 모든 origin의 WebSocket upgrade를
+거부합니다. DNS rebinding 위험을 줄이기 위해 loopback이 아닌 `Host` 요청도 거부합니다.
 
 ### 시작 순서
 

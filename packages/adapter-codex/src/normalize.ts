@@ -1,5 +1,8 @@
-import path from "node:path";
-import { sanitizeSpeech, type AgentEvent } from "@token-floor/protocol";
+import {
+  createOpaqueProjectIdentity,
+  sanitizeSpeech,
+  type AgentEvent
+} from "@token-floor/protocol";
 import type { CodexLifecycleRecord, CodexSessionRecord } from "./types.js";
 
 interface SessionContext extends CodexSessionRecord {
@@ -145,7 +148,7 @@ export class CodexLifecycleNormalizer {
         executionId: context.threadId,
         ...(parentId ? { parentId } : {})
       },
-      project: { id: context.cwd, label: path.basename(context.cwd) || context.cwd }
+      project: createOpaqueProjectIdentity("codex", context.cwd)
     };
   }
 }

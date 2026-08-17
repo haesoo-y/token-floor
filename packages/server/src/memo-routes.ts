@@ -8,31 +8,38 @@ import { readJsonBody } from "./request-body.js";
 export function handleMemoRequest(
   request: IncomingMessage,
   response: ServerResponse,
-  store: JsonMemoStore
+  store: JsonMemoStore,
+  corsOrigin?: string
 ): boolean {
   if (request.method === "GET" && request.url === "/memos") {
-    sendJson(response, 200, store.load());
+    sendJson(response, 200, store.load(), corsOrigin);
     return true;
   }
   if (request.method === "POST" && request.url === "/memos") {
-    void mutate(request, response, (payload) => store.create(readText(payload)));
+    void mutate(request, response, (payload) => store.create(readText(payload)), corsOrigin);
     return true;
   }
   const match = request.url?.match(/^\/memos\/([^/]+)$/);
   if (request.method === "PATCH" && match) {
-    void mutate(request, response, (payload) =>
-      store.update(decodeURIComponent(match[1]!), readPatch(payload))
+    void mutate(
+      request,
+      response,
+      (payload) => store.update(decodeURIComponent(match[1]!), readPatch(payload)),
+      corsOrigin
     );
     return true;
   }
   if (request.method === "DELETE" && match) {
     try {
-      sendJson(response, 200, store.delete(decodeURIComponent(match[1]!)));
+      sendJson(response, 200, store.delete(decodeURIComponent(match[1]!)), corsOrigin);
     } catch (error) {
       const status = error instanceof MemoNotArchivedError ? 409 : 404;
-      sendJson(response, status, {
-        error: status === 409 ? "Archive memo before deletion" : "Memo not found"
-      });
+      sendJson(
+        response,
+        status,
+        { error: status === 409 ? "Archive memo before deletion" : "Memo not found" },
+        corsOrigin
+      );
     }
     return true;
   }
@@ -42,13 +49,19 @@ export function handleMemoRequest(
 async function mutate(
   request: IncomingMessage,
   response: ServerResponse,
-  operation: (payload: unknown) => unknown
+  operation: (payload: unknown) => unknown,
+  corsOrigin?: string
 ): Promise<void> {
   try {
-    sendJson(response, 200, operation(await readJsonBody(request)));
+    sendJson(response, 200, operation(await readJsonBody(request)), corsOrigin);
   } catch (error) {
     const status = error instanceof MemoNotFoundError ? 404 : 400;
-    sendJson(response, status, { error: status === 404 ? "Memo not found" : "Invalid memo" });
+    sendJson(
+      response,
+      status,
+      { error: status === 404 ? "Memo not found" : "Invalid memo" },
+      corsOrigin
+    );
   }
 }
 

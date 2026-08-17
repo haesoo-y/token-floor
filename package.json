@@ -2,6 +2,15 @@
   "name": "token-floor",
   "version": "0.0.0",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haesoo-y/token-floor.git"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  },
   "type": "module",
   "workspaces": [
     "packages/*"

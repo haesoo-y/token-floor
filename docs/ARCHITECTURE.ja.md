@@ -70,6 +70,15 @@ flowchart LR
 | Web                      | HTTP snapshot、WebSocket event、memo API                   | locale・avatar preference                                       | プロバイダーファイル、認証情報、tool 原文                                     |
 
 Server は `127.0.0.1` に bind します。リモートサービスではなく、ローカル process 境界です。
+Request の `Host` も数値 loopback address でなければなりません。Browser mutation と
+WebSocket upgrade は設定済み Token Floor `Origin` だけを許可し、Claude hook は JSON と
+Token Floor 固有の固定 non-simple observer header を要求します。これにより無関係な
+web page が CORS なしの form POST や WebSocket で loopback state を読み書きできません。
+
+Provider の作業 directory は adapter 内に留まります。各 adapter は `cwd` を安定した
+provider-scoped opaque project ID と長さを制限した表示 label へ変換します。絶対 path と
+local username は保存・broadcast せず、legacy の保存済み project ID も load 時に同じ境界を
+再適用します。
 
 ## 4. プロバイダー中立 protocol
 
@@ -136,6 +145,9 @@ POST http://127.0.0.1:4317/hooks/claude-usage
 ```
 
 構造 field だけで session、agent 種別、parent、状態遷移、安全な要約を決めます。Hook request 内の prompt、tool input、command、tool result、assistant body は projection しません。
+生成した curl observer は固定 `X-Token-Floor-Hook` header と JSON content type も送信します。
+この header は provider credential ではなく request を non-simple にし、無関係な browser
+origin が拒否される preflight なしで hook を偽装できないようにします。
 
 ### 5.3 メイン・サブエージェント
 
@@ -195,6 +207,9 @@ Usage collector は bounded recent rollout と tail から `rate_limits` metadat
 | `WS /events`               | 初回 snapshot と incremental event             |
 
 Server は `127.0.0.1:4317`、Vite 開発 UI は `127.0.0.1:5173` です。
+HTTP CORS は設定済み開発 origin だけに公開します。Memo mutation は正確な origin を要求し、
+JSON body は `application/json` に限定し、`/events` はその他すべての origin からの WebSocket
+upgrade を拒否します。DNS rebinding risk を抑えるため loopback 以外の `Host` も拒否します。
 
 ### 起動シーケンス
 

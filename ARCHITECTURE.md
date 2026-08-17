@@ -74,6 +74,15 @@ Only the adapter/collector layer touches provider-owned files. Normalized events
 | Web application          | HTTP snapshots, WebSocket normalized events, memo API                          | Locale/avatar browser preferences                                                      | Provider files, credentials, raw tool data                                            |
 
 The server binds to `127.0.0.1`. This is a local process boundary, not a remote service boundary.
+Requests must also use a numeric loopback `Host`. Browser mutations and WebSocket upgrades accept
+only the configured Token Floor `Origin`; Claude hooks require JSON plus Token Floor's fixed,
+non-simple observer header. These checks prevent an unrelated webpage from using CORS-free form
+posts or WebSockets to read or mutate loopback state.
+
+Provider working directories remain adapter-local. Each adapter converts `cwd` into a stable,
+provider-scoped opaque project ID and a bounded display label. Absolute paths and local usernames
+are not persisted or broadcast, and legacy persisted project IDs are re-projected through the same
+boundary while loading.
 
 ## 4. Provider-neutral protocol
 
@@ -150,6 +159,9 @@ POST http://127.0.0.1:4317/hooks/claude-usage
 ```
 
 Only structural fields select the session, agent kind, parent, status transition, and safe summary. Raw prompt text, tool input, command, tool result, and assistant body from the hook request are not projected.
+The generated curl observer also sends a fixed `X-Token-Floor-Hook` header and JSON content type.
+The header is not a provider credential; it makes the request non-simple so an unrelated browser
+origin cannot forge it without a rejected preflight.
 
 ### 5.3 Main agents and subagents
 
@@ -211,6 +223,9 @@ For usage, the collector scans a bounded set of recent rollout files, reads a bo
 | `WS /events`               | Initial snapshot and incremental normalized events                  |
 
 The server listens on `127.0.0.1:4317`. Vite serves the development UI on `127.0.0.1:5173`.
+HTTP responses expose CORS only to that configured development origin. Memo mutations require the
+exact origin, JSON bodies require `application/json`, and `/events` rejects WebSocket upgrades from
+every other origin. Requests with a non-loopback `Host` are rejected to reduce DNS-rebinding risk.
 
 ### Startup sequence
 

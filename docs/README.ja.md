@@ -167,14 +167,18 @@ Web UI が Claude や Codex のファイルを直接読むことはありませ�
 - install、diagnose、uninstall コマンド
 - クリーン環境でのオンボーディングと復旧ガイド
 - npm パッケージ内容、provenance、サプライチェーン強化
-- サードパーティアセット・ライセンスとソースパッケージのレビュー
+- 残りのサードパーティソースパッケージのレビュー
 - Chrome、Edge、Firefox、Safari の互換性検証
 
 Phase 05 が完了するまでは、`git clone`、`npm install`、`npm run dev` を使用してください。
 
 ## アートクレジット
 
-Token Floor のキャラクターとオフィスアートは、JIK-A-4 の [MetroCity Free Top-Down Character Pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack) を使用しています。ランタイムのキャラクターシートは、元のピクセルアートの方向性を保ちながらプロバイダーの役割に合わせて合成しています。元のアートには配布元の利用条件が適用されます。
+Token Floor のキャラクターとオフィスアートは、[CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) で提供される JIK-A-4 の [MetroCity Free Top-Down Character Pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack) を使用しています。ランタイムのキャラクターシートは、元のピクセルアートの方向性を保ちながらプロバイダーの役割に合わせて合成しています。再配布の詳細は [NOTICE](../NOTICE) を参照してください。
+
+## ライセンス
+
+Token Floor のソースコードは [MIT License](../LICENSE) で提供されます。サードパーティのアートワークは [NOTICE](../NOTICE) に別途記載しています。
 
 ## 現在の状態
 

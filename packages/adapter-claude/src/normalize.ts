@@ -1,5 +1,8 @@
-import path from "node:path";
-import { sanitizeSpeech, type AgentEvent } from "@token-floor/protocol";
+import {
+  createOpaqueProjectIdentity,
+  sanitizeSpeech,
+  type AgentEvent
+} from "@token-floor/protocol";
 import { ClaudeSubagentRegistry } from "./subagent-registry.js";
 import { parseClaudeHookInput, type ClaudeHookInput } from "./types.js";
 
@@ -33,7 +36,7 @@ function eventBase(input: ClaudeHookInput, occurredAt: string, registry: ClaudeS
     provider: "claude-code",
     sessionId: input.session_id,
     agent,
-    project: { id: input.cwd, label: path.basename(input.cwd) || input.cwd }
+    project: createOpaqueProjectIdentity("claude-code", input.cwd)
   };
 }
 

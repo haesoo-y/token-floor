@@ -1,4 +1,8 @@
-import { sanitizeSpeech, type NormalizedEvent } from "@token-floor/protocol";
+import {
+  createOpaqueProjectIdentity,
+  sanitizeSpeech,
+  type NormalizedEvent
+} from "@token-floor/protocol";
 
 function agentBase(event: Exclude<NormalizedEvent, { type: "usage.updated" }>) {
   return {
@@ -14,10 +18,7 @@ function agentBase(event: Exclude<NormalizedEvent, { type: "usage.updated" }>) {
       ...(event.agent.executionId ? { executionId: event.agent.executionId } : {}),
       ...(event.agent.role ? { role: sanitizeSpeech(event.agent.role, { maxLength: 64 }) } : {})
     },
-    project: {
-      id: event.project.id,
-      label: sanitizeSpeech(event.project.label, { maxLength: 96 })
-    }
+    project: createOpaqueProjectIdentity(event.provider, event.project.id, event.project.label)
   };
 }
 

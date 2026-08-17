@@ -129,6 +129,8 @@ describe("Codex lifecycle normalization", () => {
     expect(later.agent.id).toBe(started.agent.id);
     expect(normalizer.sessionStarted("other")!.agent.id).not.toBe(started.agent.id);
     expect(active.agent.executionId).toBe("main-thread");
+    expect(active.project.id).toMatch(/^project:codex:[0-9a-f]{16}$/);
+    expect(JSON.stringify(active)).not.toContain("/workspace/token-floor");
   });
 
   it("normalizes active, waiting, completed, and error transitions", () => {

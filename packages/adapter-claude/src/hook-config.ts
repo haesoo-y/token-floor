@@ -42,7 +42,7 @@ export function createClaudeHookSettings(
               command: "sh",
               args: [
                 "-c",
-                'curl --silent --max-time 1 --header "Content-Type: application/json" --data-binary @- "$1" >/dev/null 2>&1 || true',
+                'curl --silent --max-time 1 --header "Content-Type: application/json" --header "X-Token-Floor-Hook: token-floor-observer-v1" --data-binary @- "$1" >/dev/null 2>&1 || true',
                 "token-floor-observer",
                 url
               ],
@@ -62,6 +62,6 @@ export function createClaudeStatusLineSetting(
 ): ClaudeStatusLineSetting {
   return {
     type: "command",
-    command: `curl --silent --max-time 1 --header "Content-Type: application/json" --data-binary @- "${url}" >/dev/null 2>&1 || true`
+    command: `curl --silent --max-time 1 --header "Content-Type: application/json" --header "X-Token-Floor-Hook: token-floor-observer-v1" --data-binary @- "${url}" >/dev/null 2>&1 || true`
   };
 }

@@ -34,7 +34,13 @@ describe("SqliteEventStore", () => {
     };
     store.append(event);
     store.append(event);
-    expect(store.load()).toEqual([event]);
+    const restored = store.load();
+    expect(restored).toHaveLength(1);
+    expect(restored[0]).toMatchObject({
+      ...event,
+      project: { id: expect.stringMatching(/^project:claude-code:[0-9a-f]{16}$/), label: "project" }
+    });
+    expect(JSON.stringify(restored)).not.toContain("/work/project");
     store.close();
   });
 
@@ -159,8 +165,10 @@ describe("SqliteEventStore", () => {
 
     expect(store.load()[0]).toMatchObject({
       type: "agent.message",
+      project: { id: expect.stringMatching(/^project:codex:[0-9a-f]{16}$/) },
       message: { text: "Bearer [REDACTED_TOKEN] API_TOKEN=[REDACTED]" }
     });
+    expect(JSON.stringify(store.load()[0])).not.toContain("/work/project");
     expect(JSON.stringify(store.load()[0])).not.toMatch(/providerPayload|tool_input|tool_result/);
     store.close();
   });

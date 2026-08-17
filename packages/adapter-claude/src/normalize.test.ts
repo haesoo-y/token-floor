@@ -31,6 +31,8 @@ describe("normalizeClaudeHook", () => {
       activity: { tool: "Bash", summary: "Using Bash" }
     });
     expect(JSON.stringify(event)).not.toContain("secret");
+    expect(event?.project.id).toMatch(/^project:claude-code:[0-9a-f]{16}$/);
+    expect(JSON.stringify(event)).not.toContain("/work/token-floor");
   });
 
   it("links subagents to the main Claude session", () => {

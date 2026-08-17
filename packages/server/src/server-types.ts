@@ -9,6 +9,7 @@ export interface TokenFloorServer {
 
 /** Provider-owned read-only roots and Token Floor-owned persistence overrides. */
 export interface TokenFloorServerOptions {
+  browserOrigin?: string;
   claudeCliRootPath?: string;
   claudeDesktopCachePath?: string;
   claudeProjectsPath?: string;

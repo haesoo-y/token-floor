@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { CharacterPicker } from "./components/CharacterPicker.js";
 import { ChatPanel, type PanelTab } from "./components/ChatPanel.js";
 import { HeaderStats } from "./components/HeaderStats.js";
 import { MemoPanel } from "./components/MemoPanel.js";
-import { OfficeCanvas } from "./components/OfficeCanvas.js";
 import { SetupScreen } from "./components/SetupScreen.js";
 import { SettingsPanel } from "./components/SettingsPanel.js";
 import { ProviderAlerts } from "./components/ProviderAlerts.js";
@@ -15,6 +14,10 @@ import { resolveAvatarPreset, type AvatarPreset } from "./lib/avatar.js";
 import { resolveLocale, translate, type Locale } from "./lib/i18n.js";
 import { countAgentStatuses } from "./lib/stats.js";
 import { nextMemoPanelOpenState } from "./game/officeInteraction.js";
+
+const OfficeCanvas = lazy(() =>
+  import("./components/OfficeCanvas.js").then(({ OfficeCanvas }) => ({ default: OfficeCanvas }))
+);
 
 export function App() {
   const assets = useAssetAvailability();
@@ -92,24 +95,26 @@ export function App() {
         </div>
         <ProviderAlerts sources={state.sourceStatusByProvider ?? {}} locale={locale} />
         {assets.status === "ready" ? (
-          <OfficeCanvas
-            agents={state.agents}
-            preset={preset}
-            locale={locale}
-            onSelect={(id) => {
-              setSelectedUsage(undefined);
-              setSelectedId(id);
-              setPanelTab("selected");
-              setPanelMinimized(false);
-            }}
-            onSelectUsage={(provider) => {
-              setSelectedId(undefined);
-              setSelectedUsage(provider);
-              setPanelTab("selected");
-              setPanelMinimized(false);
-            }}
-            onOpenMemos={() => setMemosOpen(nextMemoPanelOpenState)}
-          />
+          <Suspense fallback={<div className="loading">LOADING OFFICE…</div>}>
+            <OfficeCanvas
+              agents={state.agents}
+              preset={preset}
+              locale={locale}
+              onSelect={(id) => {
+                setSelectedUsage(undefined);
+                setSelectedId(id);
+                setPanelTab("selected");
+                setPanelMinimized(false);
+              }}
+              onSelectUsage={(provider) => {
+                setSelectedId(undefined);
+                setSelectedUsage(provider);
+                setPanelTab("selected");
+                setPanelMinimized(false);
+              }}
+              onOpenMemos={() => setMemosOpen(nextMemoPanelOpenState)}
+            />
+          </Suspense>
         ) : assets.status === "missing" ? (
           <SetupScreen files={assets.files} locale={locale} />
         ) : (

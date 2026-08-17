@@ -1,5 +1,8 @@
-import path from "node:path";
-import { sanitizeSpeech, type AgentEvent } from "@token-floor/protocol";
+import {
+  createOpaqueProjectIdentity,
+  sanitizeSpeech,
+  type AgentEvent
+} from "@token-floor/protocol";
 
 interface TranscriptMetadata {
   sessionId: string;
@@ -66,7 +69,7 @@ export function recoverClaudeTranscript(
     provider: "claude-code",
     sessionId: latest.sessionId,
     agent: { id: `claude:${latest.sessionId}`, kind: "main" as const },
-    project: { id: latest.cwd, label: path.basename(latest.cwd) || latest.cwd }
+    project: createOpaqueProjectIdentity("claude-code", latest.cwd)
   };
   return inferred
     ? { ...base, type: "agent.completed", inferred: true }
@@ -102,7 +105,7 @@ export function recoverClaudeTranscriptMessages(content: string): AgentEvent[] {
         provider: "claude-code",
         sessionId: metadata.sessionId,
         agent: { id: `claude:${metadata.sessionId}`, kind: "main" },
-        project: { id: metadata.cwd, label: path.basename(metadata.cwd) || metadata.cwd },
+        project: createOpaqueProjectIdentity("claude-code", metadata.cwd),
         type: "agent.message",
         message: { role: value.type, text }
       });

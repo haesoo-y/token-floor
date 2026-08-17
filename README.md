@@ -167,14 +167,18 @@ The following items are planned, not shipped:
 - install, diagnose, and uninstall commands;
 - clean-machine onboarding and recovery guidance;
 - npm package contents, provenance, and supply-chain hardening;
-- third-party asset/license and source-package review;
+- remaining third-party source-package review;
 - verified Chrome, Edge, Firefox, and Safari compatibility.
 
 Until Phase 05 is complete, use `git clone`, `npm install`, and `npm run dev`.
 
 ## Art credits
 
-Character and office art used by Token Floor is sourced from the [MetroCity Free Top-Down Character Pack by JIK-A-4](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack). Token Floor's runtime character sheets are composed for provider roles while preserving the pack's authored pixel-art direction. Upstream artwork remains subject to its original terms.
+Character and office art used by Token Floor is sourced from the [MetroCity Free Top-Down Character Pack by JIK-A-4](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack), offered under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/). Token Floor's runtime character sheets are composed for provider roles while preserving the pack's authored pixel-art direction. See [NOTICE](NOTICE) for redistribution details.
+
+## License
+
+Token Floor source code is available under the [MIT License](LICENSE). Third-party artwork remains identified separately in [NOTICE](NOTICE).
 
 ## Status
 

@@ -9,14 +9,15 @@ describe("sendCorsPreflight", () => {
       end: vi.fn()
     } as unknown as ServerResponse;
 
-    sendCorsPreflight(response);
+    sendCorsPreflight(response, "http://127.0.0.1:5173");
 
     expect(response.writeHead).toHaveBeenCalledWith(
       204,
       expect.objectContaining({
         "Access-Control-Allow-Origin": "http://127.0.0.1:5173",
         "Access-Control-Allow-Methods": expect.stringContaining("PATCH"),
-        "Access-Control-Allow-Headers": "Content-Type"
+        "Access-Control-Allow-Headers": "Content-Type",
+        Vary: "Origin"
       })
     );
     expect(response.end).toHaveBeenCalledOnce();

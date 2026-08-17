@@ -167,14 +167,18 @@ npm run build
 - 설치, 진단, 제거 명령어
 - 깨끗한 환경에서의 온보딩과 복구 안내
 - npm 패키지 구성, provenance, 공급망 강화
-- 서드파티 에셋·라이선스와 소스 패키지 검토
+- 남은 서드파티 소스 패키지 검토
 - Chrome, Edge, Firefox, Safari 호환성 검증
 
 Phase 05 완료 전에는 `git clone`, `npm install`, `npm run dev`를 사용하세요.
 
 ## 에셋 출처
 
-Token Floor의 캐릭터와 오피스 아트는 JIK-A-4의 [MetroCity Free Top-Down Character Pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack)에서 가져왔습니다. 런타임 캐릭터 시트는 원본 픽셀 아트의 방향성을 유지하면서 공급자 역할에 맞게 합성했습니다. 원본 아트에는 원저작자의 이용 조건이 적용됩니다.
+Token Floor의 캐릭터와 오피스 아트는 [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/)로 제공되는 JIK-A-4의 [MetroCity Free Top-Down Character Pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack)에서 가져왔습니다. 런타임 캐릭터 시트는 원본 픽셀 아트의 방향성을 유지하면서 공급자 역할에 맞게 합성했습니다. 재배포 상세 내용은 [NOTICE](../NOTICE)를 확인하세요.
+
+## 라이선스
+
+Token Floor 소스 코드는 [MIT 라이선스](../LICENSE)로 제공됩니다. 서드파티 아트워크는 [NOTICE](../NOTICE)에 별도로 표시합니다.
 
 ## 현재 상태
 

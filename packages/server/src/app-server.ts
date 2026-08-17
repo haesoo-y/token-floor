@@ -1,4 +1,4 @@
-import http, { type IncomingMessage, type ServerResponse } from "node:http";
+import http from "node:http";
 import { ClaudeSubagentRegistry } from "@token-floor/adapter-claude";
 import {
   applyEvent,
@@ -9,19 +9,19 @@ import {
 } from "@token-floor/protocol";
 import { WebSocketServer } from "ws";
 import { startAgentMaintenance } from "./agent-maintenance.js";
-import { ingestClaudeHook } from "./claude-ingestion.js";
 import { startClaudeMaintenance } from "./claude-maintenance.js";
 import { removeUnobservedClaudeAgents } from "./claude-state-migration.js";
-import { ingestClaudeUsage } from "./claude-usage-ingestion.js";
 import { startCodexMaintenance } from "./codex-maintenance.js";
 import { removeHiddenCodexAgents, removeLegacyCodexAgents } from "./codex-state-migration.js";
-import { createHealthPayload } from "./health.js";
-import { sendCorsPreflight, sendJson } from "./json-response.js";
-import { handleMemoRequest } from "./memo-routes.js";
+import { createHttpHandler } from "./http-handler.js";
 import { JsonMemoStore } from "./memo-store.js";
 import { startProviderUsageMaintenance } from "./provider-usage-maintenance.js";
 import { applyProviderSourceReport } from "./provider-source-projection.js";
-import { readJsonBody } from "./request-body.js";
+import {
+  DEFAULT_BROWSER_ORIGIN,
+  hasLoopbackHost,
+  trustedBrowserOrigin
+} from "./request-security.js";
 import { createInitialEvents, createScenarioEvent } from "./simulation.js";
 import type { ProviderCollectorReport } from "./source-diagnostics.js";
 import type { TokenFloorServer, TokenFloorServerOptions } from "./server-types.js";
@@ -32,6 +32,7 @@ export type { TokenFloorServer, TokenFloorServerOptions } from "./server-types.j
 /** Creates the local HTTP and WebSocket projection server. */
 export function createTokenFloorServer(options: TokenFloorServerOptions = {}): TokenFloorServer {
   const startedAt = Date.now();
+  const browserOrigin = options.browserOrigin ?? DEFAULT_BROWSER_ORIGIN;
   const restored = options.eventStore?.load() ?? [];
   const seed =
     restored.length > 0 ? restored : options.simulation === false ? [] : createInitialEvents();
@@ -72,43 +73,28 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
     state = next;
     broadcastSnapshot(state);
   };
-  const server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
-    if (req.method === "OPTIONS") return sendCorsPreflight(res);
-    if (req.method === "GET" && req.url === "/health") {
-      return sendJson(res, 200, createHealthPayload((Date.now() - startedAt) / 1000));
-    }
-    if (req.method === "GET" && req.url === "/snapshot") return sendJson(res, 200, state);
-    if (handleMemoRequest(req, res, memoStore)) return;
-    if (req.method === "POST" && req.url === "/hooks/claude") {
-      void readJsonBody(req)
-        .then((payload) => {
-          const result = ingestClaudeHook(state, payload, new Date(), claudeRegistry);
-          const event = result.event;
-          if (event) acceptEvent(event);
-          res.writeHead(204).end();
-        })
-        .catch(() => sendJson(res, 400, { error: "Invalid Claude hook payload" }));
-      return;
-    }
-    if (req.method === "POST" && req.url === "/hooks/claude-usage") {
-      void readJsonBody(req)
-        .then((payload) => {
-          ingestClaudeUsage(
-            payload,
-            options.providerUsageCachePath,
-            acceptRecoveredEvent,
-            new Date()
-          );
-          res.writeHead(204).end();
-        })
-        .catch(() => sendJson(res, 400, { error: "Invalid Claude usage payload" }));
-      return;
-    }
-    sendJson(res, 404, { error: "Not found" });
-  });
+  const server = http.createServer(
+    createHttpHandler({
+      browserOrigin,
+      startedAt,
+      getState: () => state,
+      memoStore,
+      claudeRegistry,
+      acceptEvent: acceptRecoveredEvent,
+      ...(options.providerUsageCachePath
+        ? { providerUsageCachePath: options.providerUsageCachePath }
+        : {})
+    })
+  );
   sockets.on("connection", (socket) => socket.send(JSON.stringify({ type: "snapshot", state })));
   server.on("upgrade", (request, socket, head) => {
-    if (request.url !== "/events") return socket.destroy();
+    if (
+      request.url !== "/events" ||
+      !hasLoopbackHost(request) ||
+      !trustedBrowserOrigin(request, browserOrigin)
+    ) {
+      return socket.destroy();
+    }
     sockets.handleUpgrade(request, socket, head, (client) =>
       sockets.emit("connection", client, request)
     );
@@ -180,7 +166,9 @@ export function createTokenFloorServer(options: TokenFloorServerOptions = {}): T
         sockets.close();
         server.close((error) => {
           options.eventStore?.close();
-          return error ? reject(error) : resolve();
+          return error && (error as NodeJS.ErrnoException).code !== "ERR_SERVER_NOT_RUNNING"
+            ? reject(error)
+            : resolve();
         });
       })
   };

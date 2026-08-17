@@ -2,6 +2,7 @@
   "name": "@token-floor/protocol",
   "version": "0.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts"

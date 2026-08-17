@@ -15,6 +15,9 @@ describe("createClaudeHookSettings", () => {
     });
     expect(settings.hooks.SubagentStop).toBeDefined();
     expect(settings.hooks.PermissionRequest).toBeDefined();
+    expect(settings.hooks.SessionStart?.[0]?.hooks[0]?.args.join(" ")).toContain(
+      "X-Token-Floor-Hook: token-floor-observer-v1"
+    );
   });
 
   it("posts CLI status metadata without starting another Claude process", () => {
@@ -22,5 +25,8 @@ describe("createClaudeHookSettings", () => {
       type: "command",
       command: expect.stringContaining("http://127.0.0.1:4317/hooks/claude-usage")
     });
+    expect(createClaudeStatusLineSetting().command).toContain(
+      "X-Token-Floor-Hook: token-floor-observer-v1"
+    );
   });
 });
