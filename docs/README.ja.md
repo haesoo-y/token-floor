@@ -8,8 +8,6 @@ Token Floor は、Claude Code と Codex がローカルに残すアクティビ�
 
 Token Floor アカウント、プロバイダー OAuth 画面、API キー入力、Claude・Codex への再ログインは不要です。マシン上で設定済みのプロバイダーのローカル状態を `127.0.0.1` から読み取るため、軽量に始められます。プロバイダーの認証情報やツールの生 payload は Token Floor に保存しません。
 
-> Phase 05 package はローカル実装・検証済みです。npm registry にはまだ公開していません。
-
 ![Token Floor オフィスで作業する Claude Code と Codex のエージェント](assets/agents-working.png)
 
 _メインエージェントとサブエージェントは別々のキャラクターと作業位置を使い、完了したエージェントはラウンジで休憩します。_
@@ -185,18 +183,6 @@ Web UI が Claude や Codex のファイルを直接読むことはありませ�
 | `packages/asset-contract` | ランタイムアセット manifest と検証契約                                     |
 | `packages/cli`            | CLI parse、install・diagnose・uninstall ownership、production 起動         |
 
-## Phase 05 配布ステータス
-
-ローカル実装・検証済み:
-
-- start/install/diagnose/uninstall 配布 CLI
-- 厳密な共通 port 契約と単一 production UI・HTTP・WS port
-- provider 0 件と Claude/Codex の独立動作
-- npm tarball allowlist と clean-install smoke
-- MIT/CC0 notice と npm audit
-
-npm registry 公開と Chrome、Edge、Firefox、Safari の完全 matrix はリリース前の確認項目です。Public-readiness 監査は `CONDITIONAL PASS` で、credential・高リスク PII blocker はありません。remote force-push、GitHub public 化、npm publish には別途承認が必要です。
-
 ## アートクレジット
 
 Token Floor のキャラクターとオフィスアートは、[CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) で提供される JIK-A-4 の [MetroCity Free Top-Down Character Pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack) を使用しています。ランタイムのキャラクターシートは、元のピクセルアートの方向性を保ちながらプロバイダーの役割に合わせて合成しています。再配布の詳細は [NOTICE](../NOTICE) を参照してください。
@@ -204,7 +190,3 @@ Token Floor のキャラクターとオフィスアートは、[CC0 1.0 Universa
 ## ライセンス
 
 Token Floor のソースコードは [MIT License](../LICENSE) で提供されます。サードパーティのアートワークは [NOTICE](../NOTICE) に別途記載しています。
-
-## 現在の状態
-
-現在のローカルビルドには Phase 00–05 が反映されています。npm 公開と完全な browser release matrix は未完了です。

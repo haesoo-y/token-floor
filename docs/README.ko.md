@@ -8,8 +8,6 @@ Token Floor는 Claude Code와 Codex가 로컬에 남긴 활동을 실시간 탑�
 
 Token Floor 계정, 공급자 OAuth 화면, API 키 입력, Claude·Codex 재로그인은 필요하지 않습니다. 컴퓨터에 이미 설정된 공급자의 로컬 상태를 `127.0.0.1`에서 읽으므로 가볍게 시작할 수 있습니다. 공급자 인증정보와 도구 원문 페이로드는 Token Floor에 저장하지 않습니다.
 
-> Phase 05 패키징은 로컬 구현·검증을 마쳤습니다. npm registry에는 아직 공개하지 않았습니다.
-
 ![Token Floor 오피스에서 작업 중인 Claude Code와 Codex 에이전트](assets/agents-working.png)
 
 _메인 에이전트와 서브에이전트는 서로 다른 캐릭터와 작업 위치를 사용하며, 완료된 에이전트는 라운지에서 휴식합니다._
@@ -185,18 +183,6 @@ npm run build
 | `packages/asset-contract` | 런타임 에셋 매니페스트와 검증 계약                                |
 | `packages/cli`            | CLI 해석, 설치·진단·제거 소유권, production 시작                  |
 
-## Phase 05 배포 상태
-
-로컬 구현과 검증을 마친 항목:
-
-- start/install/diagnose/uninstall 배포 CLI
-- 엄격한 공통 port 계약과 단일 production UI·HTTP·WS port
-- 공급자 0개 및 Claude/Codex 독립 동작
-- npm tarball allowlist와 clean-install smoke
-- MIT/CC0 고지와 npm audit
-
-npm registry 공개와 Chrome, Edge, Firefox, Safari 전체 matrix는 release 전 확인 항목입니다. Public-readiness 감사는 `CONDITIONAL PASS`이며 credential·고위험 개인정보 blocker는 없습니다. 원격 force-push, GitHub public 전환, npm publish는 별도 승인이 필요합니다.
-
 ## 에셋 출처
 
 Token Floor의 캐릭터와 오피스 아트는 [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/)로 제공되는 JIK-A-4의 [MetroCity Free Top-Down Character Pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack)에서 가져왔습니다. 런타임 캐릭터 시트는 원본 픽셀 아트의 방향성을 유지하면서 공급자 역할에 맞게 합성했습니다. 재배포 상세 내용은 [NOTICE](../NOTICE)를 확인하세요.
@@ -204,7 +190,3 @@ Token Floor의 캐릭터와 오피스 아트는 [CC0 1.0 Universal](https://crea
 ## 라이선스
 
 Token Floor 소스 코드는 [MIT 라이선스](../LICENSE)로 제공됩니다. 서드파티 아트워크는 [NOTICE](../NOTICE)에 별도로 표시합니다.
-
-## 현재 상태
-
-현재 로컬 빌드에는 Phase 00–05가 반영되어 있습니다. npm 공개와 전체 browser release matrix는 남아 있습니다.

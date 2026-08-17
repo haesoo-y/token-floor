@@ -2,7 +2,7 @@
 
 # Token Floor 아키텍처
 
-이 문서는 현재 구현된 Phase 00–05 아키텍처를 설명합니다. Registry 공개와 전체 browser release matrix는 외부 release 확인 항목으로 남아 있습니다.
+이 문서는 Token Floor의 현재 아키텍처를 설명합니다.
 
 ## 1. 설계 목표
 
@@ -330,7 +330,3 @@ token-floor/
 - Server 재시작 시 SQLite를 replay하고 로그를 복구한 뒤 만료 캐릭터를 제거합니다.
 - 중복 관찰은 안정적 ID와 reducer 멱등성으로 로그나 UI timer를 다시 만들지 않습니다.
 - Memo write 실패 시 이전 정상 JSON을 보존합니다.
-
-## 13. Phase 경계
-
-Phase 00–05는 위 구조를 제공합니다. Phase 05에는 배포 CLI, 명시적 install·diagnose·uninstall 소유권, 엄격한 port 우선순위, 단일-port production serving, 공급자 0개 동작, allowlist npm tarball이 포함됩니다. Registry 공개와 Chrome·Edge·Firefox·Safari 전체 matrix는 완료로 표시하지 않는 release 확인 항목입니다.

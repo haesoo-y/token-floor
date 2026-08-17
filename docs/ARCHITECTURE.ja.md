@@ -2,7 +2,7 @@
 
 # Token Floor アーキテクチャ
 
-この文書は実装済みの Phase 00–05 を説明します。Registry 公開と完全な browser release matrix は外部リリース確認項目です。
+この文書は Token Floor の現在のアーキテクチャを説明します。
 
 ## 1. 設計目標
 
@@ -330,7 +330,3 @@ token-floor/
 - Server restart は SQLite replay、bounded logs 復元、expired character prune の順です。
 - Duplicate observation は stable ID と reducer idempotency により log や UI timer を増やしません。
 - Memo write failure は以前の valid JSON を保持します。
-
-## 13. Phase 境界
-
-Phase 00–05 は上記構成を提供します。Phase 05 には配布 CLI、明示的 install・diagnose・uninstall ownership、厳密な port 優先順位、単一 port production serving、provider 0 件動作、allowlist npm tarball が含まれます。Registry 公開と Chrome・Edge・Firefox・Safari の完全 matrix は完了扱いしない release check です。

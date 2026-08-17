@@ -2,7 +2,7 @@
 
 # Token Floor Architecture
 
-This document describes the implemented Phase 00–05 architecture. Registry publication and the complete browser release matrix remain external release checks.
+This document describes Token Floor's current architecture.
 
 ## 1. Design goals
 
@@ -367,7 +367,3 @@ Each package exposes explicit TypeScript boundaries. Production source is split 
 - **Server restart:** replay sanitized SQLite events, rebuild bounded logs, prune expired completed characters, and reconnect collectors.
 - **Duplicate observation:** stable identity plus reducer idempotency produces no duplicate log entry or renewed presentation timer.
 - **Memo write failure:** preserve the previously valid JSON document; do not mix partially written data into lifecycle persistence.
-
-## 13. Phase boundary
-
-Phase 00–05 provide the architecture described above. Phase 05 adds the distributable CLI, explicit install/diagnose/uninstall ownership, strict port precedence, one-port production serving, provider-free operation, and an allowlisted npm tarball. Registry publication and the complete Chrome/Edge/Firefox/Safari matrix remain release checks and are not represented as completed.

@@ -6,7 +6,6 @@
 - Treat the provider's existing local runtime state as the integration boundary. Token Floor may observe files, hooks, and cache metadata produced by an already configured provider, but it must never impersonate the user, start a helper agent, or send prompts on the user's behalf.
 - Keep the product useful when only one provider is installed. Claude and Codex collection, source health, usage, and presentation must degrade independently.
 - Preserve the current Phase 00–04 scope: normalized contracts, the live pixel office, Claude integration, Codex integration, lifecycle reliability, durable sanitized logs, and whiteboard memos.
-- Phase 05 CLI, lifecycle commands, one-port production serving, package/license review, and local tarball verification are implemented. Keep npm registry publication, remote provenance, and any browser not actually exercised labeled pending; never imply that registry `npx` or the full Chrome/Edge/Firefox/Safari matrix is complete before external verification.
 
 ## Product Standard
 
@@ -230,7 +229,7 @@
 - Credit the MetroCity Free Top-Down Character Pack at `https://jik-a-4.itch.io/metrocity-free-topdown-character-pack`. Do not imply that Token Floor owns or relicenses upstream artwork.
 - Keep documentation screenshots under `docs/assets/`, use descriptive alt text and captions, and update or remove screenshots when they materially misrepresent the current UI.
 - Keep architecture documents synchronized with actual provider sources, polling bounds, normalization rules, redaction boundaries, HTTP/WebSocket routes, persistence files, retention limits, package ownership, and degraded behavior.
-- Document locally verified Phase 05 distribution features consistently in every language. Distinguish package capability from registry availability, and keep npm publication, remote provenance, and untested browsers visibly pending.
+- Document locally verified distribution features consistently in every language. Distinguish package capability from registry availability, and keep npm publication, remote provenance, and untested supported-browser behavior visibly pending.
 
 ## Verification
 
@@ -244,4 +243,4 @@
 - Move the player in all four directions with both input schemes and verify matching facing frames.
 - Check that retained solid props block movement.
 - Repeat visual inspection after each correction. Do not declare completion based only on unit tests or a build result.
-- For documentation changes, also verify translated heading parity, local Markdown links, image paths, Mermaid fence balance, feature inventory completeness, and accurate separation between local Phase 05 verification and pending external release checks.
+- For documentation changes, also verify translated heading parity, local Markdown links, image paths, Mermaid fence balance, feature inventory completeness, and accurate separation between local verification and pending external release checks.

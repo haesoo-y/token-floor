@@ -8,8 +8,6 @@ Token Floor turns the local activity already produced by Claude Code and Codex i
 
 There is no Token Floor account, provider OAuth screen, API-key form, or second Claude/Codex sign-in. If a provider is already configured on your machine, Token Floor observes its local state on `127.0.0.1` and starts lightly. Provider credentials and raw tool payloads stay out of Token Floor.
 
-> Phase 05 packaging is implemented and verified locally. The npm registry package is not published yet.
-
 ![Claude Code and Codex agents working in the Token Floor office](docs/assets/agents-working.png)
 
 _Active main agents and subagents have distinct sprites and work positions; completed agents take a break in the lounge._
@@ -187,18 +185,6 @@ The web UI never reads Claude or Codex files directly. See [Architecture](ARCHIT
 | `packages/asset-contract` | Runtime asset manifest and validation contracts                                      |
 | `packages/cli`            | CLI parsing, install/diagnose/uninstall ownership, and production startup            |
 
-## Phase 05 distribution status
-
-Implemented and locally verified:
-
-- distributable CLI with start/install/diagnose/uninstall;
-- strict shared port resolution and one production HTTP/WS/UI port;
-- provider-free and independent Claude/Codex operation;
-- npm tarball allowlist and clean-install smoke tests;
-- MIT/CC0 notices and npm audit review.
-
-Registry publication and the complete Chrome, Edge, Firefox, and Safari matrix remain release checks. The public-readiness audit is `CONDITIONAL PASS`; no credential or high-risk PII blocker remains, while remote force-push, GitHub visibility, and npm publication require separate approval.
-
 ## Art credits
 
 Character and office art used by Token Floor is sourced from the [MetroCity Free Top-Down Character Pack by JIK-A-4](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack), offered under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/). Token Floor's runtime character sheets are composed for provider roles while preserving the pack's authored pixel-art direction. See [NOTICE](NOTICE) for redistribution details.
@@ -206,7 +192,3 @@ Character and office art used by Token Floor is sourced from the [MetroCity Free
 ## License
 
 Token Floor source code is available under the [MIT License](LICENSE). Third-party artwork remains identified separately in [NOTICE](NOTICE).
-
-## Status
-
-Phases 00–05 are implemented in the local build. npm publication and the complete browser release matrix remain pending.
