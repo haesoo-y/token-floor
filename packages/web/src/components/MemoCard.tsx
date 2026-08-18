@@ -53,10 +53,11 @@ export function MemoCard({
         <div className="memo-actions">
           {editing ? (
             <>
-              <button type="button" onClick={() => void save()}>
+              <button className="memo-edit-action" type="button" onClick={() => void save()}>
                 {translate(locale, "saveMemo")}
               </button>
               <button
+                className="memo-edit-action"
                 type="button"
                 onClick={() => {
                   setText(memo.text);

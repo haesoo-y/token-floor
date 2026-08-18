@@ -12,6 +12,8 @@
   outline-offset: 2px;
 }
 .memo-panel {
+  --memo-body-font-size: 12px;
+
   z-index: 8;
   bottom: 96px;
   display: grid;
@@ -48,11 +50,16 @@
   border-radius: 9px;
   color: #e5e7eb;
   background: #071421cc;
-  font: 12px/1.5 inherit;
+  font-family: inherit;
+  font-size: var(--memo-body-font-size);
+  line-height: 1.5;
 }
 .memo-composer textarea {
   min-height: 82px;
   padding: 10px;
+}
+.memo-composer textarea::placeholder {
+  font-size: var(--memo-body-font-size);
 }
 .memo-composer-footer {
   display: flex;
@@ -120,7 +127,7 @@
   margin: 0 0 8px;
   overflow: hidden;
   color: #e5e7eb;
-  font-size: 12px;
+  font-size: var(--memo-body-font-size);
   line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -166,6 +173,9 @@
   min-width: 30px;
   min-height: 28px;
   padding: 4px 8px;
+}
+.memo-actions .memo-edit-action {
+  font-size: 10px;
 }
 .memo-actions svg {
   display: block;
