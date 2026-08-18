@@ -71,7 +71,7 @@ describe("CLI commands", () => {
     expect(help.output.join("\n")).toContain("token-floor install");
     const version = runtime(["--version"]);
     expect(await runCli(version.value)).toBe(0);
-    expect(version.output).toEqual(["0.1.0"]);
+    expect(version.output).toEqual(["0.2.0"]);
   });
 
   it("honors environment over installed config and CLI over environment", async () => {
