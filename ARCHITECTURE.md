@@ -285,7 +285,7 @@ The memo store is a separate versioned JSON document. Writes use a same-director
 
 ### React application layer
 
-React owns the header, status counters, usage cards, provider alerts, settings, locale/avatar preferences, character picker, memo panel, agent details, chat log, and event log. Shared `FloatingPanel` and `ActionIcon` primitives keep overlay behavior and styling consistent.
+React owns the header, status counters, usage cards, provider alerts, settings, locale/avatar preferences, character picker, memo panel, agent details, chat log, and event log. Shared `FloatingPanel` and `ActionIcon` primitives keep overlay behavior and styling consistent. Scrollable panel surfaces share thin translucent scrollbar styling with transparent tracks.
 
 The WebSocket hook accepts a full snapshot first and then incremental normalized updates. On disconnect, it retains the last valid snapshot and reconnects with bounded backoff. Provider source health remains distinct from socket health.
 

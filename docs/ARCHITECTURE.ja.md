@@ -268,7 +268,7 @@ sequenceDiagram
 
 ### React 層
 
-React は header、status count、usage card、provider alert、settings、locale・avatar preference、character picker、memo、agent detail、chat、event panel を担当します。共通 `FloatingPanel` と `ActionIcon` primitive で overlay の動作・style を統一します。
+React は header、status count、usage card、provider alert、settings、locale・avatar preference、character picker、memo、agent detail、chat、event panel を担当します。共通 `FloatingPanel` と `ActionIcon` primitive で overlay の動作・style を統一します。スクロール可能な panel surface は、透明な track と細い半透明 scrollbar style を共有します。
 
 WebSocket hook は full snapshot の後に incremental event を適用します。切断時も最後の有効 snapshot を保持し、bounded backoff で再接続します。Provider source health と socket health は別です。
 

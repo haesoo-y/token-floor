@@ -42,4 +42,16 @@ describe("overlay transparency", () => {
     expect(readStyle("memos")).toMatch(/\.memo-footer\s*\{[^}]*justify-content: space-between;/s);
     expect(readStyle("memos")).toMatch(/\.memo-actions\s*\{[^}]*flex: 0 0 auto;/s);
   });
+
+  it("styles every scrollable panel surface with a translucent shared scrollbar", () => {
+    const panels = readStyle("panels");
+    const selector = ":where(.panel-content, .memo-list, .settings-panel)";
+
+    expect(panels).toContain(`${selector} {`);
+    expect(panels).toMatch(/scrollbar-color:\s*#[0-9a-f]{8}\s+transparent/i);
+    expect(panels).toContain(`${selector}::-webkit-scrollbar-thumb`);
+    expect(panels).toContain("background-clip: padding-box");
+    expect(panels).toContain(`${selector}::-webkit-scrollbar-thumb:hover`);
+    expect(panels).toMatch(/::-webkit-scrollbar-track,[\s\S]*background:\s*transparent/);
+  });
 });

@@ -268,7 +268,7 @@ sequenceDiagram
 
 ### React 계층
 
-React는 header, status count, usage card, provider alert, 설정, locale·avatar preference, 캐릭터 선택, memo, agent 상세, chat, event panel을 담당합니다. 공통 `FloatingPanel`, `ActionIcon` primitive로 overlay 동작과 style을 통일합니다.
+React는 header, status count, usage card, provider alert, 설정, locale·avatar preference, 캐릭터 선택, memo, agent 상세, chat, event panel을 담당합니다. 공통 `FloatingPanel`, `ActionIcon` primitive로 overlay 동작과 style을 통일합니다. 스크롤 가능한 panel 표면은 투명한 track과 얇은 반투명 scrollbar style을 공유합니다.
 
 WebSocket hook은 전체 snapshot을 먼저 받고 incremental event를 적용합니다. 연결이 끊겨도 마지막 유효 snapshot을 유지하고 제한된 backoff로 재연결합니다. Provider source 상태와 socket 상태는 별개입니다.
 

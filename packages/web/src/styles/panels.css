@@ -51,6 +51,27 @@
   padding: 13px 16px 17px;
   overflow: auto;
 }
+:where(.panel-content, .memo-list, .settings-panel) {
+  scrollbar-color: #7891a673 transparent;
+  scrollbar-width: thin;
+}
+:where(.panel-content, .memo-list, .settings-panel)::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+:where(.panel-content, .memo-list, .settings-panel)::-webkit-scrollbar-track,
+:where(.panel-content, .memo-list, .settings-panel)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+:where(.panel-content, .memo-list, .settings-panel)::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: #7891a65c;
+  background-clip: padding-box;
+}
+:where(.panel-content, .memo-list, .settings-panel)::-webkit-scrollbar-thumb:hover {
+  background-color: #91a8ba8f;
+}
 .agent-heading {
   display: flex;
   align-items: center;
