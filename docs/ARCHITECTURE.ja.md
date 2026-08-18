@@ -117,7 +117,7 @@ stateDiagram-v2
   completed --> active: より新しい有効活動
 ```
 
-3 分の完了推定は `active` のみに適用します。`waiting` と `error` は timeout で完了しません。完了 character projection は 60 分後に削除しますが、サニタイズ済みログは二つのグローバル 100 件制限の中で保持します。
+3 分の完了推定は `active` のみに適用します。`waiting` と `error` は timeout で完了しません。完了 character projection は 3 時間後に削除しますが、サニタイズ済みログは二つのグローバル 100 件制限の中で保持します。
 
 ## 5. Claude 連携
 
@@ -242,7 +242,7 @@ sequenceDiagram
 | provider usage refresh               | 15 秒                         |
 | agent timeout・retention maintenance | 15 秒                         |
 | active completion inference          | 新しい heartbeat なしで 3 分  |
-| completed character retention        | 60 分                         |
+| completed character retention        | 3 時間                        |
 | chat retention                       | sanitized latest 100          |
 | event retention                      | sanitized non-chat latest 100 |
 

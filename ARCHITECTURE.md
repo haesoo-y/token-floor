@@ -131,7 +131,7 @@ stateDiagram-v2
   completed --> active: newer valid activity
 ```
 
-The three-minute inferred-completion rule applies only to active agents. Waiting and error states never time out into completion. Completed character projections expire after 60 minutes, but their sanitized logs remain within the two 100-entry global bounds.
+The three-minute inferred-completion rule applies only to active agents. Waiting and error states never time out into completion. Completed character projections expire after three hours, but their sanitized logs remain within the two 100-entry global bounds.
 
 ## 5. Claude integration
 
@@ -259,7 +259,7 @@ Pruning before the first browser snapshot prevents a burst of old completed char
 | Provider usage refresh              | 15 seconds                           |
 | Agent timeout/retention maintenance | 15 seconds                           |
 | Active completion inference         | 3 minutes without a newer heartbeat  |
-| Completed character retention       | 60 minutes                           |
+| Completed character retention       | 3 hours                              |
 | Chat retention                      | latest 100 sanitized messages        |
 | Event retention                     | latest 100 sanitized non-chat events |
 

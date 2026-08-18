@@ -166,28 +166,28 @@ describe("office state reducer", () => {
     });
   });
 
-  it("retains completed actors for one hour and then prunes them", () => {
+  it("retains completed actors for three hours and then prunes them", () => {
     const completed = applyEvent(createOfficeState(), {
       ...activeEvent,
       type: "agent.completed",
       inferred: false
     });
     expect(
-      pruneCompletedAgents(completed, new Date("2026-08-16T00:59:59.000Z")).agents["agent-1"]
+      pruneCompletedAgents(completed, new Date("2026-08-16T02:59:59.999Z")).agents["agent-1"]
     ).toBeDefined();
     expect(
-      pruneCompletedAgents(completed, new Date("2026-08-16T01:00:00.000Z")).agents["agent-1"]
+      pruneCompletedAgents(completed, new Date("2026-08-16T03:00:00.000Z")).agents["agent-1"]
     ).toBeUndefined();
   });
 
-  it("retains inferred completion for an hour from its deterministic timeout boundary", () => {
+  it("retains inferred completion for three hours from its deterministic timeout boundary", () => {
     const active = applyEvent(createOfficeState(), activeEvent);
     const completed = inferTimedOutCompletions(active, new Date("2026-08-16T02:00:00.000Z"));
     expect(
-      pruneCompletedAgents(completed, new Date("2026-08-16T01:02:59.999Z")).agents["agent-1"]
+      pruneCompletedAgents(completed, new Date("2026-08-16T03:02:59.999Z")).agents["agent-1"]
     ).toBeDefined();
     expect(
-      pruneCompletedAgents(completed, new Date("2026-08-16T01:03:00.000Z")).agents["agent-1"]
+      pruneCompletedAgents(completed, new Date("2026-08-16T03:03:00.000Z")).agents["agent-1"]
     ).toBeUndefined();
   });
 
@@ -222,14 +222,14 @@ describe("office state reducer", () => {
       type: "agent.completed",
       inferred: false
     });
-    const pruned = pruneCompletedAgents(state, new Date("2026-08-16T01:00:00.000Z"));
+    const pruned = pruneCompletedAgents(state, new Date("2026-08-16T03:00:00.000Z"));
     expect(pruned.agents["agent-1"]).toBeUndefined();
     expect(pruned.messages.map((event) => event.eventId)).toEqual(["message-cleanup"]);
     expect(pruned.recentEvents.map((event) => event.eventId)).toEqual([
       "completed-cleanup",
       "event-1"
     ]);
-    expect(pruneCompletedAgents(pruned, new Date("2026-08-16T02:00:00.000Z"))).toBe(pruned);
+    expect(pruneCompletedAgents(pruned, new Date("2026-08-16T04:00:00.000Z"))).toBe(pruned);
   });
 
   it("keeps Claude and Codex identities separate for the same provider execution token", () => {

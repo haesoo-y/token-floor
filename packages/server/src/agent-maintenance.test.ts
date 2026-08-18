@@ -7,7 +7,7 @@ afterEach(() => vi.useRealTimers());
 describe("startAgentMaintenance", () => {
   it("reconciles recovered agents before the first interval elapses", () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-08-17T02:00:00.000Z"));
+    vi.setSystemTime(new Date("2026-08-17T04:00:00.000Z"));
     let state = applyEvent(createOfficeState(), {
       schemaVersion: 1,
       eventId: "old-completed",
@@ -35,7 +35,7 @@ describe("startAgentMaintenance", () => {
 
   it("immediately expires and prunes a recovered stale active agent", () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-08-17T02:00:00.000Z"));
+    vi.setSystemTime(new Date("2026-08-17T04:00:00.000Z"));
     let state = applyEvent(createOfficeState(), {
       schemaVersion: 1,
       eventId: "old-active",

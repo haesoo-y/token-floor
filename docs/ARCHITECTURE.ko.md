@@ -117,7 +117,7 @@ stateDiagram-v2
   completed --> active: 더 최신 유효 활동
 ```
 
-3분 완료 추론은 `active`에만 적용합니다. `waiting`, `error`는 timeout으로 완료되지 않습니다. 완료 캐릭터 projection은 60분 후 제거하지만, 정제된 로그는 두 개의 전역 100개 제한 안에서 계속 유지합니다.
+3분 완료 추론은 `active`에만 적용합니다. `waiting`, `error`는 timeout으로 완료되지 않습니다. 완료 캐릭터 projection은 3시간 후 제거하지만, 정제된 로그는 두 개의 전역 100개 제한 안에서 계속 유지합니다.
 
 ## 5. Claude 연동
 
@@ -242,7 +242,7 @@ sequenceDiagram
 | 공급자 usage 갱신              | 15초                       |
 | agent timeout·보존 maintenance | 15초                       |
 | active 완료 추론               | 더 최신 heartbeat 없이 3분 |
-| 완료 캐릭터 보존               | 60분                       |
+| 완료 캐릭터 보존               | 3시간                      |
 | chat 보존                      | 정제된 최근 100개          |
 | event 보존                     | 정제된 비채팅 최근 100개   |
 

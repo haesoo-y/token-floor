@@ -96,7 +96,7 @@ describe("SqliteEventStore", () => {
     const reopened = new SqliteEventStore(filename);
     const restored = pruneCompletedAgents(
       reopened.load().reduce(applyEvent, createOfficeState()),
-      new Date("2026-08-16T01:02:00.000Z")
+      new Date("2026-08-16T03:02:00.000Z")
     );
     expect(restored.agents["codex:session-1"]).toBeUndefined();
     expect(restored.messages.map((event) => event.eventId)).toEqual(["message-1"]);

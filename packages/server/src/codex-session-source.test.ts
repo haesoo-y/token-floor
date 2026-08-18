@@ -152,14 +152,14 @@ describe("CodexSessionCollector", () => {
 
   it("prunes an expired recovered character before the first maintenance interval", () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-08-17T03:00:00.000Z"));
+    vi.setSystemTime(new Date("2026-08-17T04:00:00.000Z"));
     const directory = root();
     fs.writeFileSync(
       path.join(directory, "expired.jsonl"),
       line(meta("expired")) + line(task("task_started")) + line(task("task_complete"))
     );
     let state = new CodexSessionCollector(directory)
-      .poll(new Date("2026-08-17T03:00:00.000Z"))
+      .poll(new Date("2026-08-17T04:00:00.000Z"))
       .reduce(applyEvent, createOfficeState());
 
     const stop = startAgentMaintenance({

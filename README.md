@@ -30,7 +30,7 @@ _Active main agents and subagents have distinct sprites and work positions; comp
 - Assigns stable labels, role-specific work destinations, staggered cardinal routes, varied speed and pause timing, and collision-aware movement.
 - Moves completed agents into the coffee lounge, where they rotate short localized idle phrases without covering the office with simultaneous bubbles.
 - Keeps work-area speech visible while an agent is present, prioritizing sanitized assistant messages over state transitions and idle lines.
-- Retains completed characters for 60 minutes, while hiding already-expired characters immediately after a restart.
+- Retains completed characters for three hours, while hiding already-expired characters immediately after a restart.
 
 ### Interactive office
 
@@ -46,7 +46,7 @@ _Active main agents and subagents have distinct sprites and work positions; comp
 
 - Opens an agent detail panel by selecting a character and shows provider, status, project, session, activity, wait/error context, and parent agent.
 - Keeps **sanitized chat** separate from **non-chat lifecycle events**, with independent tabs and up to 100 recent entries in each log.
-- Stores normalized logs in SQLite and restores them after a server restart, independently of the 60-minute character lifetime.
+- Stores normalized logs in SQLite and restores them after a server restart, independently of the three-hour character lifetime.
 - Handles duplicate records idempotently and prevents older events from rolling back newer state.
 - Keeps the last valid office snapshot visible while the WebSocket reconnects.
 
