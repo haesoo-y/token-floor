@@ -117,7 +117,9 @@ npx token-floor --port 8080
 TOKEN_FLOOR_PORT=8080 npx token-floor
 ```
 
-The production UI, HTTP API, and WebSocket share one loopback URL. Port precedence is `--port` > `TOKEN_FLOOR_PORT` > installed `.token-floor/config.json` > `4317`.
+The production UI, HTTP API, and WebSocket share one loopback URL. Port precedence is `--port` > `TOKEN_FLOOR_PORT` > installed `.token-floor/config.json` > `10214`.
+
+Normal startup automatically prepares Token Floor's Claude observers for the resolved port after the loopback server is listening. A separate `install` command is not required. Existing Claude hooks and user-owned status lines are preserved, and no Claude directory is created when Claude Code is absent.
 
 Lifecycle commands never log in to or start a provider:
 
@@ -128,7 +130,7 @@ npx token-floor uninstall
 npx token-floor uninstall --delete-local-data
 ```
 
-`install` adds only Token Floor-owned Claude observers when Claude is present. `diagnose` is read-only. `uninstall` preserves events, usage cache, and memos unless `--delete-local-data` is explicit. Claude-only, Codex-only, and provider-free machines are supported.
+`install` remains available to preconfigure or repair only Token Floor-owned Claude observers without starting the server. `diagnose` is read-only. `uninstall` preserves events, usage cache, and memos unless `--delete-local-data` is explicit. Claude-only, Codex-only, and provider-free machines are supported.
 
 ### Development
 
@@ -139,7 +141,7 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The local collector/server listens on `127.0.0.1:4317`.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The local collector/server listens on `127.0.0.1:10214`.
 
 Use `TOKEN_FLOOR_PORT` for the development server and `npm run dev -w @token-floor/web -- --port 5174` for a different Vite UI port. Set `TOKEN_FLOOR_BROWSER_ORIGIN` to that UI origin when changing the Vite port.
 

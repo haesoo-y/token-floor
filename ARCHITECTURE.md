@@ -149,7 +149,7 @@ Explicit path overrides are diagnostics and platform fallbacks, not the primary 
 
 ### 5.2 Hook observation
 
-`token-floor install` idempotently merges loopback observers only when Claude is installed. Normal server startup never changes provider settings or creates a missing provider directory. Installation preserves unrelated user settings and hooks, creates one recovery backup, and uses a short, failure-tolerant local POST.
+Production `token-floor` CLI startup binds the loopback server and then idempotently ensures Claude observers for the resolved port. The explicit `token-floor install` command uses the same merge without starting the server, so it remains useful for preconfiguration or repair but is not required. Neither path creates a missing Claude directory. They preserve unrelated user settings, hooks, and user-owned status lines, create at most one recovery backup, and avoid rewriting unchanged settings. Automatic setup failures are reported without stopping the server or Codex observation.
 
 Observed boundaries include session start, user prompt submission, pre/post tool use, tool failure, permission request, notification, subagent start/stop, stop/failure, and session end. Hooks post to:
 
@@ -222,7 +222,7 @@ For usage, the collector scans a bounded set of recent rollout files, reads a bo
 | `POST /hooks/claude-usage` | Silent Claude usage handoff                                         |
 | `WS /events`               | Initial snapshot and incremental normalized events                  |
 
-Production UI, HTTP API, WebSocket, and Claude hooks share the resolved `127.0.0.1` port. Resolution order is CLI flag, environment, installed config, then `4317`. Vite development uses `5173` and proxies same-origin API/WS traffic to the development server.
+Production UI, HTTP API, WebSocket, and Claude hooks share the resolved `127.0.0.1` port. Resolution order is CLI flag, environment, installed config, then `10214`. Vite development uses `5173` and proxies same-origin API/WS traffic to the development server.
 HTTP responses expose CORS only to that configured development origin. Memo mutations require the
 exact origin, JSON bodies require `application/json`, and `/events` rejects WebSocket upgrades from
 every other origin. Requests with a non-loopback `Host` are rejected to reduce DNS-rebinding risk.

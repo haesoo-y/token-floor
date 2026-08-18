@@ -7,6 +7,7 @@ describe("Token Floor port contract", () => {
     expect(resolveTokenFloorPort({ environment: "7000", installed: 6000 })).toBe(7000);
     expect(resolveTokenFloorPort({ installed: 6000 })).toBe(6000);
     expect(resolveTokenFloorPort({})).toBe(DEFAULT_TOKEN_FLOOR_PORT);
+    expect(DEFAULT_TOKEN_FLOOR_PORT).toBe(10_214);
   });
 
   it.each(["", "port", "1.5", "-1", "0", "65536", " 8080"])("rejects %j", (value) => {

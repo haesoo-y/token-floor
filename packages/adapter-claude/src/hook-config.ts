@@ -1,3 +1,7 @@
+import { DEFAULT_TOKEN_FLOOR_PORT, loopbackUrl } from "@token-floor/protocol";
+
+const defaultHookRoot = loopbackUrl(DEFAULT_TOKEN_FLOOR_PORT);
+
 const observedEvents = [
   "SessionStart",
   "UserPromptSubmit",
@@ -29,7 +33,7 @@ export interface ClaudeStatusLineSetting {
 
 /** Creates side-effect-only localhost hooks that never return a Claude control decision. */
 export function createClaudeHookSettings(
-  url = "http://127.0.0.1:4317/hooks/claude"
+  url = `${defaultHookRoot}/hooks/claude`
 ): ClaudeHookSettings {
   const hooks: ClaudeHookSettings["hooks"] = Object.fromEntries(
     observedEvents.map((event) => [
@@ -58,7 +62,7 @@ export function createClaudeHookSettings(
 
 /** Creates a silent observer for rate-limit metadata already supplied by Claude Code. */
 export function createClaudeStatusLineSetting(
-  url = "http://127.0.0.1:4317/hooks/claude-usage"
+  url = `${defaultHookRoot}/hooks/claude-usage`
 ): ClaudeStatusLineSetting {
   return {
     type: "command",

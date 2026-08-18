@@ -37,8 +37,8 @@ function tokenFloorStatusLine(value: unknown): boolean {
 /** Adds Token Floor observers without replacing hooks owned by the user or other tools. */
 export function mergeClaudeHookSettings(
   settings: SettingsRecord,
-  url = "http://127.0.0.1:4317/hooks/claude",
-  usageUrl = "http://127.0.0.1:4317/hooks/claude-usage"
+  url?: string,
+  usageUrl?: string
 ): SettingsRecord {
   const generated = createClaudeHookSettings(url).hooks;
   const currentHooks = isRecord(settings.hooks) ? settings.hooks : {};

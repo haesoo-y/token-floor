@@ -7,11 +7,11 @@ describe("createClaudeHookSettings", () => {
     expect(settings.hooks.SessionStart?.[0]?.hooks[0]).toMatchObject({
       type: "command",
       command: "sh",
-      args: expect.arrayContaining(["http://127.0.0.1:4317/hooks/claude"])
+      args: expect.arrayContaining(["http://127.0.0.1:10214/hooks/claude"])
     });
     expect(settings.hooks.SubagentStart?.[0]?.hooks[0]).toMatchObject({
       type: "command",
-      args: expect.arrayContaining(["http://127.0.0.1:4317/hooks/claude"])
+      args: expect.arrayContaining(["http://127.0.0.1:10214/hooks/claude"])
     });
     expect(settings.hooks.SubagentStop).toBeDefined();
     expect(settings.hooks.PermissionRequest).toBeDefined();
@@ -23,7 +23,7 @@ describe("createClaudeHookSettings", () => {
   it("posts CLI status metadata without starting another Claude process", () => {
     expect(createClaudeStatusLineSetting()).toMatchObject({
       type: "command",
-      command: expect.stringContaining("http://127.0.0.1:4317/hooks/claude-usage")
+      command: expect.stringContaining("http://127.0.0.1:10214/hooks/claude-usage")
     });
     expect(createClaudeStatusLineSetting().command).toContain(
       "X-Token-Floor-Hook: token-floor-observer-v1"

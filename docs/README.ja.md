@@ -117,7 +117,9 @@ npx token-floor --port 8080
 TOKEN_FLOOR_PORT=8080 npx token-floor
 ```
 
-Production UI、HTTP API、WebSocket は一つのループバック URL を共有します。ポートの優先順位は `--port` > `TOKEN_FLOOR_PORT` > `.token-floor/config.json` > `4317` です。
+Production UI、HTTP API、WebSocket は一つのループバック URL を共有します。ポートの優先順位は `--port` > `TOKEN_FLOOR_PORT` > `.token-floor/config.json` > `10214` です。
+
+通常起動では、ループバックサーバーが開いた後、解決済みポートに合わせて Token Floor の Claude observer を自動的に準備します。別途 `install` を実行する必要はありません。既存の Claude hook とユーザー所有 status line を保持し、Claude Code が存在しない場合は Claude directory を作成しません。
 
 ```bash
 npx token-floor install --port 8080
@@ -126,7 +128,7 @@ npx token-floor uninstall
 npx token-floor uninstall --delete-local-data
 ```
 
-`install` は Claude が存在するときだけ Token Floor 所有 observer を追加します。`diagnose` は read-only です。`uninstall` は `--delete-local-data` を明示しない限り event・usage・memo を保持します。Claude のみ、Codex のみ、両方なしの環境をサポートします。
+`install` は、サーバーを起動せずに Token Floor 所有の Claude observer だけを事前設定または修復するために引き続き利用できます。`diagnose` は read-only です。`uninstall` は `--delete-local-data` を明示しない限り event・usage・memo を保持します。Claude のみ、Codex のみ、両方なしの環境をサポートします。
 
 ### 開発
 
@@ -137,7 +139,7 @@ npm install
 npm run dev
 ```
 
-[http://127.0.0.1:5173](http://127.0.0.1:5173) を開きます。ローカルコレクター・サーバーは `127.0.0.1:4317` で動作します。
+[http://127.0.0.1:5173](http://127.0.0.1:5173) を開きます。ローカルコレクター・サーバーは `127.0.0.1:10214` で動作します。
 
 開発 server port は `TOKEN_FLOOR_PORT`、Vite UI port は `npm run dev -w @token-floor/web -- --port 5174` で変更できます。Vite port を変える場合は `TOKEN_FLOOR_BROWSER_ORIGIN` もその UI origin に設定してください。
 

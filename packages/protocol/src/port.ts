@@ -1,4 +1,5 @@
-export const DEFAULT_TOKEN_FLOOR_PORT = 4317;
+/** Default loopback port used when no CLI, environment, or installed override exists. */
+export const DEFAULT_TOKEN_FLOOR_PORT = 10_214;
 
 export interface PortSources {
   cli?: string;

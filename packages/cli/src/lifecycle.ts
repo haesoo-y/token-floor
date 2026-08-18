@@ -15,20 +15,31 @@ export interface LifecycleOptions {
   port: number;
 }
 
+export type ClaudeObserverSetup = "ready" | "not-installed";
+
+/** Ensures normal CLI startup can observe Claude without a separate install command. */
+export function ensureClaudeObserver(
+  options: Pick<LifecycleOptions, "home" | "port">
+): ClaudeObserverSetup {
+  const provider = resolveProviderPaths(options.home);
+  if (!fs.existsSync(provider.claudeRoot)) return "not-installed";
+  const root = loopbackUrl(options.port);
+  installClaudeObservers(
+    provider.claudeSettings,
+    `${root}/hooks/claude`,
+    `${root}/hooks/claude-usage`
+  );
+  return "ready";
+}
+
 export function installTokenFloor(options: LifecycleOptions): string[] {
   const runtime = resolveRuntimePaths(options.cwd);
   const provider = resolveProviderPaths(options.home);
   writeLocalConfig(runtime.config, { version: 1, port: options.port });
   const lines = [`config: installed`, `port: ${options.port}`];
-  if (!fs.existsSync(provider.claudeRoot)) {
+  if (ensureClaudeObserver(options) === "not-installed") {
     lines.push("claude-code: not installed");
   } else {
-    const root = loopbackUrl(options.port);
-    installClaudeObservers(
-      provider.claudeSettings,
-      `${root}/hooks/claude`,
-      `${root}/hooks/claude-usage`
-    );
     lines.push("claude-code observer: installed");
   }
   lines.push(`codex: ${fs.existsSync(provider.codexRoot) ? "detected" : "not installed"}`);

@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const backendPort = process.env.TOKEN_FLOOR_PORT ?? "10214";
+const httpTarget = `http://127.0.0.1:${backendPort}`;
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -8,10 +11,10 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      "/events": { target: "ws://127.0.0.1:4317", ws: true },
-      "/health": "http://127.0.0.1:4317",
-      "/snapshot": "http://127.0.0.1:4317",
-      "/memos": "http://127.0.0.1:4317"
+      "/events": { target: httpTarget, ws: true },
+      "/health": httpTarget,
+      "/snapshot": httpTarget,
+      "/memos": httpTarget
     }
   },
   build: { outDir: "../../dist/web", emptyOutDir: true }

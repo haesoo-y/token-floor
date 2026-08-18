@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { runCli, type CliRuntime } from "./run.js";
 
 function runtime(argv: string[]): { value: CliRuntime; output: string[]; errors: string[] } {
@@ -23,6 +23,48 @@ function runtime(argv: string[]): { value: CliRuntime; output: string[]; errors:
 }
 
 describe("CLI commands", () => {
+  it("automatically prepares Claude observation during normal startup", async () => {
+    const started = runtime([]);
+    const close = vi.fn(async () => undefined);
+    const settings = path.join(started.value.home, ".claude", "settings.json");
+    fs.mkdirSync(path.dirname(settings), { recursive: true });
+    started.value.startServer = vi.fn(async () => {
+      expect(fs.existsSync(settings)).toBe(false);
+      return { url: "http://127.0.0.1:10214", close };
+    });
+    started.value.waitForShutdown = async (stop) => {
+      await stop();
+      return 0;
+    };
+
+    expect(await runCli(started.value)).toBe(0);
+    expect(started.value.startServer).toHaveBeenCalledWith(
+      expect.objectContaining({ port: 10_214 })
+    );
+    expect(started.output).toContain("Claude observer: ready");
+    expect(fs.readFileSync(settings, "utf8")).toContain("/hooks/claude");
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it("keeps Codex startup available when automatic Claude setup fails", async () => {
+    const started = runtime([]);
+    const settings = path.join(started.value.home, ".claude", "settings.json");
+    fs.mkdirSync(path.dirname(settings), { recursive: true });
+    fs.writeFileSync(settings, "not-json");
+    started.value.startServer = vi.fn(async () => ({
+      url: "http://127.0.0.1:10214",
+      close: async () => undefined
+    }));
+    started.value.waitForShutdown = async (stop) => {
+      await stop();
+      return 0;
+    };
+
+    expect(await runCli(started.value)).toBe(0);
+    expect(started.errors[0]).toContain("Codex observation continues");
+    expect(started.output).toContain("Token Floor: http://127.0.0.1:10214");
+  });
+
   it("prints help and version without filesystem changes", async () => {
     const help = runtime(["--help"]);
     expect(await runCli(help.value)).toBe(0);

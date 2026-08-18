@@ -13,7 +13,7 @@ function request(headers: IncomingMessage["headers"]): IncomingMessage {
 
 describe("loopback request security", () => {
   it("accepts only the numeric loopback host and configured browser origin", () => {
-    const local = request({ host: "127.0.0.1:4317", origin: "http://127.0.0.1:5173" });
+    const local = request({ host: "127.0.0.1:10214", origin: "http://127.0.0.1:5173" });
     expect(hasLoopbackHost(local)).toBe(true);
     expect(trustedBrowserOrigin(local, "http://127.0.0.1:5173")).toBe("http://127.0.0.1:5173");
     expect(hasLoopbackHost(request({ host: "attacker.example" }))).toBe(false);
@@ -22,7 +22,7 @@ describe("loopback request security", () => {
 
   it("requires JSON and the Token Floor observer header for originless hooks", () => {
     const hook = request({
-      host: "127.0.0.1:4317",
+      host: "127.0.0.1:10214",
       "content-type": "application/json; charset=utf-8",
       "x-token-floor-hook": "token-floor-observer-v1"
     });

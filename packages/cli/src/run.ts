@@ -5,7 +5,7 @@ import { resolveRuntimePaths } from "@token-floor/server/runtime-paths";
 import { parseCli } from "./cli-parser.js";
 import { diagnoseTokenFloor } from "./diagnostics.js";
 import { HELP, VERSION } from "./help.js";
-import { installTokenFloor, uninstallTokenFloor } from "./lifecycle.js";
+import { ensureClaudeObserver, installTokenFloor, uninstallTokenFloor } from "./lifecycle.js";
 import { readLocalConfig } from "./local-config.js";
 
 export interface CliRuntime {
@@ -16,6 +16,15 @@ export interface CliRuntime {
   webRootPath: string;
   write: (line: string) => void;
   writeError: (line: string) => void;
+  /** Optional server boundary used by embedded runtimes and lifecycle tests. */
+  startServer?: (options: {
+    port: number;
+    cwd: string;
+    home: string;
+    webRootPath: string;
+  }) => Promise<{ url: string; close: () => Promise<void> }>;
+  /** Optional shutdown owner used when a host manages process signals itself. */
+  waitForShutdown?: (close: () => Promise<void>) => Promise<number>;
 }
 
 export async function runCli(runtime: CliRuntime): Promise<number> {
@@ -77,16 +86,34 @@ function resolvePort(runtime: CliRuntime, cliPort: string | undefined): number {
   });
 }
 
+/** Starts the live endpoint before configuring hooks and isolates Claude setup from Codex startup. */
 async function runStart(runtime: CliRuntime, port: number): Promise<number> {
-  const { startTokenFloor } = await import("@token-floor/server/start");
-  const app = await startTokenFloor({
+  const startServer =
+    runtime.startServer ??
+    (async (options) => {
+      const { startTokenFloor } = await import("@token-floor/server/start");
+      return startTokenFloor(options);
+    });
+  const app = await startServer({
     port,
     cwd: runtime.cwd,
     home: runtime.home,
     webRootPath: runtime.webRootPath
   });
+  try {
+    const observer = ensureClaudeObserver({ home: runtime.home, port });
+    runtime.write(
+      observer === "ready"
+        ? "Claude observer: ready"
+        : "Claude observer: skipped (Claude Code not installed)"
+    );
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "unknown settings error";
+    runtime.writeError(`Claude observer setup failed; Codex observation continues: ${reason}`);
+  }
   runtime.write(`Token Floor: ${app.url}`);
   runtime.write(`Press Ctrl+C to stop.`);
+  if (runtime.waitForShutdown) return runtime.waitForShutdown(app.close);
   return new Promise((resolve) => {
     let closing = false;
     const close = () => {

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { installTokenFloor, uninstallTokenFloor } from "./lifecycle.js";
+import { ensureClaudeObserver, installTokenFloor, uninstallTokenFloor } from "./lifecycle.js";
 
 function fixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "token-floor-cli-"));
@@ -10,6 +10,24 @@ function fixture() {
 }
 
 describe("CLI lifecycle ownership", () => {
+  it("prepares Claude observers without writing install-only runtime config", () => {
+    const value = fixture();
+    fs.mkdirSync(path.join(value.home, ".claude"), { recursive: true });
+
+    expect(ensureClaudeObserver({ home: value.home, port: 8080 })).toBe("ready");
+    expect(fs.readFileSync(path.join(value.home, ".claude", "settings.json"), "utf8")).toContain(
+      "127.0.0.1:8080"
+    );
+    expect(fs.existsSync(path.join(value.cwd, ".token-floor", "config.json"))).toBe(false);
+  });
+
+  it("does not create a missing Claude directory during automatic setup", () => {
+    const value = fixture();
+
+    expect(ensureClaudeObserver({ home: value.home, port: 8080 })).toBe("not-installed");
+    expect(fs.existsSync(path.join(value.home, ".claude"))).toBe(false);
+  });
+
   it.each([
     [true, true],
     [true, false],

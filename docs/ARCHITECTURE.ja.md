@@ -135,7 +135,7 @@ Claude の経路は `packages/adapter-claude` と server collector から始ま�
 
 ### 5.2 Hook 観察
 
-`token-floor install` は Claude が存在するときだけ loopback observer を冪等に merge します。通常の server 起動は provider 設定を変更せず、存在しない provider directory を作りません。既存設定と hook を保ち、復旧 backup は一度だけ作成します。
+Production `token-floor` CLI は loopback server を開いた後、解決済み port に合わせて Claude observer を冪等に準備します。明示的な `token-floor install` は server を起動せずに同じ merge を行うため、事前設定や修復に利用できますが必須ではありません。どちらも存在しない Claude directory を作成しません。無関係なユーザー設定、hook、ユーザー所有 status line を保持し、復旧 backup は最大一つだけ作成し、設定が変わらなければファイルを書き直しません。自動設定に失敗してもエラーを報告し、server と Codex 観察を継続します。
 
 Session start、user prompt submit、tool 前後、tool failure、permission request、notification、subagent start/stop、stop/failure、session end を観察します。
 
@@ -206,7 +206,7 @@ Usage collector は bounded recent rollout と tail から `rate_limits` metadat
 | `POST /hooks/claude-usage` | Claude usage handoff                           |
 | `WS /events`               | 初回 snapshot と incremental event             |
 
-Production UI、HTTP API、WebSocket、Claude hook は解決された一つの `127.0.0.1` port を共有します。優先順位は CLI flag、environment、install config、`4317` です。Vite 開発 UI は `5173` を使い、API・WS を開発 server に proxy します。
+Production UI、HTTP API、WebSocket、Claude hook は解決された一つの `127.0.0.1` port を共有します。優先順位は CLI flag、environment、install config、`10214` です。Vite 開発 UI は `5173` を使い、API・WS を開発 server に proxy します。
 HTTP CORS は設定済み開発 origin だけに公開します。Memo mutation は正確な origin を要求し、
 JSON body は `application/json` に限定し、`/events` はその他すべての origin からの WebSocket
 upgrade を拒否します。DNS rebinding risk を抑えるため loopback 以外の `Host` も拒否します。

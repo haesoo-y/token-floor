@@ -10,5 +10,6 @@ Usage:
   token-floor --help
   token-floor --version
 
-Port precedence: --port > TOKEN_FLOOR_PORT > .token-floor/config.json > 4317
-The server always binds to 127.0.0.1.`;
+Port precedence: --port > TOKEN_FLOOR_PORT > .token-floor/config.json > 10214
+The server always binds to 127.0.0.1.
+Normal startup automatically prepares Claude observers when Claude Code is installed.`;

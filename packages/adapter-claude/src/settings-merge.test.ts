@@ -29,7 +29,7 @@ describe("Claude settings merge", () => {
   });
 
   it("upgrades the unsupported legacy HTTP SessionStart observer", () => {
-    const url = "http://127.0.0.1:4317/hooks/claude";
+    const url = "http://127.0.0.1:10214/hooks/claude";
     const legacy = {
       hooks: { SessionStart: [{ hooks: [{ type: "http", url, timeout: 1 }] }] }
     };

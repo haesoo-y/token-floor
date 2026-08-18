@@ -35,10 +35,12 @@ export function installClaudeObservers(
   usageUrl?: string
 ): ClaudeObserverStatus {
   const settings = readSettings(filename);
+  const merged = mergeClaudeHookSettings(settings, url, usageUrl);
+  if (JSON.stringify(merged) === JSON.stringify(settings)) return getClaudeObserverStatus(filename);
   if (fs.existsSync(filename) && !fs.existsSync(`${filename}.token-floor.backup`)) {
     fs.copyFileSync(filename, `${filename}.token-floor.backup`);
   }
-  writeSettings(filename, mergeClaudeHookSettings(settings, url, usageUrl));
+  writeSettings(filename, merged);
   return getClaudeObserverStatus(filename);
 }
 

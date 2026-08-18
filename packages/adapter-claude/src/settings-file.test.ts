@@ -38,4 +38,15 @@ describe("Claude observer settings file", () => {
     );
     expect(uninstallClaudeObservers(filename).installed).toBe(false);
   });
+
+  it("does not rewrite settings when the requested observers are already installed", () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "token-floor-settings-"));
+    directories.push(directory);
+    const filename = path.join(directory, "settings.json");
+    installClaudeObservers(filename);
+    fs.utimesSync(filename, 1, 1);
+
+    expect(installClaudeObservers(filename).installed).toBe(true);
+    expect(fs.statSync(filename).mtimeMs).toBe(1_000);
+  });
 });
