@@ -12,3 +12,11 @@ export interface MemoDocument {
   version: 1;
   memos: Memo[];
 }
+
+/** Returns a deterministic copy ordered by most recent user-visible mutation. */
+export function sortMemosByUpdatedAt(memos: readonly Memo[]): Memo[] {
+  return [...memos].sort(
+    (left, right) =>
+      right.updatedAt.localeCompare(left.updatedAt) || left.id.localeCompare(right.id)
+  );
+}

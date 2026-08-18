@@ -262,7 +262,7 @@ sequenceDiagram
 
 ### `memos.json`
 
-별도의 versioned memo 문서입니다. 같은 디렉터리의 temp file과 atomic rename을 사용합니다. Text는 1–1,000자이며 active memo는 수정·보관, archived memo는 복원·삭제가 가능합니다.
+별도의 versioned memo 문서입니다. 같은 디렉터리의 temp file과 atomic rename을 사용합니다. 불러오기와 변경 결과는 `updatedAt` 내림차순으로 정렬하고, 시간이 같으면 memo ID를 결정적 순서 기준으로 사용합니다. Text는 1–1,000자이며 active memo는 수정·보관, archived memo는 복원·삭제가 가능합니다.
 
 ## 9. Web·게임 구조
 

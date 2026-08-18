@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import type { Memo, MemoDocument } from "@token-floor/protocol";
+import { sortMemosByUpdatedAt, type Memo, type MemoDocument } from "@token-floor/protocol";
 import { ensurePrivateDirectory } from "./private-files.js";
 
 const EMPTY_DOCUMENT: MemoDocument = { version: 1, memos: [] };
@@ -13,7 +13,9 @@ export class JsonMemoStore {
   load(): MemoDocument {
     try {
       const value = JSON.parse(fs.readFileSync(this.filename, "utf8")) as unknown;
-      return isMemoDocument(value) ? value : EMPTY_DOCUMENT;
+      return isMemoDocument(value)
+        ? { ...value, memos: sortMemosByUpdatedAt(value.memos) }
+        : EMPTY_DOCUMENT;
     } catch {
       return EMPTY_DOCUMENT;
     }
@@ -30,7 +32,7 @@ export class JsonMemoStore {
       archived: false
     };
     const document = this.load();
-    this.save({ version: 1, memos: [memo, ...document.memos] });
+    this.save({ version: 1, memos: sortMemosByUpdatedAt([memo, ...document.memos]) });
     return memo;
   }
 
@@ -47,7 +49,7 @@ export class JsonMemoStore {
     };
     const memos = [...document.memos];
     memos[index] = memo;
-    this.save({ version: 1, memos });
+    this.save({ version: 1, memos: sortMemosByUpdatedAt(memos) });
     return memo;
   }
 

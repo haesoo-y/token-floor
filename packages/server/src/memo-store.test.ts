@@ -41,6 +41,23 @@ describe("JsonMemoStore", () => {
     expect(updated.updatedAt).toBe("2026-08-17T01:00:00.000Z");
   });
 
+  it("loads and persists memos in descending update order", () => {
+    const { filename, store } = createStore();
+    const newest = store.create("Newest", new Date("2026-08-17T02:00:00.000Z"));
+    const older = store.create("Older", new Date("2026-08-17T01:00:00.000Z"));
+    expect(store.load().memos.map(({ id }) => id)).toEqual([newest.id, older.id]);
+
+    const updated = store.update(
+      older.id,
+      { text: "Updated" },
+      new Date("2026-08-17T03:00:00.000Z")
+    );
+    expect(store.load().memos.map(({ id }) => id)).toEqual([updated.id, newest.id]);
+    expect(
+      JSON.parse(fs.readFileSync(filename, "utf8")).memos.map(({ id }: { id: string }) => id)
+    ).toEqual([updated.id, newest.id]);
+  });
+
   it("rejects invalid text and unknown memo ids", () => {
     const { store } = createStore();
     expect(() => store.create(" ")).toThrow(TypeError);

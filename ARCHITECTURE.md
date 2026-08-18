@@ -279,7 +279,7 @@ Usage snapshots are written atomically only when changed. A missing, locked, par
 
 ### `memos.json`
 
-The memo store is a separate versioned JSON document. Writes use a same-directory temporary file and atomic rename. Memo text is limited to 1–1,000 characters. Active memos support edit/archive; archived memos support restore/delete. It is intentionally unrelated to lifecycle logs and browser preferences.
+The memo store is a separate versioned JSON document. Writes use a same-directory temporary file and atomic rename. Load and mutation results are ordered by `updatedAt` descending with memo ID as the deterministic tie breaker. Memo text is limited to 1–1,000 characters. Active memos support edit/archive; archived memos support restore/delete. It is intentionally unrelated to lifecycle logs and browser preferences.
 
 ## 9. Web and game architecture
 

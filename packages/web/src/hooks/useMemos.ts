@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Memo, MemoDocument } from "@token-floor/protocol";
+import { sortMemosByUpdatedAt, type Memo, type MemoDocument } from "@token-floor/protocol";
 
 const apiRoot = import.meta.env.VITE_TOKEN_FLOOR_API ?? "";
 
@@ -13,7 +13,7 @@ export function useMemos() {
     setLoading(true);
     try {
       const document = await request<MemoDocument>("/memos");
-      setMemos(document.memos);
+      setMemos(sortMemosByUpdatedAt(document.memos));
       setError(undefined);
     } catch {
       setError("memoLoadFailed");
@@ -31,7 +31,7 @@ export function useMemos() {
         method: "POST",
         body: JSON.stringify({ text })
       });
-      setMemos((current) => [memo, ...current]);
+      setMemos((current) => sortMemosByUpdatedAt([memo, ...current]));
       setError(undefined);
     } catch {
       setError("memoSaveFailed");
@@ -43,7 +43,9 @@ export function useMemos() {
         method: "PATCH",
         body: JSON.stringify(patch)
       });
-      setMemos((current) => current.map((item) => (item.id === memo.id ? memo : item)));
+      setMemos((current) =>
+        sortMemosByUpdatedAt(current.map((item) => (item.id === memo.id ? memo : item)))
+      );
       setError(undefined);
     } catch {
       setError("memoSaveFailed");

@@ -262,7 +262,7 @@ sequenceDiagram
 
 ### `memos.json`
 
-独立した versioned memo document です。同一 directory の temp file と atomic rename を使います。Text は 1–1,000 文字、active memo は edit/archive、archived memo は restore/delete が可能です。
+独立した versioned memo document です。同一 directory の temp file と atomic rename を使います。読み込みと変更の結果は `updatedAt` の降順に並べ、同一時刻では memo ID を決定的な順序の基準にします。Text は 1–1,000 文字、active memo は edit/archive、archived memo は restore/delete が可能です。
 
 ## 9. Web・ゲーム構成
 

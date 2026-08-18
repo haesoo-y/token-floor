@@ -69,7 +69,7 @@ _Active main agents and subagents have distinct sprites and work positions; comp
 ### Whiteboard memos
 
 - Opens and closes the memo panel by clicking the meeting-room whiteboard.
-- Creates memos up to 1,000 characters with `Ctrl`/`Cmd` + `Enter`, and supports refresh, expand/collapse, and copy.
+- Creates memos up to 1,000 characters with `Ctrl`/`Cmd` + `Enter`, keeps the most recently updated memo first, and supports refresh, expand/collapse, and copy.
 - Lets active memos be edited or archived.
 - Lets archived memos be restored or permanently deleted; deletion is intentionally unavailable for active memos.
 - Saves versioned memo JSON atomically to `.token-floor/memos.json`, outside Git.
