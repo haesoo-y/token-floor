@@ -276,7 +276,7 @@ WebSocket hook は full snapshot の後に incremental event を適用します�
 
 Phaser は pixel world、room texture、prop、collision、autonomous agent、player movement、camera、frame animation、depth を担当します。現在は左上 workspace、右上 meeting room、右中央 lounge、左下の分離 Codex・Claude usage office、右下 future zone です。
 
-Character は 32×32 pixel 表示と 16×16 collision footprint を使います。移動は cardinal-only で、壁と許可された solid prop を避けます。Player は meeting room から始まり WASD・矢印キーで移動します。矢印は global に player が所有し、WASD は text 入力中だけ譲ります。
+Character は 32×32 pixel 表示と 16×16 collision footprint を使います。移動は cardinal-only で、壁と許可された solid prop を避けます。Player は meeting room から始まり WASD・矢印キーで移動します。矢印キーは文字入力以外では global に player が所有します。input、textarea、編集可能要素が文字入力を所有している間は、矢印キーと WASD の両方をエディターへ譲ります。
 
 ### DOM overlay 層
 

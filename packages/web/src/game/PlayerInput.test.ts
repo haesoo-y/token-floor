@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PlayerInput } from "./PlayerInput.js";
 
-function createHarness(activeElementMatches = false) {
+function createHarness(initiallyEditing = false) {
+  let editing = initiallyEditing;
   const listeners = new Map<string, (event: KeyboardEvent) => void>();
   const focus = vi.fn();
   const key = () => {
@@ -30,19 +31,20 @@ function createHarness(activeElementMatches = false) {
     s: key(),
     d: key()
   };
+  const addKeys = vi.fn(() => keys);
   vi.stubGlobal("window", {
     addEventListener: (type: string, listener: (event: KeyboardEvent) => void) =>
       listeners.set(type, listener),
     removeEventListener: (type: string) => listeners.delete(type)
   });
   vi.stubGlobal("document", {
-    activeElement: { matches: () => activeElementMatches }
+    activeElement: { matches: () => editing }
   });
   const scene = {
     input: {
       keyboard: {
         enabled: true,
-        addKeys: () => keys
+        addKeys
       }
     },
     game: {
@@ -54,7 +56,16 @@ function createHarness(activeElementMatches = false) {
       }
     }
   };
-  return { input: new PlayerInput(scene as never), keys, listeners, focus };
+  return {
+    input: new PlayerInput(scene as never),
+    keys,
+    listeners,
+    focus,
+    addKeys,
+    setEditing: (value: boolean) => {
+      editing = value;
+    }
+  };
 }
 
 function arrowEvent(key: string) {
@@ -68,8 +79,8 @@ function arrowEvent(key: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("PlayerInput", () => {
-  it("owns arrow keys globally and handles repeated keydown idempotently", () => {
-    const { input, keys, listeners } = createHarness(true);
+  it("owns arrow keys outside text entry and handles repeated keydown idempotently", () => {
+    const { input, keys, listeners } = createHarness();
     const down = listeners.get("keydown")!;
     const up = listeners.get("keyup")!;
     const event = arrowEvent("ArrowLeft");
@@ -87,16 +98,24 @@ describe("PlayerInput", () => {
     expect(input.read()).toEqual({ x: 0, y: 0 });
   });
 
-  it("keeps arrows active but ignores WASD while editing text", () => {
-    const { input, keys, listeners } = createHarness(true);
+  it("leaves WASD and arrow keys with the focused text editor", () => {
+    const { input, keys, listeners, addKeys } = createHarness(true);
+    const event = arrowEvent("ArrowDown");
     keys.w.isDown = true;
-    listeners.get("keydown")!(arrowEvent("ArrowDown"));
+    keys.right.isDown = true;
+    listeners.get("keydown")!(event);
 
-    expect(input.read()).toEqual({ x: 0, y: 1 });
+    expect(input.read()).toEqual({ x: 0, y: 0 });
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.stopPropagation).not.toHaveBeenCalled();
+    expect(keys.down.onDown).not.toHaveBeenCalled();
+    expect(keys.right.reset).toHaveBeenCalledOnce();
+    expect(addKeys).toHaveBeenCalledWith(expect.any(Object), false);
   });
 
-  it("uses Phaser arrow state even while a panel control owns focus", () => {
-    const { input, keys } = createHarness(true);
+  it("uses Phaser arrow state while a non-editable panel control owns focus", () => {
+    const { input, keys, setEditing } = createHarness(true);
+    setEditing(false);
     keys.right.isDown = true;
 
     expect(input.read()).toEqual({ x: 1, y: 0 });

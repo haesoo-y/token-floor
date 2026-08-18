@@ -299,7 +299,7 @@ Phaser owns the pixel world, room textures, props, collisions, autonomous agents
 - lower-left sealed Codex and Claude usage offices;
 - lower-right intentionally empty future zone.
 
-Characters render at 32×32 pixels with compact 16×16 collision footprints. Movement is cardinal-only, uses horizontal or vertical legs to avoid staircase motion, and resolves against walls and retained solid props. The player starts in the meeting room and can move with WASD or arrows. Arrow events are captured globally for player ownership; WASD yields while typing.
+Characters render at 32×32 pixels with compact 16×16 collision footprints. Movement is cardinal-only, uses horizontal or vertical legs to avoid staircase motion, and resolves against walls and retained solid props. The player starts in the meeting room and can move with WASD or arrows. Arrow events are captured globally for player ownership outside text entry. When an input, textarea, or editable element owns text entry, both arrows and WASD yield to the editor.
 
 ### DOM overlay layer
 

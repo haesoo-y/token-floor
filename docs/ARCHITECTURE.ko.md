@@ -276,7 +276,7 @@ WebSocket hook은 전체 snapshot을 먼저 받고 incremental event를 적용�
 
 Phaser는 pixel world, room texture, prop, collision, autonomous agent, player movement, camera, frame animation, depth를 담당합니다. 현재는 좌상단 workspace, 우상단 meeting room, 우측 중앙 lounge, 좌하단의 분리된 Codex·Claude usage office, 우하단 future zone으로 구성됩니다.
 
-캐릭터는 32×32 pixel로 표시하고 16×16 collision footprint를 사용합니다. 이동은 직교 방향만 허용하며 벽과 승인된 solid prop을 피합니다. Player는 meeting room에서 시작하고 WASD·방향키로 이동합니다. 방향키는 전역에서 player가 소유하며 WASD는 text 입력 중에만 양보합니다.
+캐릭터는 32×32 pixel로 표시하고 16×16 collision footprint를 사용합니다. 이동은 직교 방향만 허용하며 벽과 승인된 solid prop을 피합니다. Player는 meeting room에서 시작하고 WASD·방향키로 이동합니다. 방향키는 텍스트 입력 외부에서 player가 전역으로 소유합니다. input, textarea, 편집 가능 요소가 텍스트 입력을 소유하는 동안에는 방향키와 WASD 모두 편집기에 양보합니다.
 
 ### DOM overlay 계층
 

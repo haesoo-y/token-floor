@@ -35,7 +35,7 @@ _Active main agents and subagents have distinct sprites and work positions; comp
 ### Interactive office
 
 - Lets you walk with **WASD or the arrow keys**, using the same four-direction movement and facing logic.
-- Keeps arrow keys assigned to the player even after a panel, tab, memo, button, or whiteboard receives focus; WASD remains available except while typing.
+- Keeps arrow keys assigned to the player when panels, tabs, buttons, or the whiteboard receive focus. While an input, textarea, or editable element owns text entry, both arrows and WASD remain with the editor.
 - Uses a compact five-zone layout: agent workspace, meeting room, coffee lounge, separate Codex and Claude usage offices, and a future area.
 - Provides solid walls, meeting table, and whiteboard collision, agent route avoidance, depth sorting, camera follow, wheel zoom, and crisp nearest-neighbor pixel rendering.
 - More office furniture will arrive with the next version. Thank you for waiting.

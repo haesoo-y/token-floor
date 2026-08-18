@@ -1,6 +1,11 @@
 import type Phaser from "phaser";
 import { resolveCardinalIntent, type InputAxis } from "./cardinalInput.js";
-import { axisForDirection, directionForArrowKey, type ArrowDirection } from "./playerKeyboard.js";
+import {
+  axisForDirection,
+  directionForArrowKey,
+  isTextEntryElement,
+  type ArrowDirection
+} from "./playerKeyboard.js";
 
 type DirectionKey = "up" | "down" | "left" | "right" | "w" | "a" | "s" | "d";
 
@@ -19,16 +24,19 @@ export class PlayerInput {
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.keys = scene.input.keyboard!.addKeys({
-      up: "UP",
-      down: "DOWN",
-      left: "LEFT",
-      right: "RIGHT",
-      w: "W",
-      a: "A",
-      s: "S",
-      d: "D"
-    }) as Record<DirectionKey, Phaser.Input.Keyboard.Key>;
+    this.keys = scene.input.keyboard!.addKeys(
+      {
+        up: "UP",
+        down: "DOWN",
+        left: "LEFT",
+        right: "RIGHT",
+        w: "W",
+        a: "A",
+        s: "S",
+        d: "D"
+      },
+      false
+    ) as Record<DirectionKey, Phaser.Input.Keyboard.Key>;
     scene.game.canvas.tabIndex = 0;
     this.focusCanvas = () => scene.game.canvas.focus({ preventScroll: true });
     scene.game.canvas.addEventListener("pointerdown", this.focusCanvas);
@@ -47,21 +55,23 @@ export class PlayerInput {
   }
 
   read() {
-    const acceptsText = document.activeElement?.matches(
-      "input, textarea, [contenteditable='true']"
-    );
+    const acceptsText = isTextEntryElement(document.activeElement);
     const horizontalDown =
-      this.arrows.has("left") ||
-      this.arrows.has("right") ||
-      this.keys.left.isDown ||
-      this.keys.right.isDown ||
-      (!acceptsText && (this.keys.a.isDown || this.keys.d.isDown));
+      !acceptsText &&
+      (this.arrows.has("left") ||
+        this.arrows.has("right") ||
+        this.keys.left.isDown ||
+        this.keys.right.isDown ||
+        this.keys.a.isDown ||
+        this.keys.d.isDown);
     const verticalDown =
-      this.arrows.has("up") ||
-      this.arrows.has("down") ||
-      this.keys.up.isDown ||
-      this.keys.down.isDown ||
-      (!acceptsText && (this.keys.w.isDown || this.keys.s.isDown));
+      !acceptsText &&
+      (this.arrows.has("up") ||
+        this.arrows.has("down") ||
+        this.keys.up.isDown ||
+        this.keys.down.isDown ||
+        this.keys.w.isDown ||
+        this.keys.s.isDown);
     if (horizontalDown && !this.wasHorizontalDown) {
       this.preferredAxis = "horizontal";
     }
@@ -72,13 +82,13 @@ export class PlayerInput {
     this.wasVerticalDown = verticalDown;
     return resolveCardinalIntent(
       {
-        up: this.arrows.has("up") || this.keys.up.isDown || (!acceptsText && this.keys.w.isDown),
+        up: !acceptsText && (this.arrows.has("up") || this.keys.up.isDown || this.keys.w.isDown),
         down:
-          this.arrows.has("down") || this.keys.down.isDown || (!acceptsText && this.keys.s.isDown),
+          !acceptsText && (this.arrows.has("down") || this.keys.down.isDown || this.keys.s.isDown),
         left:
-          this.arrows.has("left") || this.keys.left.isDown || (!acceptsText && this.keys.a.isDown),
+          !acceptsText && (this.arrows.has("left") || this.keys.left.isDown || this.keys.a.isDown),
         right:
-          this.arrows.has("right") || this.keys.right.isDown || (!acceptsText && this.keys.d.isDown)
+          !acceptsText && (this.arrows.has("right") || this.keys.right.isDown || this.keys.d.isDown)
       },
       this.preferredAxis
     );
@@ -94,6 +104,10 @@ export class PlayerInput {
   private updateArrow(event: KeyboardEvent, pressed: boolean): void {
     const direction = directionForArrowKey(event.key);
     if (!direction) return;
+    if (isTextEntryElement(document.activeElement)) {
+      this.clearArrows();
+      return;
+    }
     event.preventDefault();
     // Stop focused controls from receiving arrow navigation. Phaser ignores default-prevented
     // events, so bridge the captured event into its Key state explicitly before stopping it.
