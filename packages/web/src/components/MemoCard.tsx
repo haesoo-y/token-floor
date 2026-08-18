@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Memo } from "@token-floor/protocol";
+import { useOverflowState } from "../hooks/useOverflowState.js";
 import { translate, type Locale } from "../lib/i18n.js";
 import { ActionIcon } from "./common/ActionIcon.js";
 
@@ -17,6 +18,7 @@ export function MemoCard({
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(memo.text);
+  const { ref: bodyRef, overflowing } = useOverflowState(memo.text, expanded);
   const save = async () => {
     await onUpdate(memo.id, { text });
     setEditing(false);
@@ -30,7 +32,9 @@ export function MemoCard({
           onChange={(event) => setText(event.target.value)}
         />
       ) : (
-        <p className={expanded ? "is-expanded" : ""}>{memo.text}</p>
+        <p ref={bodyRef} className={expanded ? "is-expanded" : ""}>
+          {memo.text}
+        </p>
       )}
       <div className="memo-footer">
         <div className="memo-meta">
@@ -40,7 +44,7 @@ export function MemoCard({
               timeStyle: "short"
             })}
           </time>
-          {!editing && memo.text.length > 160 ? (
+          {!editing && (overflowing || expanded) ? (
             <button
               className="memo-expand"
               type="button"
