@@ -109,7 +109,7 @@ stateDiagram-v2
   active --> waiting: input または permission
   waiting --> active: より新しい活動
   active --> completed: 明示的な完了
-  active --> completed: heartbeat なしで 5 分
+  active --> completed: heartbeat なしで 3 分
   active --> error: 失敗
   waiting --> completed: 明示的な完了のみ
   waiting --> error: 失敗
@@ -117,7 +117,7 @@ stateDiagram-v2
   completed --> active: より新しい有効活動
 ```
 
-5 分の完了推定は `active` のみに適用します。`waiting` と `error` は timeout で完了しません。完了 character projection は 60 分後に削除しますが、サニタイズ済みログは二つのグローバル 100 件制限の中で保持します。
+3 分の完了推定は `active` のみに適用します。`waiting` と `error` は timeout で完了しません。完了 character projection は 60 分後に削除しますが、サニタイズ済みログは二つのグローバル 100 件制限の中で保持します。
 
 ## 5. Claude 連携
 
@@ -181,7 +181,7 @@ Guardian subagent と、subagent に属する user-role の内部 orchestration 
 
 ### 6.3 Active heartbeat・待機
 
-`mcp_tool_call_begin`、`mcp_tool_call_end`、`agent_reasoning` をプロバイダー中立の `agent.active` に正規化します。Reasoning text、tool input/result、invocation data は含めません。安定 ID は bounded decoder cache と protocol reducer の両方で deduplicate されます。この経路が、実際に作業中の Codex session が 5 分後に誤って完了扱いされる問題を防ぎます。
+`mcp_tool_call_begin`、`mcp_tool_call_end`、`agent_reasoning` をプロバイダー中立の `agent.active` に正規化します。Reasoning text、tool input/result、invocation data は含めません。安定 ID は bounded decoder cache と protocol reducer の両方で deduplicate されます。この経路が、実際に作業中の Codex session が 3 分後に誤って完了扱いされる問題を防ぎます。
 
 Decoder は構造的な `request_user_input`、`require_escalated` 境界を見つける場合にだけ local opaque argument を調べられます。出力は正規化待機理由だけで、argument 本体は境界を越えません。
 
@@ -241,7 +241,7 @@ sequenceDiagram
 | Claude transcript 復元               | 30 秒                         |
 | provider usage refresh               | 15 秒                         |
 | agent timeout・retention maintenance | 15 秒                         |
-| active completion inference          | 新しい heartbeat なしで 5 分  |
+| active completion inference          | 新しい heartbeat なしで 3 分  |
 | completed character retention        | 60 分                         |
 | chat retention                       | sanitized latest 100          |
 | event retention                      | sanitized non-chat latest 100 |

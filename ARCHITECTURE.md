@@ -123,7 +123,7 @@ stateDiagram-v2
   active --> waiting: input or permission boundary
   waiting --> active: newer activity
   active --> completed: explicit completion
-  active --> completed: 5 min without active heartbeat
+  active --> completed: 3 min without active heartbeat
   active --> error: failure
   waiting --> completed: explicit completion only
   waiting --> error: failure
@@ -131,7 +131,7 @@ stateDiagram-v2
   completed --> active: newer valid activity
 ```
 
-The five-minute inferred-completion rule applies only to active agents. Waiting and error states never time out into completion. Completed character projections expire after 60 minutes, but their sanitized logs remain within the two 100-entry global bounds.
+The three-minute inferred-completion rule applies only to active agents. Waiting and error states never time out into completion. Completed character projections expire after 60 minutes, but their sanitized logs remain within the two 100-entry global bounds.
 
 ## 5. Claude integration
 
@@ -197,7 +197,7 @@ Guardian subagents are excluded. User-role content belonging to a subagent is tr
 
 The adapter normalizes `mcp_tool_call_begin`, `mcp_tool_call_end`, and `agent_reasoning` into provider-neutral `agent.active` events. These heartbeats contain no reasoning text, tool input, result, or invocation data. Their stable IDs are deduplicated through a bounded identity cache and again by the protocol reducer.
 
-This heartbeat path is what prevents a busy Codex session from disappearing and being inferred complete after five minutes.
+This heartbeat path is what prevents a busy Codex session from disappearing and being inferred complete after three minutes.
 
 The decoder may inspect opaque local arguments only to identify structural `request_user_input` or `require_escalated` boundaries. It emits a normalized waiting reason, never the arguments themselves.
 
@@ -258,7 +258,7 @@ Pruning before the first browser snapshot prevents a burst of old completed char
 | Claude transcript recovery          | 30 seconds                           |
 | Provider usage refresh              | 15 seconds                           |
 | Agent timeout/retention maintenance | 15 seconds                           |
-| Active completion inference         | 5 minutes without a newer heartbeat  |
+| Active completion inference         | 3 minutes without a newer heartbeat  |
 | Completed character retention       | 60 minutes                           |
 | Chat retention                      | latest 100 sanitized messages        |
 | Event retention                     | latest 100 sanitized non-chat events |

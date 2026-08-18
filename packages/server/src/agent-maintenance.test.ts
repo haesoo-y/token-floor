@@ -119,7 +119,7 @@ describe("startAgentMaintenance", () => {
 
     vi.advanceTimersByTime(1);
     expect(state.agents["codex:thread"]?.status).toBe("active");
-    vi.setSystemTime(new Date("2026-08-17T00:09:30.000Z"));
+    vi.setSystemTime(new Date("2026-08-17T00:07:30.000Z"));
     vi.advanceTimersByTime(1);
     expect(state.agents["codex:thread"]?.status).toBe("completed");
     stop();

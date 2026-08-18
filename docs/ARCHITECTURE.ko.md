@@ -109,7 +109,7 @@ stateDiagram-v2
   active --> waiting: input 또는 permission
   waiting --> active: 더 최신 활동
   active --> completed: 명시적 완료
-  active --> completed: heartbeat 없이 5분
+  active --> completed: heartbeat 없이 3분
   active --> error: 실패
   waiting --> completed: 명시적 완료만 허용
   waiting --> error: 실패
@@ -117,7 +117,7 @@ stateDiagram-v2
   completed --> active: 더 최신 유효 활동
 ```
 
-5분 완료 추론은 `active`에만 적용합니다. `waiting`, `error`는 timeout으로 완료되지 않습니다. 완료 캐릭터 projection은 60분 후 제거하지만, 정제된 로그는 두 개의 전역 100개 제한 안에서 계속 유지합니다.
+3분 완료 추론은 `active`에만 적용합니다. `waiting`, `error`는 timeout으로 완료되지 않습니다. 완료 캐릭터 projection은 60분 후 제거하지만, 정제된 로그는 두 개의 전역 100개 제한 안에서 계속 유지합니다.
 
 ## 5. Claude 연동
 
@@ -181,7 +181,7 @@ Guardian subagent는 제외합니다. Subagent 소속 user-role content도 내�
 
 ### 6.3 활동 heartbeat·대기
 
-`mcp_tool_call_begin`, `mcp_tool_call_end`, `agent_reasoning`은 공급자 중립 `agent.active`로 정규화합니다. Reasoning text, tool input, result, invocation data는 포함하지 않습니다. 안정적 ID는 제한된 decoder cache와 protocol reducer에서 두 번 중복 제거됩니다. 이 경로가 실제 작업 중인 Codex session의 5분 완료 오판을 방지합니다.
+`mcp_tool_call_begin`, `mcp_tool_call_end`, `agent_reasoning`은 공급자 중립 `agent.active`로 정규화합니다. Reasoning text, tool input, result, invocation data는 포함하지 않습니다. 안정적 ID는 제한된 decoder cache와 protocol reducer에서 두 번 중복 제거됩니다. 이 경로가 실제 작업 중인 Codex session의 3분 완료 오판을 방지합니다.
 
 Decoder는 구조적인 `request_user_input`, `require_escalated` 경계를 알아내는 데만 로컬 opaque argument를 검사할 수 있습니다. 방출하는 값은 정규화된 대기 사유뿐이며 argument 자체는 경계를 넘지 않습니다.
 
@@ -241,7 +241,7 @@ sequenceDiagram
 | Claude transcript 복구         | 30초                       |
 | 공급자 usage 갱신              | 15초                       |
 | agent timeout·보존 maintenance | 15초                       |
-| active 완료 추론               | 더 최신 heartbeat 없이 5분 |
+| active 완료 추론               | 더 최신 heartbeat 없이 3분 |
 | 완료 캐릭터 보존               | 60분                       |
 | chat 보존                      | 정제된 최근 100개          |
 | event 보존                     | 정제된 비채팅 최근 100개   |

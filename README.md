@@ -53,8 +53,8 @@ _Active main agents and subagents have distinct sprites and work positions; comp
 ### Reliable activity and completion
 
 - Converts Codex task, message, subagent, function, MCP, custom-tool, and reasoning boundaries into provider-neutral lifecycle events.
-- Treats `mcp_tool_call_begin`, `mcp_tool_call_end`, and `agent_reasoning` as payload-free active heartbeats, preventing a genuinely busy Codex agent from being marked complete after five minutes.
-- Infers completion only after five minutes without newer activity, and never times out waiting or failed agents as completed.
+- Treats `mcp_tool_call_begin`, `mcp_tool_call_end`, and `agent_reasoning` as payload-free active heartbeats, preventing a genuinely busy Codex agent from being marked complete after three minutes.
+- Infers completion only after three minutes without newer activity, and never times out waiting or failed agents as completed.
 - Skips valid but unsupported records quietly and reports actual malformed-source conditions separately.
 
 ### Usage meters without provider login

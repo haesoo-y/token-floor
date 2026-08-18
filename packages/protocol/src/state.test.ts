@@ -131,6 +131,19 @@ describe("office state reducer", () => {
     expect(waiting.agents["agent-1"]?.activity).toBeUndefined();
   });
 
+  it("uses a three-minute default completion boundary", () => {
+    expect(DEFAULT_COMPLETION_TIMEOUT_MS).toBe(3 * 60 * 1000);
+    const active = applyEvent(createOfficeState(), activeEvent);
+    expect(
+      inferTimedOutCompletions(active, new Date("2026-08-16T00:02:59.999Z")).agents["agent-1"]
+        ?.status
+    ).toBe("active");
+    expect(
+      inferTimedOutCompletions(active, new Date("2026-08-16T00:03:00.000Z")).agents["agent-1"]
+        ?.status
+    ).toBe("completed");
+  });
+
   it("stores provider usage independently from agent state", () => {
     const state = applyEvent(createOfficeState(), {
       schemaVersion: 1,
@@ -171,10 +184,10 @@ describe("office state reducer", () => {
     const active = applyEvent(createOfficeState(), activeEvent);
     const completed = inferTimedOutCompletions(active, new Date("2026-08-16T02:00:00.000Z"));
     expect(
-      pruneCompletedAgents(completed, new Date("2026-08-16T01:04:59.999Z")).agents["agent-1"]
+      pruneCompletedAgents(completed, new Date("2026-08-16T01:02:59.999Z")).agents["agent-1"]
     ).toBeDefined();
     expect(
-      pruneCompletedAgents(completed, new Date("2026-08-16T01:05:00.000Z")).agents["agent-1"]
+      pruneCompletedAgents(completed, new Date("2026-08-16T01:03:00.000Z")).agents["agent-1"]
     ).toBeUndefined();
   });
 

@@ -1,4 +1,5 @@
 import {
+  DEFAULT_COMPLETION_TIMEOUT_MS,
   createOpaqueProjectIdentity,
   sanitizeSpeech,
   type AgentEvent
@@ -53,7 +54,7 @@ function metadataFromLine(line: string): TranscriptMetadata | undefined {
 export function recoverClaudeTranscript(
   content: string,
   now = new Date(),
-  completionTimeoutMs = 5 * 60 * 1000
+  completionTimeoutMs = DEFAULT_COMPLETION_TIMEOUT_MS
 ): AgentEvent | undefined {
   let latest: TranscriptMetadata | undefined;
   for (const line of content.split("\n")) {

@@ -30,7 +30,10 @@ describe("recoverClaudeTranscript", () => {
       timestamp: "2026-08-16T00:00:00.000Z",
       isSidechain: false
     });
-    expect(recoverClaudeTranscript(content, new Date("2026-08-16T00:06:00.000Z"))).toMatchObject({
+    expect(recoverClaudeTranscript(content, new Date("2026-08-16T00:02:59.999Z"))).toMatchObject({
+      type: "agent.active"
+    });
+    expect(recoverClaudeTranscript(content, new Date("2026-08-16T00:03:00.000Z"))).toMatchObject({
       type: "agent.completed",
       inferred: true
     });

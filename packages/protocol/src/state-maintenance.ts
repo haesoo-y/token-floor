@@ -1,6 +1,6 @@
 import type { AgentSnapshot, OfficeState } from "./state.js";
 
-export const DEFAULT_COMPLETION_TIMEOUT_MS = 5 * 60 * 1000;
+export const DEFAULT_COMPLETION_TIMEOUT_MS = 3 * 60 * 1000;
 export const DEFAULT_COMPLETED_RETENTION_MS = 60 * 60 * 1000;
 
 /** Marks silent active agents completed while preserving waiting and error projections. */
